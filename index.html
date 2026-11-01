@@ -111,6 +111,9 @@ details[open]>summary h2::before{transform:rotate(90deg)}
 #stage.map #mapc{opacity:1}
 #mc{display:block;width:100%;aspect-ratio:16/10;max-height:70vh;background:#000;border:3px solid var(--gold2);border-radius:4px;touch-action:none}
 label{font-family:Cinzel,Georgia,serif;font-size:15px}
+
+.paper{padding:0}
+.paper .in{position:absolute;inset:17% 13% 11%;overflow:hidden}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -157,8 +160,8 @@ async function display(code){
   const cache=new Map();
   const get=async id=>{if(!id)return{};if(!cache.has(id)){const s=await getDoc(doc(db,'sessions',code,'images',id));cache.set(id,s.exists()?s.data():{})}return cache.get(id)};
   let d={},qs=[],seq=0;
-  const cv=$('#mapc'),RM=makeRenderer(cv);let MO=null,MS={},tg=null,cur=null,raf=0,curId=null;
-  const stepM=()=>{raf=0;if(!MO||!tg)return;if(!cur)cur={...tg};const k=.25;cur.x+=(tg.x-cur.x)*k;cur.y+=(tg.y-cur.y)*k;cur.ft+=(tg.ft-cur.ft)*k;RM(MO,MS,cur,1);
+  const cv=$('#mapc'),RM=makeRenderer(cv);let MO=null,MS={},tg=null,cur=null,raf=0,curId=null,TL=[];
+  const stepM=()=>{raf=0;if(!MO||!tg)return;if(!cur)cur={...tg};const k=.25;cur.x+=(tg.x-cur.x)*k;cur.y+=(tg.y-cur.y)*k;cur.ft+=(tg.ft-cur.ft)*k;RM(MO,MS,cur,1,mkToks(TL,MS));
     if(Math.abs(tg.x-cur.x)>2e-4||Math.abs(tg.y-cur.y)>2e-4||Math.abs(tg.ft-cur.ft)>.02)raf=requestAnimationFrame(stepM)};
   const kick=()=>{if(!raf)raf=requestAnimationFrame(stepM)};
   const mw=watchMap(code,(o,s)=>{MO=o;MS=s;kick()});unsubs.push(()=>mw.stop());
@@ -168,9 +171,10 @@ async function display(code){
   const paint=async()=>{
     const my=++seq,board=!!d.showBoard,mapOn=!board&&!!d.showMap&&!!d.mapId;
     const b=board||mapOn?{}:await get(d.backgroundId);
+    const tl=mapOn?(await Promise.all((d.visibleNpcIds||[]).map(async id=>{const x=await get(id);return x.data?{id,mon:x.type==='monster',im:tokImg(id,x.data,kick)}:null}))).filter(Boolean):[];
     const n=board||mapOn?[]:(await Promise.all((d.visibleNpcIds||[]).map(get))).filter(x=>x.data);
     if(my!==seq)return;
-    const posted=qs.filter(q=>q.posted),st=$('#stage');
+    TL=tl;kick();const posted=qs.filter(q=>q.posted),st=$('#stage');
     st.classList.toggle('board',board);
     st.classList.toggle('solo',!b.data);
     st.classList.toggle('empty',!board&&!mapOn&&!b.data&&!n.length);st.classList.toggle('map',mapOn);mw.set(mapOn?d.mapId:null);
@@ -181,7 +185,7 @@ async function display(code){
     $('#npcs').innerHTML=n.map(x=>x.type==='monster'?`<figure class="mon"><img src="${x.data}" alt=""></figure>`:`<figure><img src="${x.data}" alt=""><figcaption>${esc(x.name)}</figcaption></figure>`).join('');
     $('#papers').style.setProperty('--per',posted.length<=3?Math.max(1,posted.length):posted.length===4?2:3);
     $('#papers').style.setProperty('--cap',posted.length<=3?'40vh':'30vh');$('#papers').style.setProperty('--fs',posted.length<=3?'3vmin':'2.4vmin');
-    $('#papers').innerHTML=posted.map(q=>`<article class="paper ${q.done?'done':''}" style="--r:${rot(q.id)}"><i class="pin"></i><h3>${esc(q.title||'')}</h3><p>${esc(q.text||'')}</p></article>`).join('');
+    $('#papers').innerHTML=posted.map(q=>`<article class="paper ${q.done?'done':''}" style="--r:${rot(q.id)}"><i class="pin"></i><div class="in"><h3>${esc(q.title||'')}</h3><p>${esc(q.text||'')}</p></div></article>`).join('');
   };
   unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};paint()}));
   unsubs.push(onSnapshot(collection(db,'sessions',code,'quests'),s=>{qs=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>a.created-b.created);paint()}));
@@ -209,15 +213,31 @@ function watchMap(code,cb){
     stop(){unsub&&unsub()},
     get id(){return id}};
 }
+const tokCache=new Map();
+function tokImg(id,data,cb){let im=tokCache.get(id);if(!im){im=new Image();im.onload=cb;im.src=data;tokCache.set(id,im)}return im}
+const tokPos=(MS,id,i)=>{const p=MS.tk&&MS.tk[id];if(p)return p;const l=(MS.lights||[{x:.5,y:.5}])[0];return{x:l.x+i*.012,y:l.y+i*.012}};
+const mkToks=(TL,MS)=>TL.map((t,i)=>({...t,...tokPos(MS,t.id,i)}));
+const tokDia=(t,W,pxft,sc)=>Math.max(W*.035*(t.mon?1.4:1),(t.mon?10:5)*pxft*sc);
+function drawToks(c,toks,ox,oy,mw,mh,pxft,sc,R,Ls,mode){
+  toks.forEach(t=>{
+    const im=t.im;if(!im||!im.complete||!im.naturalWidth)return;
+    const x=ox+t.x*mw,y=oy+t.y*mh,d=tokDia(t,c.canvas.width,pxft,sc),r=d/2;
+    let f=1;if(mode!=='rev'){f=0;Ls.forEach(l=>{const u=Math.hypot(x-(ox+l.x*mw),y-(oy+l.y*mh))/R;f=Math.max(f,Math.min(1,Math.max(0,(1-u)/.45)))})}
+    const a=mode==='dm'?.55+.45*f:f;if(a<.02)return;
+    const s=Math.min(im.naturalWidth,im.naturalHeight),sx=(im.naturalWidth-s)/2;
+    c.save();c.globalAlpha=a;c.beginPath();c.arc(x,y,r,0,7);c.clip();c.drawImage(im,sx,0,s,s,x-r,y-r,d,d);c.restore();
+    c.save();c.globalAlpha=a;c.beginPath();c.arc(x,y,r,0,7);c.lineWidth=Math.max(2,r*.12);c.strokeStyle=t.mon?'#b3472b':'#d4a84b';c.stroke();c.restore();
+  });
+}
 function makeRenderer(cv){
   const ctx=cv.getContext('2d'),fog=document.createElement('canvas'),fx=fog.getContext('2d'),ex=document.createElement('canvas'),ec=ex.getContext('2d');
   let key='',last=null;
   const soft=(c,x,y,R,col)=>{const g=c.createRadialGradient(x,y,0,x,y,R);g.addColorStop(0,col+'1)');g.addColorStop(.55,col+'1)');g.addColorStop(1,col+'0)');c.fillStyle=g;c.beginPath();c.arc(x,y,R,0,7);c.fill()};
-  return(MO,MS,v,fa)=>{
+  return(MO,MS,v,fa,toks=[])=>{
     const W=cv.width,H=cv.height;ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);if(!MO||W<2)return;
     const m=MO.meta,pxft=m.w/((MS.sq||30)*5),sc=(W/v.ft)/pxft,mw=m.w*sc,mh=m.h*sc,ox=W/2-v.x*mw,oy=H/2-v.y*mh;
     ctx.drawImage(MO.canvas,ox,oy,mw,mh);
-    if(MS.rev)return;
+    const Ls=MS.lights||[{x:.5,y:.5}];if(MS.rev){drawToks(ctx,toks,ox,oy,mw,mh,pxft,sc,(MS.lft||30)*pxft*sc,Ls,'rev');return}
     const lf=MS.lft||30,R=lf*pxft*sc,es=Math.min(1,1024/Math.max(m.w,m.h));
     if(MO!==last){last=MO;key=''}
     const k=[MS.sq,lf,MS.ex].join('|');
@@ -227,7 +247,7 @@ function makeRenderer(cv){
     fx.globalCompositeOperation='source-over';fx.fillStyle='#000';fx.fillRect(0,0,W,H);fx.globalCompositeOperation='destination-out';
     fx.globalAlpha=.55;fx.drawImage(ex,ox,oy,mw,mh);fx.globalAlpha=1;
     (MS.lights||[{x:.5,y:.5}]).forEach(l=>soft(fx,ox+l.x*mw,oy+l.y*mh,R,'rgba(0,0,0,'));
-    ctx.globalAlpha=fa;ctx.drawImage(fog,0,0);ctx.globalAlpha=1;
+    ctx.globalAlpha=fa;ctx.drawImage(fog,0,0);ctx.globalAlpha=1;drawToks(ctx,toks,ox,oy,mw,mh,pxft,sc,R,Ls,fa<1?'dm':'show');
   };
 }
 async function prepMap(file){
@@ -261,20 +281,17 @@ function dm(code){
   let live={},imgs=[],qs=[],edit=null,MO=null,MS={},view={x:.5,y:.5,ft:60},mode=null,tmr=0,dirty=false;
   const link=location.origin+location.pathname+'#display/'+code;
   app.innerHTML=`<div class="wrap"><h1>The Arcane Table</h1>
-  <div class="panel"><h2>Table controls</h2><div class="row">
+  <details class="panel" id="d-ctl" open><summary><h2>Controls</h2></summary><div class="row">
   <button class="btn" id="bt" data-a="board">Show the quest board</button>
-  <button class="btn" data-a="black">Dim the scene</button><button class="btn alt" data-a="clear">Clear all tokens</button>
+  <button class="btn" data-a="black">Remove background</button><button class="btn alt" data-a="clear">Clear all tokens</button>
   <button class="btn alt" data-a="home">Change session</button></div>
-  <p class="note">Player display link for the tablet:</p><input id="lnk" readonly value="${esc(link)}" style="width:100%"></div>
-  <details class="panel" id="d-q" open><summary><h2>Quests <span id="cq"></span></h2></summary>
-  <input id="qt" placeholder="Quest title" style="width:100%;margin-bottom:8px"><textarea id="qx" rows="3" placeholder="Quest text"></textarea>
-  <div class="row" style="margin:8px 0"><button class="btn" id="qb" data-a="qsave">Add quest</button></div>
-  <p class="note">New quests are pinned to the board right away. Unpin one to hide it from the players.</p><div id="qs"></div></details>
+  <p class="note">Player display link for the tablet:</p><input id="lnk" readonly value="${esc(link)}" style="width:100%"></details>
   <details class="panel" id="d-up" open><summary><h2>Add to the library</h2></summary><div class="row">
   <select id="type"><option value="background">Background</option><option value="npc">NPC portrait</option><option value="monster">Monster token</option><option value="map">Map</option></select>
   <input id="nm" placeholder="Name (optional)"><input id="file" type="file" accept="image/*" multiple>
   <button class="btn" data-a="up">Add image</button></div><p class="note" id="msg">Several files at once keep their file names. Rename any image later with the pencil on its tile.</p></details>
-  <details class="panel" id="d-map" open><summary><h2>Map table</h2></summary>
+  <details class="panel" id="d-map" open><summary><h2>Maps <span id="cmp"></span></h2></summary>
+  <div class="grid" id="mps" style="margin-bottom:12px"></div>
   <canvas id="mc"></canvas>
   <div class="row" style="margin-top:10px"><button class="btn" id="mshow" data-a="mshow">Show map on tablet</button>
   <button class="btn sm alt" data-a="mlight">Add light</button><button class="btn sm alt" data-a="mrm">Remove light</button><button class="btn sm alt" data-a="mreset">Reset explored</button></div>
@@ -285,7 +302,10 @@ function dm(code){
   <details class="panel" id="d-bg" open><summary><h2>Backgrounds <span id="cb"></span></h2></summary><div class="grid" id="bgs"></div></details>
   <details class="panel" id="d-np" open><summary><h2>NPCs <span id="cn"></span></h2></summary><div class="grid" id="nps"></div></details>
   <details class="panel" id="d-mo" open><summary><h2>Monsters <span id="cm"></span></h2></summary><div class="grid" id="mos"></div></details>
-  <details class="panel" id="d-mp" open><summary><h2>Maps <span id="cmp"></span></h2></summary><div class="grid" id="mps"></div></details></div>`;
+  <details class="panel" id="d-q" open><summary><h2>Quests <span id="cq"></span></h2></summary>
+  <input id="qt" placeholder="Quest title" style="width:100%;margin-bottom:8px"><textarea id="qx" rows="3" placeholder="Quest text"></textarea>
+  <div class="row" style="margin:8px 0"><button class="btn" id="qb" data-a="qsave">Add quest</button></div>
+  <p class="note">New quests are pinned to the board right away. Unpin one to hide it from the players.</p><div id="qs"></div></details></div>`;
   document.querySelectorAll('details[id]').forEach(el=>{const k='open-'+el.id,v=localStorage.getItem(k);if(v!==null)el.open=v==='1';el.addEventListener('toggle',()=>localStorage.setItem(k,el.open?'1':'0'))});
   const draw=()=>{
     const tile=(i,on,a)=>`<div class="tile ${on?'on':''} ${a==='npc'?'npc':''} ${i.type==='monster'?'mon':''}" tabindex="0" data-a="${a}" data-id="${i.id}"><img src="${i.data}" alt=""><span>${esc(i.name)}</span><i data-a="ren" data-id="${i.id}" title="Rename">✎</i><b data-a="del" data-id="${i.id}" title="Delete">×</b></div>`;
@@ -303,6 +323,7 @@ function dm(code){
   };
   const mc=$('#mc'),R2=makeRenderer(mc),ptr=new Map();let pinch=0;const lastT={};
   const mw=watchMap(code,(o,s)=>{MO=o;MS=s;syncIn();drawMap()});unsubs.push(()=>mw.stop());
+  const dmToks=()=>(live.visibleNpcIds||[]).map(id=>imgs.find(x=>x.id===id)).filter(Boolean).map(x=>({id:x.id,mon:x.type==='monster',im:tokImg(x.id,x.data,drawMap)}));
   const sqv=()=>MS.sq||30,lf=()=>MS.lft||30,lights=()=>MS.lights||[{x:.5,y:.5}];
   const cam=()=>{const m=MO.meta,pxft=m.w/(sqv()*5),sc=(mc.width/view.ft)/pxft;return{m,sc,ox:mc.width/2-view.x*m.w*sc,oy:mc.height/2-view.y*m.h*sc}};
   const syncIn=()=>{const f=(id,v)=>{const e=$(id);if(e&&document.activeElement!==e)e.value=v};f('#msq',sqv());f('#mft',lf());const r=$('#mrev');if(r)r.checked=!!MS.rev};
@@ -311,11 +332,11 @@ function dm(code){
     if(w<2)return;if(mc.width!==w||mc.height!==h){mc.width=w;mc.height=h}
     const x=mc.getContext('2d');
     if(!MO){x.fillStyle='#000';x.fillRect(0,0,w,h);x.fillStyle='#d4a84b';x.font=(16*d)+'px Cinzel,serif';x.textAlign='center';x.fillText('Tap a map in the Maps list',w/2,h/2);return}
-    R2(MO,MS,view,.62);const c=cam();
+    R2(MO,MS,view,.62,mkToks(dmToks(),MS));const c=cam();
     lights().forEach(l=>{x.beginPath();x.arc(c.ox+l.x*c.m.w*c.sc,c.oy+l.y*c.m.h*c.sc,12*d,0,7);x.fillStyle='#9a78ff';x.fill();x.lineWidth=3*d;x.strokeStyle='#fff';x.stroke()});
   }
   const saveM=o=>mw.id&&setDoc(doc(db,'sessions',code,'maps',mw.id),o,{merge:true});
-  const flush=()=>{clearTimeout(tmr);tmr=0;set({mapView:{x:+view.x.toFixed(4),y:+view.y.toFixed(4),ft:+view.ft.toFixed(1)}});if(dirty){saveM({lights:MS.lights||lights(),ex:MS.ex||''});dirty=false}};
+  const flush=()=>{clearTimeout(tmr);tmr=0;set({mapView:{x:+view.x.toFixed(4),y:+view.y.toFixed(4),ft:+view.ft.toFixed(1)}});if(dirty){saveM({lights:MS.lights||lights(),ex:MS.ex||'',tk:MS.tk||{}});dirty=false}};
   const push=()=>{if(!tmr)tmr=setTimeout(flush,350)};
   const addEx=l=>{let e=MS.ex||'';if(e.length>30000)e=e.split(';').filter((_,k)=>k%2).join(';');MS.ex=(e?e+';':'')+l.x.toFixed(4)+','+l.y.toFixed(4)};
   const far=(a,b)=>!b||Math.hypot((a.x-b.x)*MO.meta.w,(a.y-b.y)*MO.meta.h)/(MO.meta.w/(sqv()*5))>=lf()/4;
@@ -323,9 +344,11 @@ function dm(code){
   mc.onpointerdown=e=>{if(!MO)return;mc.setPointerCapture(e.pointerId);const p=P(e);ptr.set(e.pointerId,p);
     if(ptr.size>1){pinch=0;mode={pinch:1};return}
     const c=cam(),k=30*mc.width/mc.clientWidth,i=lights().findIndex(l=>Math.hypot(c.ox+l.x*c.m.w*c.sc-p.x,c.oy+l.y*c.m.h*c.sc-p.y)<k);
-    mode=i>=0?{light:i}:{pan:1};if(i>=0)lastT[i]={...lights()[i]}};
+    const pf=c.m.w/(sqv()*5),tk=mkToks(dmToks(),MS).reverse().find(t=>Math.hypot(c.ox+t.x*c.m.w*c.sc-p.x,c.oy+t.y*c.m.h*c.sc-p.y)<tokDia(t,mc.width,pf,c.sc)/2+6);
+    mode=tk?{tok:tk.id}:i>=0?{light:i}:{pan:1};if(!tk&&i>=0)lastT[i]={...lights()[i]}};
   mc.onpointermove=e=>{if(!ptr.has(e.pointerId)||!MO)return;const p=P(e),pv=ptr.get(e.pointerId);ptr.set(e.pointerId,p);const c=cam();
     if(ptr.size>1){const[a,b]=[...ptr.values()],dd=Math.hypot(a.x-b.x,a.y-b.y);if(pinch)view.ft=Math.min(sqv()*6,Math.max(15,view.ft*pinch/dd));pinch=dd}
+    else if(mode&&mode.tok){MS.tk={...(MS.tk||{}),[mode.tok]:{x:Math.min(1,Math.max(0,(p.x-c.ox)/(c.m.w*c.sc))),y:Math.min(1,Math.max(0,(p.y-c.oy)/(c.m.h*c.sc)))}};dirty=true}
     else if(mode&&mode.light!=null){const L=lights().map(l=>({...l})),l=L[mode.light];
       l.x=Math.min(1,Math.max(0,(p.x-c.ox)/(c.m.w*c.sc)));l.y=Math.min(1,Math.max(0,(p.y-c.oy)/(c.m.h*c.sc)));MS.lights=L;
       if(far(l,lastT[mode.light])){addEx(l);lastT[mode.light]={...l}}dirty=true}
@@ -343,7 +366,8 @@ function dm(code){
   const set=o=>setDoc(L,o,{merge:true});
   app.onclick=async e=>{
     const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,id=t.dataset.id;
-    if(a==='bg')set({backgroundId:id});
+    if(a==='bg')set({backgroundId:live.backgroundId===id?null:id});
+    if(a==='npc'&&MO&&live.showMap&&!(live.visibleNpcIds||[]).includes(id)){MS.tk={...(MS.tk||{}),[id]:{x:view.x,y:view.y}};dirty=true;flush()}
     if(a==='npc')set({visibleNpcIds:(live.visibleNpcIds||[]).includes(id)?arrayRemove(id):arrayUnion(id)});
     if(a==='black')set({backgroundId:null});
     if(a==='clear')set({visibleNpcIds:[]});
