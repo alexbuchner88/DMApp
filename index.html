@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;700&family=IM+Fell+English&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;700&family=IM+Fell+English&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{--oak:#2a170d;--oak2:#4a2c18;--gold:#d4a84b;--gold2:#8a6a24;--parch:#eadcb4;--ink:#2b1c10;--arc:#9a78ff;--ember:#b3472b}
 *{box-sizing:border-box}
@@ -59,7 +59,7 @@ input,select{font:inherit;font-size:17px;padding:9px 10px;border:2px solid var(-
 .frame{position:absolute;inset:0;pointer-events:none;border:clamp(10px,2.2vmin,26px) solid var(--oak2);border-image:repeating-linear-gradient(90deg,#4a2c18 0 30px,#3a2012 30px 33px) 30;box-shadow:inset 0 0 0 3px var(--gold2),inset 0 0 80px #000b}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-body{background:url(board.jpg) center/cover fixed #2a170d}
+body{background:url(board.jpg) center/cover fixed #000}
 body::before,body::after{display:none}
 textarea{font:inherit;font-size:17px;padding:9px 10px;border:2px solid var(--gold2);border-radius:4px;background:#f6edcf;color:var(--ink);width:100%;resize:vertical}
 textarea:focus-visible{outline:3px solid var(--arc);outline-offset:2px}
@@ -87,6 +87,19 @@ details[open]>summary h2::before{transform:rotate(90deg)}
 .paper.done{opacity:.72}
 .paper.done h3{text-decoration:line-through}
 .paper.done::after{content:"Completed";position:absolute;right:6%;bottom:8%;transform:rotate(-12deg);font:700 1.1em Cinzel,serif;color:#8c2a12;border:3px solid #8c2a12;padding:.1em .5em;border-radius:4px}
+
+#stage{background:#000}
+#papers{display:flex;flex-wrap:wrap;justify-content:center;align-content:center;align-items:center;gap:3vmin}
+.paper{flex:0 0 min(calc((100% - (var(--per,1) - 1)*3vmin)/var(--per,1)),36vh);aspect-ratio:1;overflow:hidden;font-family:Caveat,'Segoe Script','Comic Sans MS',cursive;font-size:clamp(17px,3.4vmin,32px);padding:4.2vmin 2.4vmin 2vmin}
+.paper h3{font:700 1.25em Caveat,'Segoe Script','Comic Sans MS',cursive;margin:0 0 .15em;color:#3a2210;line-height:1.05}
+.paper p{line-height:1.1}
+.paper.done::after{font:700 1.2em Caveat,cursive}
+.pin{top:1vmin;width:2.8vmin;height:2.8vmin;margin-left:-1.4vmin;border-radius:48% 52% 50% 50%/52% 48% 52% 48%;background:radial-gradient(circle at 32% 28%,#e0a36a 0 9%,transparent 24%),radial-gradient(circle at 72% 68%,#4a2010 0 12%,transparent 34%),radial-gradient(circle,#9a5428 0 45%,#6b3416 70%,#2e160a 100%);box-shadow:.35vmin .6vmin .5vmin #0009,inset 0 0 0 .22vmin #2a140a}
+#npcs figure.mon{width:min(36vmin,340px)}
+#npcs figure.mon img{border-color:#b3472b;box-shadow:0 0 0 3px var(--oak),0 8px 24px #000c,0 0 40px #b3472b66}
+#stage.solo #npcs figure.mon{width:min(76vmin,calc(1.3*((100vw - 16vmin)/var(--n) - 3vmin)))}
+.tile.mon{border-color:#b3472b}
+.tile.mon.on{border-color:var(--arc)}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -128,7 +141,7 @@ function home(){
 
 async function display(code){
   app.onclick=null;
-  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="npcs"></div><div id="board"><div id="papers"></div></div><div class="frame"></div></div>';
+  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="npcs"></div><div id="board"><div id="papers"></div></div></div>';
   try{navigator.wakeLock&&navigator.wakeLock.request('screen')}catch(e){}
   const cache=new Map();
   const get=async id=>{if(!id)return{};if(!cache.has(id)){const s=await getDoc(doc(db,'sessions',code,'images',id));cache.set(id,s.exists()?s.data():{})}return cache.get(id)};
@@ -145,9 +158,9 @@ async function display(code){
     st.classList.toggle('empty',!board&&!b.data&&!n.length);
     $('#bg').style.backgroundImage=b.data?`url(${b.data})`:'';
     $('#idle').style.opacity=!board&&!b.data?1:0;
-    $('#npcs').style.setProperty('--n',Math.max(1,n.length));
-    $('#npcs').innerHTML=n.map(x=>`<figure><img src="${x.data}" alt=""><figcaption>${esc(x.name)}</figcaption></figure>`).join('');
-    $('#papers').style.setProperty('--c',posted.length<=3?Math.max(1,posted.length):posted.length<=8?4:5);
+    $('#npcs').style.setProperty('--n',Math.max(1,n.reduce((a,x)=>a+(x.type==='monster'?1.3:1),0)));
+    $('#npcs').innerHTML=n.map(x=>x.type==='monster'?`<figure class="mon"><img src="${x.data}" alt=""></figure>`:`<figure><img src="${x.data}" alt=""><figcaption>${esc(x.name)}</figcaption></figure>`).join('');
+    $('#papers').style.setProperty('--per',posted.length<=3?Math.max(1,posted.length):posted.length===4?2:3);
     $('#papers').innerHTML=posted.map(q=>`<article class="paper ${q.done?'done':''}" style="--r:${rot(q.id)}"><i class="pin"></i><h3>${esc(q.title||'')}</h3><p>${esc(q.text||'')}</p></article>`).join('');
   };
   unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};paint()}));
@@ -170,7 +183,7 @@ function dm(code){
   app.innerHTML=`<div class="wrap"><h1>The Arcane Table</h1>
   <div class="panel"><h2>Table controls</h2><div class="row">
   <button class="btn" id="bt" data-a="board">Show the quest board</button>
-  <button class="btn" data-a="black">Dim the scene</button><button class="btn alt" data-a="clear">Send all NPCs away</button>
+  <button class="btn" data-a="black">Dim the scene</button><button class="btn alt" data-a="clear">Clear all tokens</button>
   <button class="btn alt" data-a="home">Change session</button></div>
   <p class="note">Player display link for the tablet:</p><input id="lnk" readonly value="${esc(link)}" style="width:100%"></div>
   <details class="panel" id="d-q" open><summary><h2>Quests <span id="cq"></span></h2></summary>
@@ -178,17 +191,20 @@ function dm(code){
   <div class="row" style="margin:8px 0"><button class="btn" id="qb" data-a="qsave">Add quest</button></div>
   <p class="note">New quests are pinned to the board right away. Unpin one to hide it from the players.</p><div id="qs"></div></details>
   <details class="panel" id="d-up" open><summary><h2>Add to the library</h2></summary><div class="row">
-  <select id="type"><option value="background">Background</option><option value="npc">NPC portrait</option></select>
+  <select id="type"><option value="background">Background</option><option value="npc">NPC portrait</option><option value="monster">Monster token</option></select>
   <input id="nm" placeholder="Name (optional)"><input id="file" type="file" accept="image/*" multiple>
   <button class="btn" data-a="up">Add image</button></div><p class="note" id="msg">Several files at once keep their file names. Rename any image later with the pencil on its tile.</p></details>
   <details class="panel" id="d-bg" open><summary><h2>Backgrounds <span id="cb"></span></h2></summary><div class="grid" id="bgs"></div></details>
-  <details class="panel" id="d-np" open><summary><h2>NPCs <span id="cn"></span></h2></summary><div class="grid" id="nps"></div></details></div>`;
+  <details class="panel" id="d-np" open><summary><h2>NPCs <span id="cn"></span></h2></summary><div class="grid" id="nps"></div></details>
+  <details class="panel" id="d-mo" open><summary><h2>Monsters <span id="cm"></span></h2></summary><div class="grid" id="mos"></div></details></div>`;
   document.querySelectorAll('details[id]').forEach(el=>{const k='open-'+el.id,v=localStorage.getItem(k);if(v!==null)el.open=v==='1';el.addEventListener('toggle',()=>localStorage.setItem(k,el.open?'1':'0'))});
   const draw=()=>{
-    const tile=(i,on,a)=>`<div class="tile ${on?'on':''} ${a==='npc'?'npc':''}" tabindex="0" data-a="${a}" data-id="${i.id}"><img src="${i.data}" alt=""><span>${esc(i.name)}</span><i data-a="ren" data-id="${i.id}" title="Rename">✎</i><b data-a="del" data-id="${i.id}" title="Delete">×</b></div>`;
-    const bg=imgs.filter(i=>i.type==='background'),np=imgs.filter(i=>i.type==='npc');
+    const tile=(i,on,a)=>`<div class="tile ${on?'on':''} ${a==='npc'?'npc':''} ${i.type==='monster'?'mon':''}" tabindex="0" data-a="${a}" data-id="${i.id}"><img src="${i.data}" alt=""><span>${esc(i.name)}</span><i data-a="ren" data-id="${i.id}" title="Rename">✎</i><b data-a="del" data-id="${i.id}" title="Delete">×</b></div>`;
+    const bg=imgs.filter(i=>i.type==='background'),np=imgs.filter(i=>i.type==='npc'),mo=imgs.filter(i=>i.type==='monster');
     $('#bgs').innerHTML=bg.map(i=>tile(i,live.backgroundId===i.id,'bg')).join('')||'<p class="note">No backgrounds yet.</p>';
     $('#nps').innerHTML=np.map(i=>tile(i,(live.visibleNpcIds||[]).includes(i.id),'npc')).join('')||'<p class="note">No NPCs yet.</p>';
+    $('#mos').innerHTML=mo.map(i=>tile(i,(live.visibleNpcIds||[]).includes(i.id),'npc')).join('')||'<p class="note">No monsters yet.</p>';
+    $('#cm').textContent='('+mo.length+')';
     $('#cb').textContent='('+bg.length+')';$('#cn').textContent='('+np.length+')';$('#cq').textContent='('+qs.length+')';
     $('#bt').textContent=live.showBoard?'Hide the quest board':'Show the quest board';
     const qb=(a,id,t,alt)=>`<button class="btn sm ${alt?'alt':''}" data-a="${a}" data-id="${id}">${t}</button>`;
@@ -223,7 +239,7 @@ function dm(code){
       if(!files.length){msg.className='note err';msg.textContent='Choose at least one image first.';return}
       for(const f of files){
         try{msg.className='note';msg.textContent='Preparing '+f.name+'...';
-          const data=await shrink(f,type==='npc'?640:1920);
+          const data=await shrink(f,type==='background'?1920:type==='monster'?900:640);
           const name=(files.length===1&&$('#nm').value.trim())||f.name.replace(/\.[^.]+$/,'');
           await setDoc(doc(IM),{name,type,data,created:Date.now()});
           msg.textContent='Added '+name+'.';
