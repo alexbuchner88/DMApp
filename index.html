@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;700&family=IM+Fell+English&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;700&family=IM+Fell+English&family=MedievalSharp&family=Almendra:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{--oak:#2a170d;--oak2:#4a2c18;--gold:#d4a84b;--gold2:#8a6a24;--parch:#eadcb4;--ink:#2b1c10;--arc:#9a78ff;--ember:#b3472b}
 *{box-sizing:border-box}
@@ -100,6 +100,17 @@ details[open]>summary h2::before{transform:rotate(90deg)}
 #stage.solo #npcs figure.mon{width:min(76vmin,calc(1.3*((100vw - 16vmin)/var(--n) - 3vmin)))}
 .tile.mon{border-color:#b3472b}
 .tile.mon.on{border-color:var(--arc)}
+
+#papers{gap:2vmin}
+.paper{flex:0 0 min(calc((100% - (var(--per,1) - 1)*2vmin)/var(--per,1)),var(--cap,30vh));aspect-ratio:589/700;background:url(paper.webp) center/100% 100% no-repeat;box-shadow:none;filter:drop-shadow(0 .5vmin .8vmin #000b);padding:17% 13% 12%;font-family:Almendra,'IM Fell English',Georgia,serif;font-size:var(--fs,2.4vmin)}
+.paper h3{font:400 1.25em MedievalSharp,Almendra,Georgia,serif;color:#3a2210;margin:0 0 .3em;line-height:1.1}
+.paper p{line-height:1.2}
+.paper.done::after{font:400 1.2em MedievalSharp,Georgia,serif}
+
+#mapc{position:absolute;inset:0;width:100%;height:100%;opacity:0;pointer-events:none;transition:opacity .6s}
+#stage.map #mapc{opacity:1}
+#mc{display:block;width:100%;aspect-ratio:16/10;max-height:70vh;background:#000;border:3px solid var(--gold2);border-radius:4px;touch-action:none}
+label{font-family:Cinzel,Georgia,serif;font-size:15px}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -141,30 +152,99 @@ function home(){
 
 async function display(code){
   app.onclick=null;
-  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="npcs"></div><div id="board"><div id="papers"></div></div></div>';
+  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="npcs"></div><canvas id="mapc"></canvas><div id="board"><div id="papers"></div></div></div>';
   try{navigator.wakeLock&&navigator.wakeLock.request('screen')}catch(e){}
   const cache=new Map();
   const get=async id=>{if(!id)return{};if(!cache.has(id)){const s=await getDoc(doc(db,'sessions',code,'images',id));cache.set(id,s.exists()?s.data():{})}return cache.get(id)};
   let d={},qs=[],seq=0;
+  const cv=$('#mapc'),RM=makeRenderer(cv);let MO=null,MS={},tg=null,cur=null,raf=0,curId=null;
+  const stepM=()=>{raf=0;if(!MO||!tg)return;if(!cur)cur={...tg};const k=.25;cur.x+=(tg.x-cur.x)*k;cur.y+=(tg.y-cur.y)*k;cur.ft+=(tg.ft-cur.ft)*k;RM(MO,MS,cur,1);
+    if(Math.abs(tg.x-cur.x)>2e-4||Math.abs(tg.y-cur.y)>2e-4||Math.abs(tg.ft-cur.ft)>.02)raf=requestAnimationFrame(stepM)};
+  const kick=()=>{if(!raf)raf=requestAnimationFrame(stepM)};
+  const mw=watchMap(code,(o,s)=>{MO=o;MS=s;kick()});unsubs.push(()=>mw.stop());
+  const fit=()=>{const r=Math.min(devicePixelRatio||1,1.5);cv.width=Math.round(cv.clientWidth*r);cv.height=Math.round(cv.clientHeight*r);kick()};
+  fit();addEventListener('resize',fit);unsubs.push(()=>removeEventListener('resize',fit));
   const rot=id=>{let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))%7;return h-3};
   const paint=async()=>{
-    const my=++seq,board=!!d.showBoard;
-    const b=board?{}:await get(d.backgroundId);
-    const n=board?[]:(await Promise.all((d.visibleNpcIds||[]).map(get))).filter(x=>x.data);
+    const my=++seq,board=!!d.showBoard,mapOn=!board&&!!d.showMap&&!!d.mapId;
+    const b=board||mapOn?{}:await get(d.backgroundId);
+    const n=board||mapOn?[]:(await Promise.all((d.visibleNpcIds||[]).map(get))).filter(x=>x.data);
     if(my!==seq)return;
     const posted=qs.filter(q=>q.posted),st=$('#stage');
     st.classList.toggle('board',board);
     st.classList.toggle('solo',!b.data);
-    st.classList.toggle('empty',!board&&!b.data&&!n.length);
+    st.classList.toggle('empty',!board&&!mapOn&&!b.data&&!n.length);st.classList.toggle('map',mapOn);mw.set(mapOn?d.mapId:null);
+    if(mapOn&&d.mapView){if(curId!==d.mapId)cur=null;curId=d.mapId;tg={...d.mapView};kick()}if(!mapOn){curId=null;cur=null}
     $('#bg').style.backgroundImage=b.data?`url(${b.data})`:'';
-    $('#idle').style.opacity=!board&&!b.data?1:0;
+    $('#idle').style.opacity=!board&&!mapOn&&!b.data?1:0;
     $('#npcs').style.setProperty('--n',Math.max(1,n.reduce((a,x)=>a+(x.type==='monster'?1.3:1),0)));
     $('#npcs').innerHTML=n.map(x=>x.type==='monster'?`<figure class="mon"><img src="${x.data}" alt=""></figure>`:`<figure><img src="${x.data}" alt=""><figcaption>${esc(x.name)}</figcaption></figure>`).join('');
     $('#papers').style.setProperty('--per',posted.length<=3?Math.max(1,posted.length):posted.length===4?2:3);
+    $('#papers').style.setProperty('--cap',posted.length<=3?'40vh':'30vh');$('#papers').style.setProperty('--fs',posted.length<=3?'3vmin':'2.4vmin');
     $('#papers').innerHTML=posted.map(q=>`<article class="paper ${q.done?'done':''}" style="--r:${rot(q.id)}"><i class="pin"></i><h3>${esc(q.title||'')}</h3><p>${esc(q.text||'')}</p></article>`).join('');
   };
   unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};paint()}));
   unsubs.push(onSnapshot(collection(db,'sessions',code,'quests'),s=>{qs=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>a.created-b.created);paint()}));
+}
+
+const mapCache=new Map();
+function loadMap(code,id){
+  if(!mapCache.has(id))mapCache.set(id,(async()=>{
+    const m=(await getDoc(doc(db,'sessions',code,'images',id))).data();if(!m)return null;
+    const c=document.createElement('canvas');c.width=m.w;c.height=m.h;
+    const x=c.getContext('2d'),tw=Math.ceil(m.w/m.cols),th=Math.ceil(m.h/m.rows);
+    await Promise.all(Array.from({length:m.cols*m.rows},async(_,i)=>{
+      const t=(await getDoc(doc(db,'sessions',code,'images',id,'tiles',String(i)))).data();if(!t)return;
+      const im=new Image();im.src=t.data;await im.decode();x.drawImage(im,(i%m.cols)*tw,Math.floor(i/m.cols)*th)}));
+    return{meta:m,canvas:c};
+  })().catch(e=>{mapCache.delete(id);throw e}));
+  return mapCache.get(id);
+}
+function watchMap(code,cb){
+  let id=null,unsub=null,MO=null,MS={};
+  return{
+    set(nid){if(nid===id)return;unsub&&unsub();unsub=null;id=nid;MO=null;MS={};cb(MO,MS);if(!nid)return;
+      unsub=onSnapshot(doc(db,'sessions',code,'maps',nid),s=>{MS=s.data()||{};cb(MO,MS)});
+      loadMap(code,nid).then(o=>{if(id===nid){MO=o;cb(MO,MS)}}).catch(()=>{})},
+    stop(){unsub&&unsub()},
+    get id(){return id}};
+}
+function makeRenderer(cv){
+  const ctx=cv.getContext('2d'),fog=document.createElement('canvas'),fx=fog.getContext('2d'),ex=document.createElement('canvas'),ec=ex.getContext('2d');
+  let key='',last=null;
+  const soft=(c,x,y,R,col)=>{const g=c.createRadialGradient(x,y,0,x,y,R);g.addColorStop(0,col+'1)');g.addColorStop(.55,col+'1)');g.addColorStop(1,col+'0)');c.fillStyle=g;c.beginPath();c.arc(x,y,R,0,7);c.fill()};
+  return(MO,MS,v,fa)=>{
+    const W=cv.width,H=cv.height;ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);if(!MO||W<2)return;
+    const m=MO.meta,pxft=m.w/((MS.sq||30)*5),sc=(W/v.ft)/pxft,mw=m.w*sc,mh=m.h*sc,ox=W/2-v.x*mw,oy=H/2-v.y*mh;
+    ctx.drawImage(MO.canvas,ox,oy,mw,mh);
+    if(MS.rev)return;
+    const lf=MS.lft||30,R=lf*pxft*sc,es=Math.min(1,1024/Math.max(m.w,m.h));
+    if(MO!==last){last=MO;key=''}
+    const k=[MS.sq,lf,MS.ex].join('|');
+    if(k!==key){key=k;ex.width=Math.round(m.w*es);ex.height=Math.round(m.h*es);
+      (MS.ex||'').split(';').filter(Boolean).forEach(p=>{const[a,b]=p.split(',');soft(ec,a*ex.width,b*ex.height,lf*pxft*es,'rgba(255,255,255,')})}
+    if(fog.width!==W||fog.height!==H){fog.width=W;fog.height=H}
+    fx.globalCompositeOperation='source-over';fx.fillStyle='#000';fx.fillRect(0,0,W,H);fx.globalCompositeOperation='destination-out';
+    fx.globalAlpha=.55;fx.drawImage(ex,ox,oy,mw,mh);fx.globalAlpha=1;
+    (MS.lights||[{x:.5,y:.5}]).forEach(l=>soft(fx,ox+l.x*mw,oy+l.y*mh,R,'rgba(0,0,0,'));
+    ctx.globalAlpha=fa;ctx.drawImage(fog,0,0);ctx.globalAlpha=1;
+  };
+}
+async function prepMap(file){
+  const bm=await createImageBitmap(file),r=Math.min(1,3200/Math.max(bm.width,bm.height));
+  const w=Math.round(bm.width*r),h=Math.round(bm.height*r),cols=Math.ceil(w/1600),rows=Math.ceil(h/1600),tw=Math.ceil(w/cols),th=Math.ceil(h/rows);
+  const full=document.createElement('canvas');full.width=w;full.height=h;full.getContext('2d').drawImage(bm,0,0,w,h);
+  const tiles=[];
+  for(let i=0;i<cols*rows;i++){
+    const c=document.createElement('canvas');c.width=tw;c.height=th;
+    c.getContext('2d').drawImage(full,(i%cols)*tw,Math.floor(i/cols)*th,tw,th,0,0,tw,th);
+    let q=.8,u;do{u=c.toDataURL('image/webp',q);q-=.1}while(u.length>900000&&q>.2);
+    if(u.length>1000000)throw new Error('A map part is too detailed to store. Try a smaller image.');
+    tiles.push(u);
+  }
+  const t=document.createElement('canvas'),tr=Math.min(1,400/Math.max(w,h));t.width=Math.round(w*tr);t.height=Math.round(h*tr);
+  t.getContext('2d').drawImage(full,0,0,t.width,t.height);
+  return{w,h,cols,rows,tiles,thumb:t.toDataURL('image/webp',.7)};
 }
 
 async function shrink(file,max){
@@ -178,7 +258,7 @@ async function shrink(file,max){
 
 function dm(code){
   const L=doc(db,'sessions',code,'live','state'),IM=collection(db,'sessions',code,'images'),QC=collection(db,'sessions',code,'quests');
-  let live={},imgs=[],qs=[],edit=null;
+  let live={},imgs=[],qs=[],edit=null,MO=null,MS={},view={x:.5,y:.5,ft:60},mode=null,tmr=0,dirty=false;
   const link=location.origin+location.pathname+'#display/'+code;
   app.innerHTML=`<div class="wrap"><h1>The Arcane Table</h1>
   <div class="panel"><h2>Table controls</h2><div class="row">
@@ -191,26 +271,73 @@ function dm(code){
   <div class="row" style="margin:8px 0"><button class="btn" id="qb" data-a="qsave">Add quest</button></div>
   <p class="note">New quests are pinned to the board right away. Unpin one to hide it from the players.</p><div id="qs"></div></details>
   <details class="panel" id="d-up" open><summary><h2>Add to the library</h2></summary><div class="row">
-  <select id="type"><option value="background">Background</option><option value="npc">NPC portrait</option><option value="monster">Monster token</option></select>
+  <select id="type"><option value="background">Background</option><option value="npc">NPC portrait</option><option value="monster">Monster token</option><option value="map">Map</option></select>
   <input id="nm" placeholder="Name (optional)"><input id="file" type="file" accept="image/*" multiple>
   <button class="btn" data-a="up">Add image</button></div><p class="note" id="msg">Several files at once keep their file names. Rename any image later with the pencil on its tile.</p></details>
+  <details class="panel" id="d-map" open><summary><h2>Map table</h2></summary>
+  <canvas id="mc"></canvas>
+  <div class="row" style="margin-top:10px"><button class="btn" id="mshow" data-a="mshow">Show map on tablet</button>
+  <button class="btn sm alt" data-a="mlight">Add light</button><button class="btn sm alt" data-a="mrm">Remove light</button><button class="btn sm alt" data-a="mreset">Reset explored</button></div>
+  <div class="row" style="margin-top:10px"><label>Grid squares across <input id="msq" type="number" min="5" value="30" style="width:90px"></label>
+  <label>Light radius (ft) <input id="mft" type="number" min="5" value="30" style="width:90px"></label>
+  <label><input id="mrev" type="checkbox"> Reveal whole map</label></div>
+  <p class="note">Drag to pan. Pinch or use the mouse wheel to zoom. Drag a purple dot to move a light. Areas the light has passed stay dimly visible.</p></details>
   <details class="panel" id="d-bg" open><summary><h2>Backgrounds <span id="cb"></span></h2></summary><div class="grid" id="bgs"></div></details>
   <details class="panel" id="d-np" open><summary><h2>NPCs <span id="cn"></span></h2></summary><div class="grid" id="nps"></div></details>
-  <details class="panel" id="d-mo" open><summary><h2>Monsters <span id="cm"></span></h2></summary><div class="grid" id="mos"></div></details></div>`;
+  <details class="panel" id="d-mo" open><summary><h2>Monsters <span id="cm"></span></h2></summary><div class="grid" id="mos"></div></details>
+  <details class="panel" id="d-mp" open><summary><h2>Maps <span id="cmp"></span></h2></summary><div class="grid" id="mps"></div></details></div>`;
   document.querySelectorAll('details[id]').forEach(el=>{const k='open-'+el.id,v=localStorage.getItem(k);if(v!==null)el.open=v==='1';el.addEventListener('toggle',()=>localStorage.setItem(k,el.open?'1':'0'))});
   const draw=()=>{
     const tile=(i,on,a)=>`<div class="tile ${on?'on':''} ${a==='npc'?'npc':''} ${i.type==='monster'?'mon':''}" tabindex="0" data-a="${a}" data-id="${i.id}"><img src="${i.data}" alt=""><span>${esc(i.name)}</span><i data-a="ren" data-id="${i.id}" title="Rename">✎</i><b data-a="del" data-id="${i.id}" title="Delete">×</b></div>`;
-    const bg=imgs.filter(i=>i.type==='background'),np=imgs.filter(i=>i.type==='npc'),mo=imgs.filter(i=>i.type==='monster');
+    const bg=imgs.filter(i=>i.type==='background'),np=imgs.filter(i=>i.type==='npc'),mo=imgs.filter(i=>i.type==='monster'),mp=imgs.filter(i=>i.type==='map');
     $('#bgs').innerHTML=bg.map(i=>tile(i,live.backgroundId===i.id,'bg')).join('')||'<p class="note">No backgrounds yet.</p>';
     $('#nps').innerHTML=np.map(i=>tile(i,(live.visibleNpcIds||[]).includes(i.id),'npc')).join('')||'<p class="note">No NPCs yet.</p>';
     $('#mos').innerHTML=mo.map(i=>tile(i,(live.visibleNpcIds||[]).includes(i.id),'npc')).join('')||'<p class="note">No monsters yet.</p>';
     $('#cm').textContent='('+mo.length+')';
+    $('#mps').innerHTML=mp.map(i=>tile(i,live.mapId===i.id,'map')).join('')||'<p class="note">No maps yet.</p>';$('#cmp').textContent='('+mp.length+')';
     $('#cb').textContent='('+bg.length+')';$('#cn').textContent='('+np.length+')';$('#cq').textContent='('+qs.length+')';
     $('#bt').textContent=live.showBoard?'Hide the quest board':'Show the quest board';
+    $('#mshow').textContent=live.showMap?'Hide map on tablet':'Show map on tablet';
     const qb=(a,id,t,alt)=>`<button class="btn sm ${alt?'alt':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#qs').innerHTML=qs.map(q=>`<div class="qrow ${q.posted?'on':''}"><div class="qt"><b>${esc(q.title||'Untitled')}${q.done?' (done)':''}</b><p>${esc(q.text||'')}</p></div><div class="row">${qb('qpin',q.id,q.posted?'Unpin':'Pin to board')}${qb('qdone',q.id,q.done?'Reopen':'Done',1)}${qb('qedit',q.id,'Edit',1)}${qb('qdel',q.id,'Delete',1)}</div></div>`).join('')||'<p class="note">No quests yet.</p>';
   };
-  unsubs.push(onSnapshot(L,s=>{live=s.data()||{};draw()}));
+  const mc=$('#mc'),R2=makeRenderer(mc),ptr=new Map();let pinch=0;const lastT={};
+  const mw=watchMap(code,(o,s)=>{MO=o;MS=s;syncIn();drawMap()});unsubs.push(()=>mw.stop());
+  const sqv=()=>MS.sq||30,lf=()=>MS.lft||30,lights=()=>MS.lights||[{x:.5,y:.5}];
+  const cam=()=>{const m=MO.meta,pxft=m.w/(sqv()*5),sc=(mc.width/view.ft)/pxft;return{m,sc,ox:mc.width/2-view.x*m.w*sc,oy:mc.height/2-view.y*m.h*sc}};
+  const syncIn=()=>{const f=(id,v)=>{const e=$(id);if(e&&document.activeElement!==e)e.value=v};f('#msq',sqv());f('#mft',lf());const r=$('#mrev');if(r)r.checked=!!MS.rev};
+  function drawMap(){
+    const d=Math.min(devicePixelRatio||1,2),w=Math.round(mc.clientWidth*d),h=Math.round(mc.clientHeight*d);
+    if(w<2)return;if(mc.width!==w||mc.height!==h){mc.width=w;mc.height=h}
+    const x=mc.getContext('2d');
+    if(!MO){x.fillStyle='#000';x.fillRect(0,0,w,h);x.fillStyle='#d4a84b';x.font=(16*d)+'px Cinzel,serif';x.textAlign='center';x.fillText('Tap a map in the Maps list',w/2,h/2);return}
+    R2(MO,MS,view,.62);const c=cam();
+    lights().forEach(l=>{x.beginPath();x.arc(c.ox+l.x*c.m.w*c.sc,c.oy+l.y*c.m.h*c.sc,12*d,0,7);x.fillStyle='#9a78ff';x.fill();x.lineWidth=3*d;x.strokeStyle='#fff';x.stroke()});
+  }
+  const saveM=o=>mw.id&&setDoc(doc(db,'sessions',code,'maps',mw.id),o,{merge:true});
+  const flush=()=>{clearTimeout(tmr);tmr=0;set({mapView:{x:+view.x.toFixed(4),y:+view.y.toFixed(4),ft:+view.ft.toFixed(1)}});if(dirty){saveM({lights:MS.lights||lights(),ex:MS.ex||''});dirty=false}};
+  const push=()=>{if(!tmr)tmr=setTimeout(flush,350)};
+  const addEx=l=>{let e=MS.ex||'';if(e.length>30000)e=e.split(';').filter((_,k)=>k%2).join(';');MS.ex=(e?e+';':'')+l.x.toFixed(4)+','+l.y.toFixed(4)};
+  const far=(a,b)=>!b||Math.hypot((a.x-b.x)*MO.meta.w,(a.y-b.y)*MO.meta.h)/(MO.meta.w/(sqv()*5))>=lf()/4;
+  const P=e=>{const r=mc.getBoundingClientRect(),k=mc.width/r.width;return{x:(e.clientX-r.left)*k,y:(e.clientY-r.top)*k}};
+  mc.onpointerdown=e=>{if(!MO)return;mc.setPointerCapture(e.pointerId);const p=P(e);ptr.set(e.pointerId,p);
+    if(ptr.size>1){pinch=0;mode={pinch:1};return}
+    const c=cam(),k=30*mc.width/mc.clientWidth,i=lights().findIndex(l=>Math.hypot(c.ox+l.x*c.m.w*c.sc-p.x,c.oy+l.y*c.m.h*c.sc-p.y)<k);
+    mode=i>=0?{light:i}:{pan:1};if(i>=0)lastT[i]={...lights()[i]}};
+  mc.onpointermove=e=>{if(!ptr.has(e.pointerId)||!MO)return;const p=P(e),pv=ptr.get(e.pointerId);ptr.set(e.pointerId,p);const c=cam();
+    if(ptr.size>1){const[a,b]=[...ptr.values()],dd=Math.hypot(a.x-b.x,a.y-b.y);if(pinch)view.ft=Math.min(sqv()*6,Math.max(15,view.ft*pinch/dd));pinch=dd}
+    else if(mode&&mode.light!=null){const L=lights().map(l=>({...l})),l=L[mode.light];
+      l.x=Math.min(1,Math.max(0,(p.x-c.ox)/(c.m.w*c.sc)));l.y=Math.min(1,Math.max(0,(p.y-c.oy)/(c.m.h*c.sc)));MS.lights=L;
+      if(far(l,lastT[mode.light])){addEx(l);lastT[mode.light]={...l}}dirty=true}
+    else if(mode&&mode.pan){view.x=Math.min(1,Math.max(0,view.x-(p.x-pv.x)/(c.m.w*c.sc)));view.y=Math.min(1,Math.max(0,view.y-(p.y-pv.y)/(c.m.h*c.sc)))}
+    drawMap();push()};
+  mc.onpointerup=mc.onpointercancel=e=>{ptr.delete(e.pointerId);if(mode&&mode.light!=null&&MO){addEx(lights()[mode.light]);dirty=true}if(!ptr.size){mode=null;pinch=0;if(MO)flush()}};
+  mc.onwheel=e=>{e.preventDefault();if(!MO)return;view.ft=Math.min(sqv()*6,Math.max(15,view.ft*Math.exp(e.deltaY*.001)));drawMap();push()};
+  $('#msq').onchange=e=>saveM({sq:Math.max(5,+e.target.value||30)});
+  $('#mft').onchange=e=>saveM({lft:Math.max(5,+e.target.value||30)});
+  $('#mrev').onchange=e=>saveM({rev:e.target.checked});
+  $('#d-map').addEventListener('toggle',()=>drawMap());addEventListener('resize',drawMap);unsubs.push(()=>removeEventListener('resize',drawMap));
+  unsubs.push(onSnapshot(L,s=>{live=s.data()||{};mw.set(live.mapId||null);if(!ptr.size&&!tmr&&live.mapView)view={...live.mapView};draw();drawMap()}));
   unsubs.push(onSnapshot(IM,s=>{imgs=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.created-b.created);draw()}));
   unsubs.push(onSnapshot(QC,s=>{qs=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.created-b.created);draw()}));
   const set=o=>setDoc(L,o,{merge:true});
@@ -220,11 +347,18 @@ function dm(code){
     if(a==='npc')set({visibleNpcIds:(live.visibleNpcIds||[]).includes(id)?arrayRemove(id):arrayUnion(id)});
     if(a==='black')set({backgroundId:null});
     if(a==='clear')set({visibleNpcIds:[]});
-    if(a==='board')set({showBoard:!live.showBoard});
+    if(a==='map')set({mapId:id,mapView:{x:.5,y:.5,ft:60}});
+    if(a==='mshow'&&live.mapId)set({showMap:!live.showMap,...(!live.showMap?{showBoard:false}:{})});
+    if(a==='mlight'&&MO){const L=lights().map(l=>({...l})),n={x:view.x,y:view.y};L.push(n);MS.lights=L;addEx(n);dirty=true;flush();drawMap()}
+    if(a==='mrm'&&MO&&lights().length>1){MS.lights=lights().slice(0,-1);dirty=true;flush();drawMap()}
+    if(a==='mreset'&&MO){MS.lights=lights();MS.ex='';MS.lights.forEach(addEx);dirty=true;flush();drawMap()}
+    if(a==='board')set({showBoard:!live.showBoard,...(!live.showBoard?{showMap:false}:{})});
     if(a==='home'){location.hash='';}
     if(a==='ren'){const cur=imgs.find(x=>x.id===id),nn=prompt('New name',cur?cur.name:'');if(nn&&nn.trim())updateDoc(doc(IM,id),{name:nn.trim()})}
     if(a==='del'&&confirm('Delete this image from the library?')){
-      await set({visibleNpcIds:arrayRemove(id),...(live.backgroundId===id?{backgroundId:null}:{})});
+      const im=imgs.find(x=>x.id===id);
+      if(im&&im.type==='map'){for(let k=0;k<im.cols*im.rows;k++)await deleteDoc(doc(db,'sessions',code,'images',id,'tiles',String(k)));await deleteDoc(doc(db,'sessions',code,'maps',id));mapCache.delete(id)}
+      await set({visibleNpcIds:arrayRemove(id),...(live.backgroundId===id?{backgroundId:null}:{}),...(live.mapId===id?{mapId:null,showMap:false}:{})});
       await deleteDoc(doc(IM,id));}
     if(a==='qsave'){
       const title=$('#qt').value.trim(),text=$('#qx').value.trim();if(!title&&!text)return;
@@ -239,6 +373,9 @@ function dm(code){
       if(!files.length){msg.className='note err';msg.textContent='Choose at least one image first.';return}
       for(const f of files){
         try{msg.className='note';msg.textContent='Preparing '+f.name+'...';
+          if(type==='map'){const nm0=(files.length===1&&$('#nm').value.trim())||f.name.replace(/\.[^.]+$/,'');const M=await prepMap(f),ref=doc(IM);
+            for(let i=0;i<M.tiles.length;i++){msg.textContent='Saving map part '+(i+1)+' of '+M.tiles.length+'...';await setDoc(doc(db,'sessions',code,'images',ref.id,'tiles',String(i)),{data:M.tiles[i]})}
+            await setDoc(ref,{name:nm0,type:'map',data:M.thumb,w:M.w,h:M.h,cols:M.cols,rows:M.rows,created:Date.now()});msg.textContent='Added '+nm0+'.';continue}
           const data=await shrink(f,type==='background'?1920:type==='monster'?900:640);
           const name=(files.length===1&&$('#nm').value.trim())||f.name.replace(/\.[^.]+$/,'');
           await setDoc(doc(IM),{name,type,data,created:Date.now()});
