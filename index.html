@@ -58,6 +58,35 @@ input,select{font:inherit;font-size:17px;padding:9px 10px;border:2px solid var(-
 #npcs figcaption{margin-top:6px;padding:3px 10px;font:700 clamp(14px,2.4vmin,22px) Cinzel,serif;color:var(--gold);background:linear-gradient(#4a2c18,#2a170d);border:2px solid var(--gold2);border-radius:4px}
 .frame{position:absolute;inset:0;pointer-events:none;border:clamp(10px,2.2vmin,26px) solid var(--oak2);border-image:repeating-linear-gradient(90deg,#4a2c18 0 30px,#3a2012 30px 33px) 30;box-shadow:inset 0 0 0 3px var(--gold2),inset 0 0 80px #000b}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+body{background:url(board.jpg) center/cover fixed #2a170d}
+body::before,body::after{display:none}
+textarea{font:inherit;font-size:17px;padding:9px 10px;border:2px solid var(--gold2);border-radius:4px;background:#f6edcf;color:var(--ink);width:100%;resize:vertical}
+textarea:focus-visible{outline:3px solid var(--arc);outline-offset:2px}
+.btn.sm{padding:6px 12px;min-height:38px;font-size:14px}
+summary{cursor:pointer;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary h2{margin:0}
+summary h2::before{content:"▸";display:inline-block;margin-right:.45em;transition:transform .2s}
+details[open]>summary{margin-bottom:12px}
+details[open]>summary h2::before{transform:rotate(90deg)}
+.qrow{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;padding:10px;margin:8px 0;border:2px solid var(--gold2);border-radius:4px;background:#f6edcf99}
+.qrow.on{border-color:var(--arc);box-shadow:0 0 0 2px var(--arc)}
+.qrow p{margin:2px 0 0;white-space:pre-wrap;font-size:16px}
+.qrow .qt{flex:1 1 220px;min-width:0}
+.sigil{width:98vmin;transition:opacity .8s}
+#stage:not(.empty) .sigil{opacity:0}
+#stage.board .frame{display:none}
+#board{position:absolute;inset:0;background:url(board.jpg) center/100% 100% no-repeat;opacity:0;pointer-events:none;transition:opacity .6s}
+#stage.board #board{opacity:1}
+#papers{position:absolute;inset:9vh 8vw;display:grid;grid-template-columns:repeat(var(--c,1),1fr);gap:3vmin;align-content:center;align-items:start;overflow:hidden}
+.paper{position:relative;background:linear-gradient(#f4e8c6,#e2cf9c);color:#2b1c10;padding:3.4vmin 2.6vmin 2.4vmin;border-radius:2px;box-shadow:0 .6vmin 1.6vmin #000a,inset 0 0 4vmin #8a6a2455;transform:rotate(calc(var(--r)*1deg));font-size:clamp(13px,2.3vmin,26px);animation:rise .5s ease-out}
+.paper h3{font:700 1.15em Cinzel,serif;margin:0 0 .4em;color:#4a2c18}
+.paper p{margin:0;white-space:pre-wrap;line-height:1.35}
+.pin{position:absolute;top:.8vmin;left:50%;width:2.4vmin;height:2.4vmin;margin-left:-1.2vmin;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff9a85,#b3472b 60%,#5a1a0c);box-shadow:0 .4vmin .6vmin #0008}
+.paper.done{opacity:.72}
+.paper.done h3{text-decoration:line-through}
+.paper.done::after{content:"Completed";position:absolute;right:6%;bottom:8%;transform:rotate(-12deg);font:700 1.1em Cinzel,serif;color:#8c2a12;border:3px solid #8c2a12;padding:.1em .5em;border-radius:4px}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -99,18 +128,30 @@ function home(){
 
 async function display(code){
   app.onclick=null;
-  app.innerHTML='<div id="stage"><div id="bg"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="npcs"></div><div class="frame"></div></div>';
+  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="npcs"></div><div id="board"><div id="papers"></div></div><div class="frame"></div></div>';
   try{navigator.wakeLock&&navigator.wakeLock.request('screen')}catch(e){}
   const cache=new Map();
   const get=async id=>{if(!id)return{};if(!cache.has(id)){const s=await getDoc(doc(db,'sessions',code,'images',id));cache.set(id,s.exists()?s.data():{})}return cache.get(id)};
-  unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),async s=>{
-    const d=s.data()||{},b=await get(d.backgroundId);
+  let d={},qs=[],seq=0;
+  const rot=id=>{let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))%7;return h-3};
+  const paint=async()=>{
+    const my=++seq,board=!!d.showBoard;
+    const b=board?{}:await get(d.backgroundId);
+    const n=board?[]:(await Promise.all((d.visibleNpcIds||[]).map(get))).filter(x=>x.data);
+    if(my!==seq)return;
+    const posted=qs.filter(q=>q.posted),st=$('#stage');
+    st.classList.toggle('board',board);
+    st.classList.toggle('solo',!b.data);
+    st.classList.toggle('empty',!board&&!b.data&&!n.length);
     $('#bg').style.backgroundImage=b.data?`url(${b.data})`:'';
-    $('#idle').style.opacity=b.data?0:1;
-    const n=(await Promise.all((d.visibleNpcIds||[]).map(get))).filter(x=>x.data);
-    $('#stage').classList.toggle('solo',!b.data);$('#npcs').style.setProperty('--n',Math.max(1,n.length));
-    $('#npcs').innerHTML=n.filter(x=>x.data).map(x=>`<figure><img src="${x.data}" alt=""><figcaption>${esc(x.name)}</figcaption></figure>`).join('');
-  }));
+    $('#idle').style.opacity=!board&&!b.data?1:0;
+    $('#npcs').style.setProperty('--n',Math.max(1,n.length));
+    $('#npcs').innerHTML=n.map(x=>`<figure><img src="${x.data}" alt=""><figcaption>${esc(x.name)}</figcaption></figure>`).join('');
+    $('#papers').style.setProperty('--c',posted.length<=3?Math.max(1,posted.length):posted.length<=8?4:5);
+    $('#papers').innerHTML=posted.map(q=>`<article class="paper ${q.done?'done':''}" style="--r:${rot(q.id)}"><i class="pin"></i><h3>${esc(q.title||'')}</h3><p>${esc(q.text||'')}</p></article>`).join('');
+  };
+  unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};paint()}));
+  unsubs.push(onSnapshot(collection(db,'sessions',code,'quests'),s=>{qs=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>a.created-b.created);paint()}));
 }
 
 async function shrink(file,max){
@@ -123,27 +164,39 @@ async function shrink(file,max){
 }
 
 function dm(code){
-  const L=doc(db,'sessions',code,'live','state'),IM=collection(db,'sessions',code,'images');
-  let live={},imgs=[];
+  const L=doc(db,'sessions',code,'live','state'),IM=collection(db,'sessions',code,'images'),QC=collection(db,'sessions',code,'quests');
+  let live={},imgs=[],qs=[],edit=null;
   const link=location.origin+location.pathname+'#display/'+code;
   app.innerHTML=`<div class="wrap"><h1>The Arcane Table</h1>
   <div class="panel"><h2>Table controls</h2><div class="row">
+  <button class="btn" id="bt" data-a="board">Show the quest board</button>
   <button class="btn" data-a="black">Dim the scene</button><button class="btn alt" data-a="clear">Send all NPCs away</button>
   <button class="btn alt" data-a="home">Change session</button></div>
   <p class="note">Player display link for the tablet:</p><input id="lnk" readonly value="${esc(link)}" style="width:100%"></div>
-  <div class="panel"><h2>Add to the library</h2><div class="row">
+  <details class="panel" id="d-q" open><summary><h2>Quests <span id="cq"></span></h2></summary>
+  <input id="qt" placeholder="Quest title" style="width:100%;margin-bottom:8px"><textarea id="qx" rows="3" placeholder="Quest text"></textarea>
+  <div class="row" style="margin:8px 0"><button class="btn" id="qb" data-a="qsave">Add quest</button></div>
+  <p class="note">New quests are pinned to the board right away. Unpin one to hide it from the players.</p><div id="qs"></div></details>
+  <details class="panel" id="d-up" open><summary><h2>Add to the library</h2></summary><div class="row">
   <select id="type"><option value="background">Background</option><option value="npc">NPC portrait</option></select>
   <input id="nm" placeholder="Name (optional)"><input id="file" type="file" accept="image/*" multiple>
-  <button class="btn" data-a="up">Add image</button></div><p class="note" id="msg">Several files at once keep their file names. Rename any image later with the pencil on its tile.</p></div>
-  <div class="panel"><h2>Backgrounds</h2><div class="grid" id="bgs"></div></div>
-  <div class="panel"><h2>NPCs</h2><div class="grid" id="nps"></div></div></div>`;
+  <button class="btn" data-a="up">Add image</button></div><p class="note" id="msg">Several files at once keep their file names. Rename any image later with the pencil on its tile.</p></details>
+  <details class="panel" id="d-bg" open><summary><h2>Backgrounds <span id="cb"></span></h2></summary><div class="grid" id="bgs"></div></details>
+  <details class="panel" id="d-np" open><summary><h2>NPCs <span id="cn"></span></h2></summary><div class="grid" id="nps"></div></details></div>`;
+  document.querySelectorAll('details[id]').forEach(el=>{const k='open-'+el.id,v=localStorage.getItem(k);if(v!==null)el.open=v==='1';el.addEventListener('toggle',()=>localStorage.setItem(k,el.open?'1':'0'))});
   const draw=()=>{
     const tile=(i,on,a)=>`<div class="tile ${on?'on':''} ${a==='npc'?'npc':''}" tabindex="0" data-a="${a}" data-id="${i.id}"><img src="${i.data}" alt=""><span>${esc(i.name)}</span><i data-a="ren" data-id="${i.id}" title="Rename">✎</i><b data-a="del" data-id="${i.id}" title="Delete">×</b></div>`;
-    $('#bgs').innerHTML=imgs.filter(i=>i.type==='background').map(i=>tile(i,live.backgroundId===i.id,'bg')).join('')||'<p class="note">No backgrounds yet.</p>';
-    $('#nps').innerHTML=imgs.filter(i=>i.type==='npc').map(i=>tile(i,(live.visibleNpcIds||[]).includes(i.id),'npc')).join('')||'<p class="note">No NPCs yet.</p>';
+    const bg=imgs.filter(i=>i.type==='background'),np=imgs.filter(i=>i.type==='npc');
+    $('#bgs').innerHTML=bg.map(i=>tile(i,live.backgroundId===i.id,'bg')).join('')||'<p class="note">No backgrounds yet.</p>';
+    $('#nps').innerHTML=np.map(i=>tile(i,(live.visibleNpcIds||[]).includes(i.id),'npc')).join('')||'<p class="note">No NPCs yet.</p>';
+    $('#cb').textContent='('+bg.length+')';$('#cn').textContent='('+np.length+')';$('#cq').textContent='('+qs.length+')';
+    $('#bt').textContent=live.showBoard?'Hide the quest board':'Show the quest board';
+    const qb=(a,id,t,alt)=>`<button class="btn sm ${alt?'alt':''}" data-a="${a}" data-id="${id}">${t}</button>`;
+    $('#qs').innerHTML=qs.map(q=>`<div class="qrow ${q.posted?'on':''}"><div class="qt"><b>${esc(q.title||'Untitled')}${q.done?' (done)':''}</b><p>${esc(q.text||'')}</p></div><div class="row">${qb('qpin',q.id,q.posted?'Unpin':'Pin to board')}${qb('qdone',q.id,q.done?'Reopen':'Done',1)}${qb('qedit',q.id,'Edit',1)}${qb('qdel',q.id,'Delete',1)}</div></div>`).join('')||'<p class="note">No quests yet.</p>';
   };
   unsubs.push(onSnapshot(L,s=>{live=s.data()||{};draw()}));
   unsubs.push(onSnapshot(IM,s=>{imgs=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.created-b.created);draw()}));
+  unsubs.push(onSnapshot(QC,s=>{qs=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.created-b.created);draw()}));
   const set=o=>setDoc(L,o,{merge:true});
   app.onclick=async e=>{
     const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,id=t.dataset.id;
@@ -151,11 +204,20 @@ function dm(code){
     if(a==='npc')set({visibleNpcIds:(live.visibleNpcIds||[]).includes(id)?arrayRemove(id):arrayUnion(id)});
     if(a==='black')set({backgroundId:null});
     if(a==='clear')set({visibleNpcIds:[]});
+    if(a==='board')set({showBoard:!live.showBoard});
     if(a==='home'){location.hash='';}
     if(a==='ren'){const cur=imgs.find(x=>x.id===id),nn=prompt('New name',cur?cur.name:'');if(nn&&nn.trim())updateDoc(doc(IM,id),{name:nn.trim()})}
     if(a==='del'&&confirm('Delete this image from the library?')){
       await set({visibleNpcIds:arrayRemove(id),...(live.backgroundId===id?{backgroundId:null}:{})});
       await deleteDoc(doc(IM,id));}
+    if(a==='qsave'){
+      const title=$('#qt').value.trim(),text=$('#qx').value.trim();if(!title&&!text)return;
+      if(edit){await updateDoc(doc(QC,edit),{title,text});edit=null}
+      else await setDoc(doc(QC),{title,text,posted:true,done:false,created:Date.now()});
+      $('#qt').value='';$('#qx').value='';$('#qb').textContent='Add quest';}
+    if(a==='qpin'||a==='qdone'){const q=qs.find(x=>x.id===id);if(q)updateDoc(doc(QC,id),a==='qpin'?{posted:!q.posted}:{done:!q.done})}
+    if(a==='qedit'){const q=qs.find(x=>x.id===id);if(q){edit=id;$('#qt').value=q.title||'';$('#qx').value=q.text||'';$('#qb').textContent='Save quest';$('#qt').focus()}}
+    if(a==='qdel'&&confirm('Delete this quest?'))deleteDoc(doc(QC,id));
     if(a==='up'){
       const files=[...$('#file').files],type=$('#type').value,msg=$('#msg');
       if(!files.length){msg.className='note err';msg.textContent='Choose at least one image first.';return}
