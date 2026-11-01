@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Arcane Table</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2a170d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;700&family=IM+Fell+English&display=swap" rel="stylesheet">
+<style>
+:root{--oak:#2a170d;--oak2:#4a2c18;--gold:#d4a84b;--gold2:#8a6a24;--parch:#eadcb4;--ink:#2b1c10;--arc:#9a78ff;--ember:#b3472b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:18px/1.45 'IM Fell English',Georgia,serif;color:var(--parch);
+background:repeating-linear-gradient(90deg,transparent 0 46px,#0005 46px 48px),repeating-linear-gradient(0deg,#ffffff07 0 2px,transparent 2px 9px),radial-gradient(ellipse at 50% 0,#5a3820,var(--oak) 70%);}
+h1,h2,button,select,.tag{font-family:Cinzel,Georgia,serif}
+h1{font:700 clamp(28px,6vw,54px)/1.1 'Cinzel Decorative',Cinzel,serif;color:var(--gold);text-shadow:0 0 18px var(--arc),0 2px 0 #000;margin:.2em 0}
+h2{font-size:21px;margin:0 0 10px;color:var(--oak2)}
+.wrap{max-width:1100px;margin:0 auto;padding:18px}
+.panel{background:linear-gradient(#efe3bf,#dcc994);color:var(--ink);border:3px solid var(--gold2);border-radius:6px;padding:16px;margin:16px 0;box-shadow:inset 0 0 40px #8a6a2455,0 6px 18px #000a}
+.btn{cursor:pointer;color:var(--gold);font-weight:700;font-size:16px;padding:10px 18px;border-radius:4px;border:2px solid var(--gold);background:linear-gradient(#5b3820,#37200f);box-shadow:inset 0 1px 0 #fff3,0 3px 0 #000a;min-height:44px}
+.btn:active{transform:translateY(2px);box-shadow:none}
+.btn:focus-visible,input:focus-visible,select:focus-visible,.tile:focus-visible{outline:3px solid var(--arc);outline-offset:2px}
+.btn.alt{color:var(--parch);border-color:var(--ember)}
+input,select{font:inherit;font-size:17px;padding:9px 10px;border:2px solid var(--gold2);border-radius:4px;background:#f6edcf;color:var(--ink);min-height:44px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.tile{position:relative;cursor:pointer;border:3px solid var(--gold2);border-radius:4px;background:#2a170d;overflow:hidden;aspect-ratio:4/3;transition:box-shadow .2s,border-color .2s}
+.tile img{width:100%;height:100%;object-fit:cover;display:block}
+.tile span{position:absolute;left:0;right:0;bottom:0;padding:4px 8px;background:#2a170dd9;color:var(--parch);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile b{position:absolute;top:4px;right:4px;width:30px;height:30px;line-height:26px;text-align:center;border-radius:50%;background:#2a170dd9;color:var(--parch);border:1px solid var(--ember)}
+.tile.on{border-color:var(--arc);box-shadow:0 0 0 2px var(--arc),0 0 22px var(--arc)}
+.note{font-size:15px;opacity:.85;margin:6px 0 0}
+.err{color:#ffb3a0}
+.panel .err{color:#8c2a12}
+/* display */
+#stage{position:fixed;inset:0;background:#0b0704;overflow:hidden}
+#bg{position:absolute;inset:0;background:center/cover no-repeat;transition:opacity .8s}
+.idle{position:absolute;inset:0;display:grid;place-items:center;transition:opacity .8s;background:radial-gradient(circle,#2c1f4a,#0b0704 70%)}
+.sigil{position:relative;width:min(60vh,60vw);aspect-ratio:1;border-radius:50%;border:3px double var(--gold);box-shadow:0 0 50px var(--arc),inset 0 0 50px #9a78ff66;animation:spin 60s linear infinite}
+.sigil::before,.sigil::after{content:"";position:absolute;inset:11%;border-radius:50%;border:2px dashed var(--arc)}
+.sigil::after{inset:26%;border:3px double var(--gold);transform:rotate(45deg);border-radius:12%;animation:spin 30s linear infinite reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+#npcs{position:absolute;left:0;right:0;bottom:3vmin;display:flex;justify-content:center;gap:2.5vmin;padding:0 6vmin;align-items:flex-end}
+#npcs figure{margin:0;width:min(22vmin,200px);text-align:center;animation:rise .5s ease-out}
+@keyframes rise{from{opacity:0;transform:translateY(20px)}}
+#npcs img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;border:5px solid var(--gold);box-shadow:0 0 0 3px var(--oak),0 8px 20px #000c}
+#npcs figcaption{margin-top:6px;padding:3px 10px;font:700 clamp(14px,2.4vmin,22px) Cinzel,serif;color:var(--gold);background:linear-gradient(#4a2c18,#2a170d);border:2px solid var(--gold2);border-radius:4px}
+.frame{position:absolute;inset:0;pointer-events:none;border:clamp(10px,2.2vmin,26px) solid var(--oak2);border-image:repeating-linear-gradient(90deg,#4a2c18 0 30px,#3a2012 30px 33px) 30;box-shadow:inset 0 0 0 3px var(--gold2),inset 0 0 80px #000b}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+<body><div id="app"></div>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getFirestore,doc,collection,setDoc,getDoc,deleteDoc,onSnapshot,arrayUnion,arrayRemove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// Paste your Firebase web app config here (Project settings > Your apps).
+const CFG={apiKey:"AIzaSyCZJdQ3Lq9VuMkOj2OzhJ1FhRPY9LGNaKE",authDomain:"dm-app-b2ffe.firebaseapp.com",projectId:"dm-app-b2ffe",appId:"1:651806206382:web:a099ff940512021be6003f"};
+
+const $=s=>document.querySelector(s),app=$('#app');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let unsubs=[];
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+if(CFG.projectId==="PASTE"){app.innerHTML='<div class="wrap"><h1>The Arcane Table</h1><div class="panel"><h2>Firebase is not set up yet</h2><p>Open index.html and paste your Firebase web app config into the CFG object near the top of the script.</p></div></div>';throw 0}
+const db=getFirestore(initializeApp(CFG));
+
+function route(){
+  unsubs.forEach(u=>u());unsubs=[];
+  const [v,c]=location.hash.slice(1).split('/');
+  const code=(c||localStorage.getItem('code')||'').toLowerCase();
+  if(c)localStorage.setItem('code',code);
+  if(!code||!['dm','display'].includes(v))return home();
+  v==='dm'?dm(code):display(code);
+}
+addEventListener('hashchange',route);route();
+
+function home(){
+  app.innerHTML=`<div class="wrap"><h1>The Arcane Table</h1>
+  <div class="panel"><h2>Session code</h2>
+  <p class="note">Pick any word. Every device that uses the same code sees the same table.</p>
+  <div class="row"><input id="code" placeholder="e.g. dragonkeep" value="${esc(localStorage.getItem('code')||'')}" autocapitalize="off">
+  <button class="btn" data-go="dm">Open the DM screen</button>
+  <button class="btn alt" data-go="display">Open the player display</button></div></div></div>`;
+  app.onclick=e=>{const g=e.target.dataset.go;if(!g)return;
+    const code=$('#code').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'');
+    if(!code)return $('#code').focus();
+    localStorage.setItem('code',code);location.hash=g+'/'+code};
+}
+
+async function display(code){
+  app.onclick=null;
+  app.innerHTML='<div id="stage"><div id="bg"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="npcs"></div><div class="frame"></div></div>';
+  try{navigator.wakeLock&&navigator.wakeLock.request('screen')}catch(e){}
+  const cache=new Map();
+  const get=async id=>{if(!id)return{};if(!cache.has(id)){const s=await getDoc(doc(db,'sessions',code,'images',id));cache.set(id,s.exists()?s.data():{})}return cache.get(id)};
+  unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),async s=>{
+    const d=s.data()||{},b=await get(d.backgroundId);
+    $('#bg').style.backgroundImage=b.data?`url(${b.data})`:'';
+    $('#idle').style.opacity=b.data?0:1;
+    const n=await Promise.all((d.visibleNpcIds||[]).map(get));
+    $('#npcs').innerHTML=n.filter(x=>x.data).map(x=>`<figure><img src="${x.data}" alt=""><figcaption>${esc(x.name)}</figcaption></figure>`).join('');
+  }));
+}
+
+async function shrink(file,max){
+  const bm=await createImageBitmap(file),r=Math.min(1,max/Math.max(bm.width,bm.height));
+  const c=document.createElement('canvas');c.width=Math.round(bm.width*r);c.height=Math.round(bm.height*r);
+  c.getContext('2d').drawImage(bm,0,0,c.width,c.height);
+  let q=.85,u;do{u=c.toDataURL('image/webp',q);q-=.1}while(u.length>880000&&q>.2);
+  if(u.length>1000000)throw new Error('Image is too large even after shrinking.');
+  return u;
+}
+
+function dm(code){
+  const L=doc(db,'sessions',code,'live','state'),IM=collection(db,'sessions',code,'images');
+  let live={},imgs=[];
+  const link=location.origin+location.pathname+'#display/'+code;
+  app.innerHTML=`<div class="wrap"><h1>The Arcane Table</h1>
+  <div class="panel"><h2>Table controls</h2><div class="row">
+  <button class="btn" data-a="black">Dim the scene</button><button class="btn alt" data-a="clear">Send all NPCs away</button>
+  <button class="btn alt" data-a="home">Change session</button></div>
+  <p class="note">Player display link for the tablet:</p><input id="lnk" readonly value="${esc(link)}" style="width:100%"></div>
+  <div class="panel"><h2>Add to the library</h2><div class="row">
+  <select id="type"><option value="background">Background</option><option value="npc">NPC portrait</option></select>
+  <input id="nm" placeholder="Name (optional)"><input id="file" type="file" accept="image/*" multiple>
+  <button class="btn" data-a="up">Add image</button></div><p class="note" id="msg"></p></div>
+  <div class="panel"><h2>Backgrounds</h2><div class="grid" id="bgs"></div></div>
+  <div class="panel"><h2>NPCs</h2><div class="grid" id="nps"></div></div></div>`;
+  const draw=()=>{
+    const tile=(i,on,a)=>`<div class="tile ${on?'on':''}" tabindex="0" data-a="${a}" data-id="${i.id}"><img src="${i.data}" alt=""><span>${esc(i.name)}</span><b data-a="del" data-id="${i.id}" title="Delete">×</b></div>`;
+    $('#bgs').innerHTML=imgs.filter(i=>i.type==='background').map(i=>tile(i,live.backgroundId===i.id,'bg')).join('')||'<p class="note">No backgrounds yet.</p>';
+    $('#nps').innerHTML=imgs.filter(i=>i.type==='npc').map(i=>tile(i,(live.visibleNpcIds||[]).includes(i.id),'npc')).join('')||'<p class="note">No NPCs yet.</p>';
+  };
+  unsubs.push(onSnapshot(L,s=>{live=s.data()||{};draw()}));
+  unsubs.push(onSnapshot(IM,s=>{imgs=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.created-b.created);draw()}));
+  const set=o=>setDoc(L,o,{merge:true});
+  app.onclick=async e=>{
+    const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,id=t.dataset.id;
+    if(a==='bg')set({backgroundId:id});
+    if(a==='npc')set({visibleNpcIds:(live.visibleNpcIds||[]).includes(id)?arrayRemove(id):arrayUnion(id)});
+    if(a==='black')set({backgroundId:null});
+    if(a==='clear')set({visibleNpcIds:[]});
+    if(a==='home'){location.hash='';}
+    if(a==='del'&&confirm('Delete this image from the library?')){
+      await set({visibleNpcIds:arrayRemove(id),...(live.backgroundId===id?{backgroundId:null}:{})});
+      await deleteDoc(doc(IM,id));}
+    if(a==='up'){
+      const files=[...$('#file').files],type=$('#type').value,msg=$('#msg');
+      if(!files.length){msg.className='note err';msg.textContent='Choose at least one image first.';return}
+      for(const f of files){
+        try{msg.className='note';msg.textContent='Preparing '+f.name+'...';
+          const data=await shrink(f,type==='npc'?640:1920);
+          const name=(files.length===1&&$('#nm').value.trim())||f.name.replace(/\.[^.]+$/,'');
+          await setDoc(doc(IM),{name,type,data,created:Date.now()});
+          msg.textContent='Added '+name+'.';
+        }catch(err){msg.className='note err';msg.textContent='Could not add '+f.name+': '+err.message;return}}
+      $('#file').value='';$('#nm').value='';}
+  };
+}
+</script></body></html>
