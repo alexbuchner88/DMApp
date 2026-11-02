@@ -263,8 +263,8 @@ function watchMap(code,cb){
 }
 const WXS=[
  {id:'s1',n:['Clear'],i:'sun',cl:0},
- {id:'s2',n:['Sunny'],i:'sun',cl:0,tint:'255,210,120,.07'},
- {id:'s3',n:['Hot','Cold'],i:['sun','snow'],cl:0,tint:['255,160,50,.15','130,175,255,.17']},
+ {id:'s2',n:['Sunny','Cold'],i:'sun',cl:0,tint:['255,210,120,.07','150,190,255,.09']},
+ {id:'s3',n:['Hot','Freezing'],i:['sun','snow'],cl:0,tint:['255,160,50,.15','130,175,255,.2'],fr:[0,1]},
  {id:'c1',n:['Cloudy'],i:'cloud',cl:.45},
  {id:'c2',n:['Overcast'],i:'cloud',cl:.8},
  {id:'c3',n:['Fog'],i:'fog',cl:.3,fog:.6},
@@ -282,36 +282,64 @@ const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M
 const wxBadge=(s,w,cd)=>{const ic=Array.isArray(s.i)?s.i[cd?1:0]:s.i;
   return`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${s.n[cd&&s.n[1]?1:0]}</b><small>${WINDS[w]}</small></div>`};
 function makeWeather(cv){
-  const c=cv.getContext('2d');let st=null,wind=0,snow=false,P=[],B=[],S=[],raf=0,flash=0,nextF=0;
-  const sl=()=>[0,.1,.35,.7][wind];
+  const c=cv.getContext('2d'),R=Math.random,cu={cl:0,fog:0,cr:0,cg:0,cb:0,ca:0,fr:0,ws:0,wf:1,rain:0,snow:0,str:0};
+  let tg=null,tw=0,tsn=false,raf=0,last=0,flash=0,nextF=0,PR=[],PS=[],B=[],S=[];
   const size=()=>{if(cv.width!==cv.clientWidth||cv.height!==cv.clientHeight){cv.width=cv.clientWidth;cv.height=cv.clientHeight}};
   const build=()=>{size();const W=cv.width||1280,H=cv.height||800,k=W*H/1e6;
-    P=Array.from({length:st&&st.p?Math.round([0,140,320,650][st.p]*k):0},()=>({x:Math.random()*W,y:Math.random()*H,l:10+Math.random()*14,v:(11+Math.random()*8)*(1+((st&&st.p||1)-1)*.2),r:1.2+Math.random()*2.6,ph:Math.random()*6.3,sv:.8+Math.random()*1.6}));
-    B=Array.from({length:7},()=>({x:Math.random()*W,y:Math.random()*H*.9,r:W*(.22+Math.random()*.25),v:.08+Math.random()*.18}));
-    S=Array.from({length:wind>=3?26:wind>=2?14:0},()=>({x:Math.random()*W,y:Math.random()*H,l:80+Math.random()*140,v:18+Math.random()*14}))};
+    PR=Array.from({length:Math.round(700*k)},()=>({x:R()*W,y:R()*H,l:10+R()*14,v:11+R()*8}));
+    PS=Array.from({length:Math.round(650*k)},()=>({x:R()*W,y:R()*H,r:1.2+R()*2.6,ph:R()*6.3,sv:.8+R()*1.6}));
+    B=Array.from({length:7},()=>({x:R()*W,y:R()*H*.9,r:W*(.22+R()*.25),v:.08+R()*.18,ph:R()*6.3}));
+    S=Array.from({length:26},()=>({x:R()*W,y:R()*H,l:80+R()*140,v:18+R()*14}))};
   const blob=(b,col,a)=>{const g=c.createRadialGradient(b.x,b.y,0,b.x,b.y,b.r);g.addColorStop(0,`rgba(${col},${a})`);g.addColorStop(1,`rgba(${col},0)`);c.fillStyle=g;c.fillRect(b.x-b.r,b.y-b.r,b.r*2,b.r*2)};
-  const frame=ts=>{raf=requestAnimationFrame(frame);size();const W=cv.width,H=cv.height,ws=sl();c.clearRect(0,0,W,H);
-    if(st.tint){c.fillStyle=`rgba(${st.tint})`;c.fillRect(0,0,W,H)}
-    if(st.cl){c.fillStyle=`rgba(10,14,22,${st.cl*.16})`;c.fillRect(0,0,W,H)}
-    B.forEach(b=>{b.x+=b.v*(1+wind*1.6);if(b.x-b.r>W)b.x=-b.r;
-      if(st.cl)blob(b,'18,22,30',st.cl*.26);if(st.fog)blob({x:b.x,y:b.y,r:b.r*1.3},'220,226,232',st.fog*.55)});
-    if(st.fog){c.fillStyle=`rgba(215,220,225,${st.fog*.35})`;c.fillRect(0,0,W,H)}
-    if(st.p){const isSnow=snow&&!st.rain&&!st.hail;c.lineWidth=1.3;
-      P.forEach(p=>{
-        if(isSnow){p.x+=Math.sin(p.y*.02+p.ph)*.6+ws*7;p.y+=p.sv;c.fillStyle='rgba(255,255,255,.85)';c.beginPath();c.arc(p.x,p.y,p.r,0,7);c.fill()}
-        else if(st.hail){p.x+=ws*9;p.y+=p.v*1.3;c.fillStyle='rgba(235,245,255,.9)';c.fillRect(p.x,p.y,3,3)}
-        else{p.x+=ws*p.v;p.y+=p.v*(1+wind*.12);c.strokeStyle='rgba(185,205,225,.42)';c.beginPath();c.moveTo(p.x,p.y);c.lineTo(p.x+ws*p.l,p.y+p.l);c.stroke()}
-        if(p.y>H+20){p.y=-20;p.x=Math.random()*(W+ws*H)-ws*H}else if(p.x>W+40){p.x=-40;p.y=Math.random()*H}});}
-    if(S.length){c.strokeStyle='rgba(255,255,255,.08)';c.lineWidth=1.5;S.forEach(q=>{q.x+=q.v;if(q.x-q.l>W){q.x=-q.l;q.y=Math.random()*H}c.beginPath();c.moveTo(q.x,q.y);c.lineTo(q.x-q.l,q.y+q.l*.05);c.stroke()})}
-    if(st.bolt&&ts>nextF){flash=1;nextF=ts+4000+Math.random()*7000;if(Math.random()<.4)setTimeout(()=>{flash=.8},180)}
+  const target=()=>{const s=tg||{},t=(s.tint||'0,0,0,0').split(',').map(Number),L=[0,140,320,650][s.p||0];
+    return{cl:s.cl||0,fog:s.fog||0,cr:t[0],cg:t[1],cb:t[2],ca:t[3],fr:s.fr||0,ws:[0,.1,.35,.7][tw],wf:[1,1.1,1.5,2][tw],rain:tsn?0:L/700,snow:tsn?L/650:0,str:tw>=3?1:tw>=2?.55:0}};
+  const frame=ts=>{
+    raf=requestAnimationFrame(frame);size();const W=cv.width,H=cv.height,dt=Math.min(100,ts-(last||ts));last=ts;
+    const T=target(),k=1-Math.exp(-dt/900);for(const q in T)cu[q]+=(T[q]-cu[q])*k;
+    if(Math.max(T.cl,T.fog,T.ca,T.fr,T.rain,T.snow,T.str)===0&&Math.max(cu.cl,cu.fog,cu.ca,cu.fr,cu.rain,cu.snow,cu.str)<.004){c.clearRect(0,0,W,H);cancelAnimationFrame(raf);raf=0;return}
+    c.clearRect(0,0,W,H);
+    if(cu.ca>.003){c.fillStyle=`rgba(${cu.cr|0},${cu.cg|0},${cu.cb|0},${cu.ca})`;c.fillRect(0,0,W,H)}
+    if(cu.fr>.01){const g=c.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.hypot(W,H)/2);g.addColorStop(0,'rgba(200,230,255,0)');g.addColorStop(1,`rgba(200,230,255,${cu.fr*.4})`);c.fillStyle=g;c.fillRect(0,0,W,H)}
+    if(cu.cl>.01){c.fillStyle=`rgba(10,14,22,${cu.cl*.16})`;c.fillRect(0,0,W,H)}
+    B.forEach(b=>{b.x+=b.v*(.05+cu.ws*3);if(b.x-b.r>W)b.x=-b.r;const br=.75+.25*Math.sin(ts*.00035+b.ph);
+      if(cu.cl>.01)blob(b,'18,22,30',cu.cl*.26*br);if(cu.fog>.01)blob({x:b.x,y:b.y,r:b.r*1.3},'220,226,232',cu.fog*.55*br)});
+    if(cu.fog>.01){c.fillStyle=`rgba(215,220,225,${cu.fog*.35})`;c.fillRect(0,0,W,H)}
+    const nr=Math.round(cu.rain*PR.length);
+    if(nr){c.lineWidth=1.3;c.strokeStyle='rgba(185,205,225,.42)';c.beginPath();
+      for(let i=0;i<nr;i++){const p=PR[i];p.x+=cu.ws*p.v*cu.wf;p.y+=p.v*cu.wf;
+        if(p.y>H+20){p.y=-20;p.x=R()*(W+cu.ws*H)-cu.ws*H}else if(p.x>W+40){p.x=-40;p.y=R()*H}
+        c.moveTo(p.x,p.y);c.lineTo(p.x+cu.ws*p.l,p.y+p.l)}c.stroke()}
+    const ns=Math.round(cu.snow*PS.length);
+    if(ns){c.fillStyle='rgba(255,255,255,.85)';c.beginPath();
+      for(let i=0;i<ns;i++){const p=PS[i];p.x+=Math.sin(p.y*.02+p.ph)*.6+cu.ws*7*cu.wf;p.y+=p.sv*cu.wf;
+        if(p.y>H+20){p.y=-20;p.x=R()*(W+cu.ws*H*3)-cu.ws*H*2}else if(p.x>W+40){p.x=-40;p.y=R()*H}
+        c.moveTo(p.x+p.r,p.y);c.arc(p.x,p.y,p.r,0,7)}c.fill()}
+    const nst=Math.round(cu.str*S.length);
+    if(nst){c.strokeStyle=`rgba(255,255,255,${.08*Math.min(1,cu.str)})`;c.lineWidth=1.5;c.beginPath();
+      for(let i=0;i<nst;i++){const q=S[i];q.x+=q.v;if(q.x-q.l>W){q.x=-q.l;q.y=R()*H}c.moveTo(q.x,q.y);c.lineTo(q.x-q.l,q.y+q.l*.05)}c.stroke()}
+    if(tg&&tg.bolt&&ts>nextF){flash=1;nextF=ts+4000+R()*7000;if(R()<.4)setTimeout(()=>{flash=.8},180)}
     if(flash>0){c.fillStyle=`rgba(235,240,255,${flash*.5})`;c.fillRect(0,0,W,H);flash-=.07}
   };
   return{
-    set(s,w,sn){st=s?{...s,tint:Array.isArray(s.tint)?s.tint[sn?1:0]:s.tint,bolt:s.id==='r3'&&w>=3&&!sn}:null;wind=w;snow=sn;cancelAnimationFrame(raf);raf=0;
-      if(!st||(!st.cl&&!st.fog&&!st.tint&&!st.p&&wind<2)){st=null;size();c.clearRect(0,0,cv.width,cv.height);return}
-      build();raf=requestAnimationFrame(frame)},
-    stop(){cancelAnimationFrame(raf)}};
+    set(s,w,sn){tg=s?{...s,tint:Array.isArray(s.tint)?s.tint[sn?1:0]:s.tint,fr:Array.isArray(s.fr)?s.fr[sn?1:0]:(s.fr||0),bolt:s.id==='r3'&&w>=3&&!sn}:null;tw=w;tsn=sn;
+      if(!raf){if(!PR.length)build();last=0;raf=requestAnimationFrame(frame)}},
+    stop(){cancelAnimationFrame(raf);raf=0}};
 }
+const WM={s1:0,s2:0,s3:0,c1:1,c2:2,c3:-2,r1:2,r2:3,r3:3};
+const windFrom=(roll,wx)=>{const t=roll+(WM[wx]||0);return t<=3?0:t<=5?1:t<=7?2:3};
+const sname=(id,cd)=>{const x=WXS.find(y=>y.id===id)||WXS[0];return x.n[cd&&x.n[1]?1:0]};
+function nextWx(cur,die,P){
+  const t=cur[0],n=+cur[1];
+  if(die===t)return n<3?t+(n+1):cur;
+  if(t==='s'){const r=(die==='c'?P.tc:P.tr)[n-1];return r==='stay'?cur:r}
+  if(t==='c'){if(n===3)return die==='s'?'s2':'r2';return(die==='s'?'s':'r')+n}
+  return die==='s'?'s'+n:'c'+Math.max(1,n-1);
+}
+const defPre=()=>[
+ {id:'spring',name:'Spring',cold:false,d:{s:4,c:4,r:4},tc:['c1','c2','c3'],tr:['c1','c2','c3']},
+ {id:'summer',name:'Summer',cold:false,d:{s:5,c:2,r:5},tc:['c1','c2','c3'],tr:['r1','r2','r3']},
+ {id:'autumn',name:'Autumn',cold:false,d:{s:4,c:4,r:4},tc:['c1','c2','c3'],tr:['c1','c2','c3']},
+ {id:'winter',name:'Winter',cold:true,d:{s:5,c:2,r:5},tc:['c1','c2','c3'],tr:['r1','r2','r3']}];
 const tokCache=new Map();
 function tokImg(id,data,cb){let im=tokCache.get(id);if(!im){im=new Image();im.onload=cb;im.src=data;tokCache.set(id,im)}return im}
 const tokPos=(MS,id,i)=>{const p=MS.tk&&MS.tk[id];if(p)return p;const l=(MS.lights||[{x:.5,y:.5}])[0];return{x:l.x+i*.012,y:l.y+i*.012}};
@@ -386,8 +414,20 @@ function dm(code){
   <button class="btn alt" data-a="home">Change session</button></div>
   <p class="note">Player display link for the tablet:</p><input id="lnk" readonly value="${esc(link)}" style="width:100%"></details>
   <details class="panel" id="d-wx" open><summary><h2>Weather</h2></summary>
-  <div class="row" style="margin-bottom:10px"><button class="btn" id="wxt" data-a="wxon">Show weather on tablet</button><button class="btn sm alt" id="wxs" data-a="wxsnow">Season: warm (rain)</button><button class="btn sm alt" id="wxn" data-a="night">Switch to night</button></div>
-  <div id="wxl"></div><p class="note" style="margin:10px 0 4px">Wind</p><div class="row" id="wxw"></div></details>
+  <div class="row" style="margin-bottom:10px"><button class="btn" id="wxt" data-a="wxon">Show weather on tablet</button><button class="btn" data-a="wxquick">Quick random change</button><button class="btn sm alt" id="wxn" data-a="night">Switch to night</button></div>
+  <p class="note" style="margin:0 0 4px">Daily draw. Preset:</p><div class="row" id="wxp"></div>
+  <p class="note" id="wxbag" style="margin:8px 0"></p>
+  <div class="row"><button class="btn" data-a="wxd" data-id="s">Sun die</button><button class="btn" data-a="wxd" data-id="c">Cloud die</button><button class="btn" id="wxdr" data-a="wxd" data-id="r">Rain die</button><button class="btn sm alt" data-a="wxundo">Undo last draw</button><button class="btn sm alt" data-a="wxrefill">Refill bag</button></div>
+  <div id="wxh" style="margin-top:8px"></div>
+  <p class="note" style="margin:12px 0 4px">Wind roll (d6, the weather modifier is added)</p><div class="row" id="wxr"></div><p class="note" id="wxm"></p>
+  <p class="note" style="margin:12px 0 4px">Set weather directly</p><div id="wxl"></div>
+  <p class="note" style="margin:6px 0 4px">Set wind directly</p><div class="row" id="wxw"></div>
+  <details id="d-wxe" style="margin-top:14px"><summary><h2 style="font-size:17px">Edit season presets</h2></summary>
+  <div class="row"><input id="pn" placeholder="Name"><label><input id="pc" type="checkbox"> Cold (snow, Cold, Freezing)</label></div>
+  <div class="row" style="margin-top:8px"><label>Sun dice <input id="pds" type="number" min="0" style="width:70px"></label><label>Cloud dice <input id="pdc" type="number" min="0" style="width:70px"></label><label>Rain dice <input id="pdr" type="number" min="0" style="width:70px"></label></div>
+  <p class="note" style="margin:10px 0 4px">Cloud die on Sun 1, 2, 3 gives:</p><div class="row"><select id="tc0"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tc1"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tc2"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select></div>
+  <p class="note" style="margin:10px 0 4px">Rain die on Sun 1, 2, 3 gives:</p><div class="row"><select id="tr0"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tr1"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tr2"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select></div>
+  <div class="row" style="margin-top:10px"><button class="btn sm alt" data-a="pdup">Duplicate preset</button><button class="btn sm alt" data-a="pdel">Delete preset</button></div></details></details>
   <details class="panel" id="d-up" open><summary><h2>Add to the library</h2></summary><div class="row">
   <select id="type"><option value="background">Background</option><option value="npc">NPC portrait</option><option value="monster">Monster token</option><option value="map">Map</option></select>
   <input id="nm" placeholder="Name (optional)"><input id="file" type="file" accept="image/*" multiple>
@@ -433,13 +473,52 @@ function dm(code){
     $('#qs').innerHTML=qs.map(q=>`<div class="qrow ${q.posted?'on':''}"><div class="qt"><b>${esc(q.title||'Untitled')}${q.done?' (done)':''}</b><p>${esc(q.text||'')}</p></div><div class="row">${qb('qpin',q.id,q.posted?'Unpin':'Pin to board')}${qb('qdone',q.id,q.done?'Reopen':'Done',1)}${qb('qedit',q.id,'Edit',1)}${qb('qdel',q.id,'Delete',1)}</div></div>`).join('')||'<p class="note">No quests yet.</p>';
   };
   function wxDraw(){
-    const cd=!!live.cold,cur=live.wx||'s1',w=live.wind|0;
+    const cd=!!live.cold,cur=live.wx||'s1',w=live.wind|0,P=curPre(),bag=G.bag||P.d;
     const b=(a,id,t,act)=>`<button class="btn sm ${act?'':'alt'}" data-a="${a}" data-id="${id}">${t}</button>`;
-    $('#wxl').innerHTML=['s','c','r'].map(t=>`<div class="row" style="margin-bottom:6px">${WXS.filter(x=>x.id[0]===t).map(x=>b('wxset',x.id,x.n[cd&&x.n[1]?1:0],cur===x.id)).join('')}</div>`).join('');
+    const dn=d=>d==='s'?'Sun':d==='c'?'Cloud':cd?'Snow':'Rain';
+    $('#wxl').innerHTML=['s','c','r'].map(t=>`<div class="row" style="margin-bottom:6px">${WXS.filter(x=>x.id[0]===t).map(x=>b('wxset',x.id,sname(x.id,cd),cur===x.id)).join('')}</div>`).join('');
     $('#wxw').innerHTML=WINDS.map((n,i)=>b('wxwind',i,n,w===i)).join('');
+    $('#wxr').innerHTML=[1,2,3,4,5,6].map(n=>b('wxroll',n,n,0)).join('');
+    $('#wxm').textContent=wxMsg;
+    $('#wxp').innerHTML=G.presets.map(p=>b('wxpre',p.id,esc(p.name),p.id===P.id)).join('');
+    $('#wxbag').textContent='Day '+G.day+' of 10. Left in the bag: Sun '+bag.s+', Cloud '+bag.c+', '+dn('r')+' '+bag.r+'.';
+    $('#wxdr').textContent=dn('r')+' die';
+    $('#wxh').innerHTML=(G.hist||[]).slice(-5).reverse().map(h=>`<div class="note">${dn(h.die)} die: ${sname(h.from,cd)} to ${sname(h.to,cd)}</div>`).join('');
     $('#wxt').textContent=live.wxOn?'Hide weather on tablet':'Show weather on tablet';
-    $('#wxs').textContent='Season: '+(cd?'cold (snow)':'warm (rain)');
     $('#wxn').textContent=live.night?'Switch to day':'Switch to night';
+    syncPre();
+  }
+  function syncPre(force){
+    const P=curPre(),f=(id,v)=>{const e=$(id);if(e&&(force||document.activeElement!==e))e.value=v};
+    f('#pn',P.name);$('#pc').checked=!!P.cold;f('#pds',P.d.s);f('#pdc',P.d.c);f('#pdr',P.d.r);
+    [0,1,2].forEach(i=>{f('#tc'+i,P.tc[i]);f('#tr'+i,P.tr[i])});
+  }
+  let G={presets:defPre(),cur:'spring',bag:{s:4,c:4,r:4},day:0,hist:[]},wxMsg='';
+  const GD=doc(db,'sessions',code,'wxgen','cfg');
+  const curPre=()=>G.presets.find(p=>p.id===G.cur)||G.presets[0];
+  const saveG=o=>{Object.assign(G,o);return setDoc(GD,o,{merge:true})};
+  unsubs.push(onSnapshot(GD,s=>{if(s.exists())G={...G,...s.data()};draw()}));
+  const updPre=patch=>saveG({presets:G.presets.map(p=>p.id===G.cur?{...p,...patch}:p)});
+  $('#pn').onchange=e=>updPre({name:e.target.value.trim()||'Preset'});
+  $('#pc').onchange=e=>{updPre({cold:e.target.checked});set({cold:e.target.checked})};
+  [['s','pds'],['c','pdc'],['r','pdr']].forEach(([k,id])=>$('#'+id).onchange=e=>updPre({d:{...curPre().d,[k]:Math.max(0,+e.target.value||0)}}));
+  ['tc','tr'].forEach(k=>[0,1,2].forEach(i=>$('#'+k+i).onchange=e=>{const a=[...curPre()[k]];a[i]=e.target.value;updPre({[k]:a})}));
+  async function drawDie(die){
+    const P=curPre(),cd=!!P.cold,from=live.wx||'s1',to=nextWx(from,die,P);
+    const h={die,from,to,pw:from,pwind:live.wind|0,pbag:{...G.bag},pday:G.day};
+    let bag={...G.bag},day=G.day+1,note='';bag[die]=Math.max(0,bag[die]-1);
+    if(day>=10){bag={...P.d};day=0;note=' The bag was refilled.'}
+    await saveG({bag,day,hist:[...(G.hist||[]),h].slice(-12)});
+    await set({wx:to,wxOn:true});
+    wxMsg=(die==='s'?'Sun':die==='c'?'Cloud':cd?'Snow':'Rain')+' die: '+sname(from,cd)+' to '+sname(to,cd)+'.'+note+' Now enter the wind roll.';wxDraw();
+    return to;
+  }
+  const rollWind=(roll,wx)=>{const m=WM[wx]||0,w=windFrom(roll,wx);return{w,txt:'Wind: '+roll+(m<0?' - ':' + ')+Math.abs(m)+' = '+(roll+m)+', '+WINDS[w]+'.'}};
+  async function quick(){
+    const b=G.bag,tot=b.s+b.c+b.r,r=Math.random()*(tot>0?tot:1);
+    const die=tot>0?(r<b.s?'s':r<b.s+b.c?'c':'r'):['s','c','r'][Math.floor(Math.random()*3)];
+    const to=await drawDie(die),q=rollWind(1+Math.floor(Math.random()*6),to);
+    await set({wind:q.w});wxMsg=wxMsg.replace(' Now enter the wind roll.',' '+q.txt);wxDraw();
   }
   function shopDraw(){
     const sel=shops.find(x=>x.id===selShop),on=!!sel&&live.showShop&&live.shopId===sel.id;
@@ -506,6 +585,14 @@ function dm(code){
     if(a==='wxwind')set({wind:+id,wxOn:true});
     if(a==='wxsnow')set({cold:!live.cold});
     if(a==='night')set({night:!live.night});
+    if(a==='wxd')drawDie(id);
+    if(a==='wxquick')quick();
+    if(a==='wxroll'){const q=rollWind(+id,live.wx||'s1');wxMsg=q.txt;wxDraw();set({wind:q.w,wxOn:true})}
+    if(a==='wxundo'){const h=(G.hist||[]).slice(-1)[0];if(h){await set({wx:h.pw,wind:h.pwind});await saveG({bag:h.pbag,day:h.pday,hist:G.hist.slice(0,-1)});wxMsg='Last draw undone.';wxDraw()}}
+    if(a==='wxrefill'){await saveG({bag:{...curPre().d},day:0});wxMsg='Bag refilled.';wxDraw()}
+    if(a==='wxpre'){const P=G.presets.find(p=>p.id===id);if(P){await saveG({cur:id,bag:{...P.d},day:0});await set({cold:!!P.cold});wxMsg='Preset '+P.name+'. Bag refilled.';wxDraw();syncPre(true)}}
+    if(a==='pdup'){const n2={...curPre(),id:'p'+Date.now(),name:curPre().name+' copy'};await saveG({presets:[...G.presets,n2],cur:n2.id});syncPre(true)}
+    if(a==='pdel'&&G.presets.length>1&&confirm('Delete this preset?')){const pr=G.presets.filter(p=>p.id!==G.cur);await saveG({presets:pr,cur:pr[0].id,bag:{...pr[0].d},day:0});await set({cold:!!pr[0].cold});wxDraw();syncPre(true)}
     if(a==='shadd'){const nm=$('#shn').value.trim();if(!nm)return;const r=doc(collection(db,'sessions',code,'shops'));await setDoc(r,{name:nm,created:Date.now()});selShop=r.id;localStorage.setItem('selShop',r.id);$('#shn').value='';draw()}
     if(a==='shsel'){selShop=id;localStorage.setItem('selShop',id);draw()}
     if(a==='shshow'&&selShop){const on=live.showShop&&live.shopId===selShop;set(on?{showShop:false,shopItemId:null}:{showShop:true,shopId:selShop,shopItemId:null,showBoard:false,showMap:false})}
