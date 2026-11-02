@@ -114,11 +114,32 @@ label{font-family:Cinzel,Georgia,serif;font-size:15px}
 
 .paper{padding:0}
 .paper .in{position:absolute;inset:17% 13% 11%;overflow:hidden}
+
+#shopc{position:absolute;inset:0;display:flex;flex-direction:column;padding:8vh 8vw 7vh;background:url(board.jpg) center/100% 100% no-repeat;opacity:0;pointer-events:none;transition:opacity .6s}
+#stage.shop #shopc{opacity:1;pointer-events:auto}
+#shopt{text-align:center;margin-bottom:2vmin;font:700 clamp(24px,5.2vmin,56px) 'Cinzel Decorative',Cinzel,serif;color:var(--gold);text-shadow:0 0 14px #000,0 2px 0 #000}
+#shopg{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,clamp(150px,19vmin,240px));justify-content:center;align-content:start;gap:2.4vmin;padding:1vmin;-webkit-overflow-scrolling:touch}
+.card{cursor:pointer;display:flex;flex-direction:column;gap:.9vmin;padding:1.2vmin;text-align:center;color:var(--ink);background:linear-gradient(#f2e6c2,#dcc994);border:3px solid var(--gold2);border-radius:8px;box-shadow:0 .8vmin 1.6vmin #000b,inset 0 0 3vmin #8a6a2455}
+.card:active{transform:scale(.98)}
+.card .pic{aspect-ratio:1;border:2px solid var(--gold2);border-radius:5px;overflow:hidden;background:#2a170d;display:grid;place-items:center}
+.card .pic img,.sheet img{width:100%;height:100%;object-fit:cover;display:block}
+.card .ph{font-size:6vmin;color:var(--gold)}
+.card h3{margin:0;font:400 clamp(15px,2.5vmin,26px) MedievalSharp,Almendra,serif;line-height:1.1}
+.card .cost{margin:0;align-self:center;padding:.25em .7em;border-radius:4px;background:#2a170d;color:var(--gold);font:700 clamp(13px,2.2vmin,23px) Cinzel,serif}
+#shopd{position:absolute;inset:0;display:none;place-items:center;background:#000b;z-index:5}
+#shopd.on{display:grid}
+.sheet{position:relative;height:92vh;aspect-ratio:589/700;background:url(paper.webp) center/100% 100% no-repeat;filter:drop-shadow(0 1vmin 2vmin #000)}
+.sheet .sin{position:absolute;inset:13% 12% 10%;overflow:auto;color:#2b1c10;font:clamp(14px,2.7vmin,28px)/1.25 Almendra,'IM Fell English',serif;text-align:center}
+.sheet .pic2{width:34%;aspect-ratio:1;margin:0 auto 1vmin;border:3px solid var(--gold2);border-radius:8px;overflow:hidden;background:#2a170d}
+.sheet h4{margin:.2em 0;font:400 1.5em MedievalSharp,Almendra,serif;color:#3a2210}
+.sheet .cost{margin:0 0 .5em;font:700 1em Cinzel,serif;color:#7a4a12}
+.sheet .lbl{margin:.7em 0 .1em;font:700 .85em Cinzel,serif;color:#7a4a12}
+.sheet p{margin:0;text-align:left;white-space:pre-wrap}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getFirestore,doc,collection,setDoc,getDoc,deleteDoc,updateDoc,onSnapshot,arrayUnion,arrayRemove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,collection,setDoc,getDoc,deleteDoc,updateDoc,query,where,onSnapshot,arrayUnion,arrayRemove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Paste your Firebase web app config here (Project settings > Your apps).
 const CFG={apiKey:"AIzaSyCZJdQ3Lq9VuMkOj2OzhJ1FhRPY9LGNaKE",authDomain:"dm-app-b2ffe.firebaseapp.com",projectId:"dm-app-b2ffe",appId:"1:651806206382:web:a099ff940512021be6003f"};
@@ -155,7 +176,7 @@ function home(){
 
 async function display(code){
   app.onclick=null;
-  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="npcs"></div><canvas id="mapc"></canvas><div id="board"><div id="papers"></div></div></div>';
+  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="npcs"></div><canvas id="mapc"></canvas><div id="board"><div id="papers"></div></div><div id="shopc"><div id="shopt"></div><div id="shopg"></div></div><div id="shopd"></div></div>';
   try{navigator.wakeLock&&navigator.wakeLock.request('screen')}catch(e){}
   const cache=new Map();
   const get=async id=>{if(!id)return{};if(!cache.has(id)){const s=await getDoc(doc(db,'sessions',code,'images',id));cache.set(id,s.exists()?s.data():{})}return cache.get(id)};
@@ -167,20 +188,36 @@ async function display(code){
   const mw=watchMap(code,(o,s)=>{MO=o;MS=s;kick()});unsubs.push(()=>mw.stop());
   const fit=()=>{const r=Math.min(devicePixelRatio||1,1.5);cv.width=Math.round(cv.clientWidth*r);cv.height=Math.round(cv.clientHeight*r);kick()};
   fit();addEventListener('resize',fit);unsubs.push(()=>removeEventListener('resize',fit));
+  let IT=[],SH={},sid=null,su1=null,su2=null,lo=null,dis=null,prevS=null;
+  const renderShop=()=>{
+    $('#shopt').textContent=SH.name||'';
+    $('#shopg').innerHTML=IT.map(i=>`<div class="card" data-i="${i.id}"><div class="pic">${i.img?`<img src="${i.img}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}</div>`).join('');
+    const oid=lo||(d.shopItemId&&d.shopItemId!==dis?d.shopItemId:null),it=IT.find(x=>x.id===oid);
+    $('#shopd').innerHTML=it?`<div class="sheet"><div class="sin">${it.img?`<div class="pic2"><img src="${it.img}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Rules</div><p>${esc(it.rules)}</p>`:''}</div></div>`:'';
+    $('#shopd').classList.toggle('on',!!it);
+  };
+  const watchShop=id=>{
+    if(id===sid)return;su1&&su1();su2&&su2();su1=su2=null;sid=id;IT=[];SH={};lo=null;renderShop();if(!id)return;
+    su1=onSnapshot(doc(db,'sessions',code,'shops',id),s=>{SH=s.data()||{};renderShop()});
+    su2=onSnapshot(query(collection(db,'sessions',code,'items'),where('shopId','==',id)),s=>{IT=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>a.created-b.created);renderShop()});
+  };
+  unsubs.push(()=>{su1&&su1();su2&&su2()});
+  $('#shopg').onclick=e=>{const c=e.target.closest('[data-i]');if(c){lo=c.dataset.i;renderShop()}};
+  $('#shopd').onclick=()=>{if(lo)lo=null;else dis=d.shopItemId;renderShop()};
   const rot=id=>{let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))%7;return h-3};
   const paint=async()=>{
-    const my=++seq,board=!!d.showBoard,mapOn=!board&&!!d.showMap&&!!d.mapId;
-    const b=board||mapOn?{}:await get(d.backgroundId);
+    const my=++seq,board=!!d.showBoard,shopOn=!board&&!!d.showShop&&!!d.shopId,mapOn=!board&&!shopOn&&!!d.showMap&&!!d.mapId;
+    const b=board||mapOn||shopOn?{}:await get(d.backgroundId);
     const tl=mapOn?(await Promise.all((d.visibleNpcIds||[]).map(async id=>{const x=await get(id);return x.data?{id,mon:x.type==='monster',im:tokImg(id,x.data,kick)}:null}))).filter(Boolean):[];
-    const n=board||mapOn?[]:(await Promise.all((d.visibleNpcIds||[]).map(get))).filter(x=>x.data);
+    const n=board||mapOn||shopOn?[]:(await Promise.all((d.visibleNpcIds||[]).map(get))).filter(x=>x.data);
     if(my!==seq)return;
     TL=tl;kick();const posted=qs.filter(q=>q.posted),st=$('#stage');
     st.classList.toggle('board',board);
     st.classList.toggle('solo',!b.data);
-    st.classList.toggle('empty',!board&&!mapOn&&!b.data&&!n.length);st.classList.toggle('map',mapOn);mw.set(mapOn?d.mapId:null);
+    st.classList.toggle('empty',!board&&!mapOn&&!shopOn&&!b.data&&!n.length);st.classList.toggle('map',mapOn);st.classList.toggle('shop',shopOn);watchShop(shopOn?d.shopId:null);if(d.shopItemId!==prevS){prevS=d.shopItemId;dis=null}renderShop();mw.set(mapOn?d.mapId:null);
     if(mapOn&&d.mapView){if(curId!==d.mapId)cur=null;curId=d.mapId;tg={...d.mapView};kick()}if(!mapOn){curId=null;cur=null}
     $('#bg').style.backgroundImage=b.data?`url(${b.data})`:'';
-    $('#idle').style.opacity=!board&&!mapOn&&!b.data?1:0;
+    $('#idle').style.opacity=!board&&!mapOn&&!shopOn&&!b.data?1:0;
     $('#npcs').style.setProperty('--n',Math.max(1,n.reduce((a,x)=>a+(x.type==='monster'?1.3:1),0)));
     $('#npcs').innerHTML=n.map(x=>x.type==='monster'?`<figure class="mon"><img src="${x.data}" alt=""></figure>`:`<figure><img src="${x.data}" alt=""><figcaption>${esc(x.name)}</figcaption></figure>`).join('');
     $('#papers').style.setProperty('--per',posted.length<=3?Math.max(1,posted.length):posted.length===4?2:3);
@@ -278,7 +315,7 @@ async function shrink(file,max){
 
 function dm(code){
   const L=doc(db,'sessions',code,'live','state'),IM=collection(db,'sessions',code,'images'),QC=collection(db,'sessions',code,'quests');
-  let live={},imgs=[],qs=[],edit=null,MO=null,MS={},view={x:.5,y:.5,ft:60},mode=null,tmr=0,dirty=false;
+  let live={},imgs=[],qs=[],shops=[],items=[],selShop=localStorage.getItem('selShop'),editIt=null,edit=null,MO=null,MS={},view={x:.5,y:.5,ft:60},mode=null,tmr=0,dirty=false;
   const link=location.origin+location.pathname+'#display/'+code;
   app.innerHTML=`<div class="wrap"><h1>The Arcane Table</h1>
   <details class="panel" id="d-ctl" open><summary><h2>Controls</h2></summary><div class="row">
@@ -305,7 +342,15 @@ function dm(code){
   <details class="panel" id="d-q" open><summary><h2>Quests <span id="cq"></span></h2></summary>
   <input id="qt" placeholder="Quest title" style="width:100%;margin-bottom:8px"><textarea id="qx" rows="3" placeholder="Quest text"></textarea>
   <div class="row" style="margin:8px 0"><button class="btn" id="qb" data-a="qsave">Add quest</button></div>
-  <p class="note">New quests are pinned to the board right away. Unpin one to hide it from the players.</p><div id="qs"></div></details></div>`;
+  <p class="note">New quests are pinned to the board right away. Unpin one to hide it from the players.</p><div id="qs"></div></details>
+  <details class="panel" id="d-sh" open><summary><h2>Shops <span id="csh"></span></h2></summary>
+  <p class="note" style="margin:0 0 8px">Use a shop for stores, loot or party inventory. Tap a card on the tablet to read it.</p>
+  <div class="row"><input id="shn" placeholder="Shop or loot list name"><button class="btn" data-a="shadd">Add shop</button></div>
+  <div class="row" id="shl" style="margin:10px 0"></div><div class="row" id="shb"></div>
+  <div style="margin-top:10px"><div class="row"><input id="itn" placeholder="Item name" style="flex:2 1 160px"><input id="itc" placeholder="Cost, e.g. 50 gp" style="flex:1 1 110px"></div>
+  <textarea id="itd" rows="2" placeholder="Description" style="margin-top:8px"></textarea><textarea id="itr" rows="2" placeholder="Rules" style="margin-top:8px"></textarea>
+  <div class="row" style="margin:8px 0"><input id="iti" type="file" accept="image/*"><button class="btn" id="itb" data-a="itsave">Add item</button></div><p class="note" id="itm"></p></div>
+  <div id="shi"></div></details></div>`;
   document.querySelectorAll('details[id]').forEach(el=>{const k='open-'+el.id,v=localStorage.getItem(k);if(v!==null)el.open=v==='1';el.addEventListener('toggle',()=>localStorage.setItem(k,el.open?'1':'0'))});
   const draw=()=>{
     const tile=(i,on,a)=>`<div class="tile ${on?'on':''} ${a==='npc'?'npc':''} ${i.type==='monster'?'mon':''}" tabindex="0" data-a="${a}" data-id="${i.id}"><img src="${i.data}" alt=""><span>${esc(i.name)}</span><i data-a="ren" data-id="${i.id}" title="Rename">✎</i><b data-a="del" data-id="${i.id}" title="Delete">×</b></div>`;
@@ -318,9 +363,20 @@ function dm(code){
     $('#cb').textContent='('+bg.length+')';$('#cn').textContent='('+np.length+')';$('#cq').textContent='('+qs.length+')';
     $('#bt').textContent=live.showBoard?'Hide the quest board':'Show the quest board';
     $('#mshow').textContent=live.showMap?'Hide map on tablet':'Show map on tablet';
+    shopDraw();
     const qb=(a,id,t,alt)=>`<button class="btn sm ${alt?'alt':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#qs').innerHTML=qs.map(q=>`<div class="qrow ${q.posted?'on':''}"><div class="qt"><b>${esc(q.title||'Untitled')}${q.done?' (done)':''}</b><p>${esc(q.text||'')}</p></div><div class="row">${qb('qpin',q.id,q.posted?'Unpin':'Pin to board')}${qb('qdone',q.id,q.done?'Reopen':'Done',1)}${qb('qedit',q.id,'Edit',1)}${qb('qdel',q.id,'Delete',1)}</div></div>`).join('')||'<p class="note">No quests yet.</p>';
   };
+  function shopDraw(){
+    const sel=shops.find(x=>x.id===selShop),on=!!sel&&live.showShop&&live.shopId===sel.id;
+    const bt=(a,id,t,alt)=>`<button class="btn sm ${alt?'alt':''}" data-a="${a}" data-id="${id}">${t}</button>`;
+    $('#csh').textContent='('+shops.length+')';
+    $('#shl').innerHTML=shops.map(x=>`<button class="btn sm ${x.id===selShop?'':'alt'}" data-a="shsel" data-id="${x.id}">${esc(x.name)} (${items.filter(i=>i.shopId===x.id).length})</button>`).join('')||'<span class="note">No shops yet.</span>';
+    $('#shb').innerHTML=sel?bt('shshow',sel.id,on?'Hide shop on tablet':'Show shop on tablet')+bt('shren',sel.id,'Rename',1)+bt('shdel',sel.id,'Delete shop',1):'';
+    $('#shi').innerHTML=sel?items.filter(i=>i.shopId===sel.id).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${i.img?`<img src="${i.img}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}<p>${esc(i.desc||'')}</p></div></div><div class="row">${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide details':'Show details')}${bt('itedit',i.id,'Edit',1)}${bt('itdel',i.id,'Delete',1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':'';
+  }
+  unsubs.push(onSnapshot(collection(db,'sessions',code,'shops'),s=>{shops=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.created-b.created);if(selShop&&!shops.some(x=>x.id===selShop))selShop=null;draw()}));
+  unsubs.push(onSnapshot(collection(db,'sessions',code,'items'),s=>{items=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.created-b.created);draw()}));
   const mc=$('#mc'),R2=makeRenderer(mc),ptr=new Map();let pinch=0;const lastT={};
   const mw=watchMap(code,(o,s)=>{MO=o;MS=s;syncIn();drawMap()});unsubs.push(()=>mw.stop());
   const dmToks=()=>(live.visibleNpcIds||[]).map(id=>imgs.find(x=>x.id===id)).filter(Boolean).map(x=>({id:x.id,mon:x.type==='monster',im:tokImg(x.id,x.data,drawMap)}));
@@ -371,12 +427,32 @@ function dm(code){
     if(a==='npc')set({visibleNpcIds:(live.visibleNpcIds||[]).includes(id)?arrayRemove(id):arrayUnion(id)});
     if(a==='black')set({backgroundId:null});
     if(a==='clear')set({visibleNpcIds:[]});
+    if(a==='shadd'){const nm=$('#shn').value.trim();if(!nm)return;const r=doc(collection(db,'sessions',code,'shops'));await setDoc(r,{name:nm,created:Date.now()});selShop=r.id;localStorage.setItem('selShop',r.id);$('#shn').value='';draw()}
+    if(a==='shsel'){selShop=id;localStorage.setItem('selShop',id);draw()}
+    if(a==='shshow'&&selShop){const on=live.showShop&&live.shopId===selShop;set(on?{showShop:false,shopItemId:null}:{showShop:true,shopId:selShop,shopItemId:null,showBoard:false,showMap:false})}
+    if(a==='shren'){const sh=shops.find(x=>x.id===selShop),nn=sh&&prompt('Shop name',sh.name);if(nn&&nn.trim())updateDoc(doc(db,'sessions',code,'shops',selShop),{name:nn.trim()})}
+    if(a==='shdel'&&selShop&&confirm('Delete this shop and all its items?')){const sd=selShop;
+      for(const i of items.filter(x=>x.shopId===sd))await deleteDoc(doc(db,'sessions',code,'items',i.id));
+      await deleteDoc(doc(db,'sessions',code,'shops',sd));if(live.shopId===sd)set({showShop:false,shopItemId:null});selShop=null;localStorage.removeItem('selShop');draw()}
+    if(a==='itsave'){
+      const msg=$('#itm'),name=$('#itn').value.trim();
+      if(!selShop){msg.className='note err';msg.textContent='Select or add a shop first.';return}
+      if(!name){msg.className='note err';msg.textContent='Give the item a name.';return}
+      try{msg.className='note';msg.textContent='Saving...';
+        const f=$('#iti').files[0],img=f?await shrink(f,480):null,body={name,cost:$('#itc').value.trim(),desc:$('#itd').value.trim(),rules:$('#itr').value.trim(),...(img?{img}:{})};
+        if(editIt)await updateDoc(doc(db,'sessions',code,'items',editIt),body);
+        else await setDoc(doc(collection(db,'sessions',code,'items')),{shopId:selShop,img:'',created:Date.now(),...body});
+        editIt=null;['#itn','#itc','#itd','#itr','#iti'].forEach(k=>$(k).value='');$('#itb').textContent='Add item';msg.textContent='Saved.';
+      }catch(err){msg.className='note err';msg.textContent='Could not save: '+err.message}}
+    if(a==='itedit'){const i=items.find(x=>x.id===id);if(i){editIt=id;$('#itn').value=i.name||'';$('#itc').value=i.cost||'';$('#itd').value=i.desc||'';$('#itr').value=i.rules||'';$('#itb').textContent='Save item';$('#itn').focus()}}
+    if(a==='itdel'&&confirm('Delete this item?')){if(editIt===id){editIt=null;$('#itb').textContent='Add item'}deleteDoc(doc(db,'sessions',code,'items',id))}
+    if(a==='itshow'){const i=items.find(x=>x.id===id);if(i){const on=live.showShop&&live.shopId===i.shopId;set(on?{shopItemId:live.shopItemId===id?null:id}:{showShop:true,shopId:i.shopId,shopItemId:id,showBoard:false,showMap:false})}}
     if(a==='map')set({mapId:id,mapView:{x:.5,y:.5,ft:60}});
-    if(a==='mshow'&&live.mapId)set({showMap:!live.showMap,...(!live.showMap?{showBoard:false}:{})});
+    if(a==='mshow'&&live.mapId)set({showMap:!live.showMap,...(!live.showMap?{showBoard:false,showShop:false}:{})});
     if(a==='mlight'&&MO){const L=lights().map(l=>({...l})),n={x:view.x,y:view.y};L.push(n);MS.lights=L;addEx(n);dirty=true;flush();drawMap()}
     if(a==='mrm'&&MO&&lights().length>1){MS.lights=lights().slice(0,-1);dirty=true;flush();drawMap()}
     if(a==='mreset'&&MO){MS.lights=lights();MS.ex='';MS.lights.forEach(addEx);dirty=true;flush();drawMap()}
-    if(a==='board')set({showBoard:!live.showBoard,...(!live.showBoard?{showMap:false}:{})});
+    if(a==='board')set({showBoard:!live.showBoard,...(!live.showBoard?{showMap:false,showShop:false}:{})});
     if(a==='home'){location.hash='';}
     if(a==='ren'){const cur=imgs.find(x=>x.id===id),nn=prompt('New name',cur?cur.name:'');if(nn&&nn.trim())updateDoc(doc(IM,id),{name:nn.trim()})}
     if(a==='del'&&confirm('Delete this image from the library?')){
