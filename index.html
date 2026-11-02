@@ -168,7 +168,7 @@ function route(){
   if(!code||!['dm','display'].includes(v))return home();
   v==='dm'?dm(code):display(code);
 }
-addEventListener('hashchange',route);route();
+
 
 function home(){
   app.innerHTML=`<div class="wrap"><h1>The Arcane Table</h1>
@@ -330,10 +330,11 @@ const windFrom=(roll,wx)=>{const t=roll+(WM[wx]||0);return t<=3?0:t<=5?1:t<=7?2:
 const sname=(id,cd)=>{const x=WXS.find(y=>y.id===id)||WXS[0];return x.n[cd&&x.n[1]?1:0]};
 function nextWx(cur,die,P){
   const t=cur[0],n=+cur[1];
+  if(die==='s')return t==='s'?(n<3?'s'+(n+1):cur):'s1';
   if(die===t)return n<3?t+(n+1):cur;
   if(t==='s'){const r=(die==='c'?P.tc:P.tr)[n-1];return r==='stay'?cur:r}
-  if(t==='c'){if(n===3)return die==='s'?'s2':'r2';return(die==='s'?'s':'r')+n}
-  return die==='s'?'s'+n:'c'+Math.max(1,n-1);
+  if(t==='c')return'r'+(n===3?2:n);
+  return'c'+Math.max(1,n-1);
 }
 const defPre=()=>[
  {id:'spring',name:'Spring',cold:false,d:{s:4,c:4,r:4},tc:['c1','c2','c3'],tr:['c1','c2','c3']},
@@ -650,4 +651,5 @@ function dm(code){
       $('#file').value='';$('#nm').value='';}
   };
 }
+addEventListener('hashchange',route);route();
 </script></body></html>
