@@ -141,6 +141,9 @@ label{font-family:Cinzel,Georgia,serif;font-size:15px}
 #wxb b{display:block;font:700 clamp(13px,2.4vmin,24px) Cinzel,serif}
 #wxb small{display:block;font:clamp(12px,1.9vmin,19px) Almendra,serif;color:var(--parch)}
 #stage.board #wx,#stage.board #wxb,#stage.shop #wx,#stage.shop #wxb{display:none}
+
+#night{position:absolute;inset:0;background:#5a69a6;mix-blend-mode:multiply;opacity:0;pointer-events:none;transition:opacity 1.5s}
+#stage.night #night{opacity:1}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -182,7 +185,7 @@ function home(){
 
 async function display(code){
   app.onclick=null;
-  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="npcs"></div><canvas id="mapc"></canvas><canvas id="wx"></canvas><div id="wxb"></div><div id="board"><div id="papers"></div></div><div id="shopc"><div id="shopt"></div><div id="shopg"></div></div><div id="shopd"></div></div>';
+  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="npcs"></div><canvas id="mapc"></canvas><div id="night"></div><canvas id="wx"></canvas><div id="wxb"></div><div id="board"><div id="papers"></div></div><div id="shopc"><div id="shopt"></div><div id="shopg"></div></div><div id="shopd"></div></div>';
   try{navigator.wakeLock&&navigator.wakeLock.request('screen')}catch(e){}
   const cache=new Map();
   const get=async id=>{if(!id)return{};if(!cache.has(id)){const s=await getDoc(doc(db,'sessions',code,'images',id));cache.set(id,s.exists()?s.data():{})}return cache.get(id)};
@@ -211,7 +214,7 @@ async function display(code){
   $('#shopg').onclick=e=>{const c=e.target.closest('[data-i]');if(c){lo=c.dataset.i;renderShop()}};
   $('#shopd').onclick=()=>{if(lo)lo=null;else dis=d.shopItemId;renderShop()};
   const WXE=makeWeather($('#wx'));unsubs.push(()=>WXE.stop());
-  let wk='';const renderWx=()=>{const on=!!d.wxOn,s=WXS.find(x=>x.id===d.wx)||WXS[0],w=Math.min(3,d.wind|0),k=[on,s.id,w,!!d.snow].join();if(k===wk)return;wk=k;WXE.set(on?s:null,w,!!d.snow);$('#wxb').innerHTML=on?wxBadge(s,w,!!d.snow):''};
+  let wk='';const renderWx=()=>{$('#stage').classList.toggle('night',!!d.night);const on=!!d.wxOn,s=WXS.find(x=>x.id===d.wx)||WXS[0],w=Math.min(3,d.wind|0),cd=!!d.cold,k=[on,s.id,w,cd].join();if(k===wk)return;wk=k;WXE.set(on?s:null,w,cd);$('#wxb').innerHTML=on?wxBadge(s,w,cd):''};
   const rot=id=>{let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))%7;return h-3};
   const paint=async()=>{
     const my=++seq,board=!!d.showBoard,shopOn=!board&&!!d.showShop&&!!d.shopId,mapOn=!board&&!shopOn&&!!d.showMap&&!!d.mapId;
@@ -259,34 +262,31 @@ function watchMap(code,cb){
     get id(){return id}};
 }
 const WXS=[
- {id:'clear',n:['Clear'],i:'sun',cl:0},
- {id:'partly',n:['Partly cloudy'],i:'cloud',cl:.35},
- {id:'overcast',n:['Overcast'],i:'cloud',cl:.8},
- {id:'mist',n:['Mist'],i:'fog',cl:.2,fog:.25},
- {id:'fog',n:['Dense fog'],i:'fog',cl:.3,fog:.6},
- {id:'heat',n:['Heatwave'],i:'sun',cl:0,tint:'255,160,50,.13'},
- {id:'cold',n:['Cold snap'],i:'snow',cl:.25,tint:'130,175,255,.15'},
- {id:'p1',n:['Light rain','Light snow'],i:'rain',cl:.55,p:1},
- {id:'p2',n:['Rain','Snow'],i:'rain',cl:.7,p:2},
- {id:'p3',n:['Heavy rain','Heavy snow'],i:'rain',cl:.85,p:3},
- {id:'storm',n:['Thunderstorm'],i:'bolt',cl:.9,p:3,rain:1,bolt:1},
- {id:'hail',n:['Hail'],i:'rain',cl:.8,p:2,hail:1}
+ {id:'s1',n:['Clear'],i:'sun',cl:0},
+ {id:'s2',n:['Sunny'],i:'sun',cl:0,tint:'255,210,120,.07'},
+ {id:'s3',n:['Hot','Cold'],i:['sun','snow'],cl:0,tint:['255,160,50,.15','130,175,255,.17']},
+ {id:'c1',n:['Cloudy'],i:'cloud',cl:.45},
+ {id:'c2',n:['Overcast'],i:'cloud',cl:.8},
+ {id:'c3',n:['Fog'],i:'fog',cl:.3,fog:.6},
+ {id:'r1',n:['Light rain','Light snow'],i:['rain','snow'],cl:.55,p:1},
+ {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
+ {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const WINDS=['Calm','Breeze','Strong wind','Gale'];
+const WINDS=['Still','Breeze','Gust','Storm'];
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
  cloud:'<path d="M7 18h10a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6 1.5A3.4 3.4 0 0 0 7 18z"/>',
  rain:'<g transform="translate(0,-3)"><path d="M7 18h10a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6 1.5A3.4 3.4 0 0 0 7 18z"/></g><path d="M8 19l-1 3M12 19l-1 3M16 19l-1 3"/>',
  snow:'<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/>',
  bolt:'<path d="M13 2L5 13h6l-1 9 8-12h-6z"/>',
  fog:'<path d="M4 8h16M3 12h18M5 16h14M8 20h8"/>'};
-const wxBadge=(s,w,sn)=>{const ic=sn&&s.p&&!s.rain&&!s.hail?'snow':s.i;
-  return`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${s.n[sn&&s.n[1]?1:0]}</b><small>${WINDS[w]}</small></div>`};
+const wxBadge=(s,w,cd)=>{const ic=Array.isArray(s.i)?s.i[cd?1:0]:s.i;
+  return`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${s.n[cd&&s.n[1]?1:0]}</b><small>${WINDS[w]}</small></div>`};
 function makeWeather(cv){
   const c=cv.getContext('2d');let st=null,wind=0,snow=false,P=[],B=[],S=[],raf=0,flash=0,nextF=0;
-  const sl=()=>[0,.08,.3,.6][wind];
+  const sl=()=>[0,.1,.35,.7][wind];
   const size=()=>{if(cv.width!==cv.clientWidth||cv.height!==cv.clientHeight){cv.width=cv.clientWidth;cv.height=cv.clientHeight}};
   const build=()=>{size();const W=cv.width||1280,H=cv.height||800,k=W*H/1e6;
-    P=Array.from({length:st&&st.p?Math.round([0,140,320,650][st.p]*k):0},()=>({x:Math.random()*W,y:Math.random()*H,l:10+Math.random()*14,v:11+Math.random()*8,r:1.2+Math.random()*2.6,ph:Math.random()*6.3,sv:.8+Math.random()*1.6}));
+    P=Array.from({length:st&&st.p?Math.round([0,140,320,650][st.p]*k):0},()=>({x:Math.random()*W,y:Math.random()*H,l:10+Math.random()*14,v:(11+Math.random()*8)*(1+((st&&st.p||1)-1)*.2),r:1.2+Math.random()*2.6,ph:Math.random()*6.3,sv:.8+Math.random()*1.6}));
     B=Array.from({length:7},()=>({x:Math.random()*W,y:Math.random()*H*.9,r:W*(.22+Math.random()*.25),v:.08+Math.random()*.18}));
     S=Array.from({length:wind>=3?26:wind>=2?14:0},()=>({x:Math.random()*W,y:Math.random()*H,l:80+Math.random()*140,v:18+Math.random()*14}))};
   const blob=(b,col,a)=>{const g=c.createRadialGradient(b.x,b.y,0,b.x,b.y,b.r);g.addColorStop(0,`rgba(${col},${a})`);g.addColorStop(1,`rgba(${col},0)`);c.fillStyle=g;c.fillRect(b.x-b.r,b.y-b.r,b.r*2,b.r*2)};
@@ -300,14 +300,14 @@ function makeWeather(cv){
       P.forEach(p=>{
         if(isSnow){p.x+=Math.sin(p.y*.02+p.ph)*.6+ws*7;p.y+=p.sv;c.fillStyle='rgba(255,255,255,.85)';c.beginPath();c.arc(p.x,p.y,p.r,0,7);c.fill()}
         else if(st.hail){p.x+=ws*9;p.y+=p.v*1.3;c.fillStyle='rgba(235,245,255,.9)';c.fillRect(p.x,p.y,3,3)}
-        else{p.x+=ws*p.v;p.y+=p.v;c.strokeStyle='rgba(185,205,225,.42)';c.beginPath();c.moveTo(p.x,p.y);c.lineTo(p.x+ws*p.l,p.y+p.l);c.stroke()}
-        if(p.y>H+20||p.x>W+40||p.x<-40){p.y=-20;p.x=Math.random()*(W+ws*H*.6)-ws*H*.4}});}
+        else{p.x+=ws*p.v;p.y+=p.v*(1+wind*.12);c.strokeStyle='rgba(185,205,225,.42)';c.beginPath();c.moveTo(p.x,p.y);c.lineTo(p.x+ws*p.l,p.y+p.l);c.stroke()}
+        if(p.y>H+20){p.y=-20;p.x=Math.random()*(W+ws*H)-ws*H}else if(p.x>W+40){p.x=-40;p.y=Math.random()*H}});}
     if(S.length){c.strokeStyle='rgba(255,255,255,.08)';c.lineWidth=1.5;S.forEach(q=>{q.x+=q.v;if(q.x-q.l>W){q.x=-q.l;q.y=Math.random()*H}c.beginPath();c.moveTo(q.x,q.y);c.lineTo(q.x-q.l,q.y+q.l*.05);c.stroke()})}
     if(st.bolt&&ts>nextF){flash=1;nextF=ts+4000+Math.random()*7000;if(Math.random()<.4)setTimeout(()=>{flash=.8},180)}
     if(flash>0){c.fillStyle=`rgba(235,240,255,${flash*.5})`;c.fillRect(0,0,W,H);flash-=.07}
   };
   return{
-    set(s,w,sn){st=s;wind=w;snow=sn;cancelAnimationFrame(raf);raf=0;
+    set(s,w,sn){st=s?{...s,tint:Array.isArray(s.tint)?s.tint[sn?1:0]:s.tint,bolt:s.id==='r3'&&w>=3&&!sn}:null;wind=w;snow=sn;cancelAnimationFrame(raf);raf=0;
       if(!st||(!st.cl&&!st.fog&&!st.tint&&!st.p&&wind<2)){st=null;size();c.clearRect(0,0,cv.width,cv.height);return}
       build();raf=requestAnimationFrame(frame)},
     stop(){cancelAnimationFrame(raf)}};
@@ -386,8 +386,8 @@ function dm(code){
   <button class="btn alt" data-a="home">Change session</button></div>
   <p class="note">Player display link for the tablet:</p><input id="lnk" readonly value="${esc(link)}" style="width:100%"></details>
   <details class="panel" id="d-wx" open><summary><h2>Weather</h2></summary>
-  <div class="row" style="margin-bottom:10px"><button class="btn" id="wxt" data-a="wxon">Show weather on tablet</button><button class="btn sm alt" id="wxs" data-a="wxsnow">Precipitation: Rain</button></div>
-  <div class="row" id="wxl"></div><p class="note" style="margin:10px 0 4px">Wind</p><div class="row" id="wxw"></div></details>
+  <div class="row" style="margin-bottom:10px"><button class="btn" id="wxt" data-a="wxon">Show weather on tablet</button><button class="btn sm alt" id="wxs" data-a="wxsnow">Season: warm (rain)</button><button class="btn sm alt" id="wxn" data-a="night">Switch to night</button></div>
+  <div id="wxl"></div><p class="note" style="margin:10px 0 4px">Wind</p><div class="row" id="wxw"></div></details>
   <details class="panel" id="d-up" open><summary><h2>Add to the library</h2></summary><div class="row">
   <select id="type"><option value="background">Background</option><option value="npc">NPC portrait</option><option value="monster">Monster token</option><option value="map">Map</option></select>
   <input id="nm" placeholder="Name (optional)"><input id="file" type="file" accept="image/*" multiple>
@@ -433,12 +433,13 @@ function dm(code){
     $('#qs').innerHTML=qs.map(q=>`<div class="qrow ${q.posted?'on':''}"><div class="qt"><b>${esc(q.title||'Untitled')}${q.done?' (done)':''}</b><p>${esc(q.text||'')}</p></div><div class="row">${qb('qpin',q.id,q.posted?'Unpin':'Pin to board')}${qb('qdone',q.id,q.done?'Reopen':'Done',1)}${qb('qedit',q.id,'Edit',1)}${qb('qdel',q.id,'Delete',1)}</div></div>`).join('')||'<p class="note">No quests yet.</p>';
   };
   function wxDraw(){
-    const sn=!!live.snow,cur=live.wx||'clear',w=live.wind|0;
+    const cd=!!live.cold,cur=live.wx||'s1',w=live.wind|0;
     const b=(a,id,t,act)=>`<button class="btn sm ${act?'':'alt'}" data-a="${a}" data-id="${id}">${t}</button>`;
-    $('#wxl').innerHTML=WXS.map(x=>b('wxset',x.id,x.n[sn&&x.n[1]?1:0],cur===x.id)).join('');
+    $('#wxl').innerHTML=['s','c','r'].map(t=>`<div class="row" style="margin-bottom:6px">${WXS.filter(x=>x.id[0]===t).map(x=>b('wxset',x.id,x.n[cd&&x.n[1]?1:0],cur===x.id)).join('')}</div>`).join('');
     $('#wxw').innerHTML=WINDS.map((n,i)=>b('wxwind',i,n,w===i)).join('');
     $('#wxt').textContent=live.wxOn?'Hide weather on tablet':'Show weather on tablet';
-    $('#wxs').textContent='Precipitation: '+(sn?'Snow':'Rain');
+    $('#wxs').textContent='Season: '+(cd?'cold (snow)':'warm (rain)');
+    $('#wxn').textContent=live.night?'Switch to day':'Switch to night';
   }
   function shopDraw(){
     const sel=shops.find(x=>x.id===selShop),on=!!sel&&live.showShop&&live.shopId===sel.id;
@@ -503,7 +504,8 @@ function dm(code){
     if(a==='wxon')set({wxOn:!live.wxOn});
     if(a==='wxset')set({wx:id,wxOn:true});
     if(a==='wxwind')set({wind:+id,wxOn:true});
-    if(a==='wxsnow')set({snow:!live.snow});
+    if(a==='wxsnow')set({cold:!live.cold});
+    if(a==='night')set({night:!live.night});
     if(a==='shadd'){const nm=$('#shn').value.trim();if(!nm)return;const r=doc(collection(db,'sessions',code,'shops'));await setDoc(r,{name:nm,created:Date.now()});selShop=r.id;localStorage.setItem('selShop',r.id);$('#shn').value='';draw()}
     if(a==='shsel'){selShop=id;localStorage.setItem('selShop',id);draw()}
     if(a==='shshow'&&selShop){const on=live.showShop&&live.shopId===selShop;set(on?{showShop:false,shopItemId:null}:{showShop:true,shopId:selShop,shopItemId:null,showBoard:false,showMap:false})}
