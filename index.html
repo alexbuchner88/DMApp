@@ -170,6 +170,30 @@ summary h2{display:flex;align-items:center;gap:.4em}
 #stage:not(.solo) #npcs figure.mon{width:min(42vmin,390px)}
 
 .sheet .wt{margin:-.3em 0 .5em;font:.85em Almendra,serif;color:#5a3a1a}
+
+.card .wgt{margin:0;align-self:center;font:clamp(12px,2vmin,20px) Almendra,serif;color:#5a3a1a}
+
+.esm{width:15px;height:15px;margin-left:5px;vertical-align:-2px;color:var(--hl)}
+.rbox .stats{display:flex;flex-wrap:wrap;gap:6px 10px;padding:0 14px 10px;font:700 15px Cinzel,serif;color:var(--gold)}
+.rbox .stats span{padding:3px 10px;border-radius:4px;background:#0005}
+.rbox .fxd{padding:0 14px 12px}
+.rbox .fxd summary{cursor:pointer;font:700 14px Cinzel,serif;color:var(--parch)}
+.pv{max-width:640px;margin:0 auto;padding:10px 12px 40px;position:relative;z-index:1}
+.pvh h1{font-size:clamp(22px,7vw,34px);text-align:center;margin:.1em 0 .2em}
+.pvt{display:flex;gap:8px;position:sticky;top:0;z-index:3;padding:8px 0;background:linear-gradient(#000a,#0000)}
+.pvt .btn{flex:1}
+.pvempty{padding:36px 10px;text-align:center;color:var(--parch);font:20px Almendra,serif}
+.pvname{margin:4px 0 10px;text-align:center;font:700 22px 'Cinzel Decorative',Cinzel,serif;color:var(--gold);text-shadow:0 2px 0 #000}
+.pvg{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px}
+.pv .card{padding:8px;gap:6px}
+.qbig{position:relative;width:min(92vw,560px);aspect-ratio:589/700;margin:12px auto;background:url(paper.webp) center/100% 100% no-repeat;filter:drop-shadow(0 6px 10px #000b)}
+.qbig .pin{top:3.5%;width:20px;height:20px;margin-left:-10px}
+.qbig .in{position:absolute;inset:17% 13% 11%;overflow:auto;color:#2b1c10;font:clamp(17px,4.6vw,24px)/1.25 Almendra,serif}
+.qbig h3{margin:0 0 .35em;font:400 1.45em MedievalSharp,Almendra,serif;color:#3a2210;line-height:1.1}
+.qbig p{margin:0;white-space:pre-wrap}
+#pvd{position:fixed;inset:0;display:none;place-items:center;background:#000b;z-index:20;overflow:auto}
+#pvd.on{display:grid}
+#pvd .sheet{height:auto;width:min(94vw,72vh);aspect-ratio:589/700}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -191,8 +215,8 @@ function route(){
   const [v,c]=location.hash.slice(1).split('/');
   const code=(c||localStorage.getItem('code')||'').toLowerCase();
   if(c)localStorage.setItem('code',code);
-  if(!code||!['dm','display'].includes(v))return home();
-  v==='dm'?dm(code):display(code);
+  if(!code||!['dm','display','player'].includes(v))return home();
+  v==='dm'?dm(code):v==='player'?player(code):display(code);
 }
 
 
@@ -201,8 +225,8 @@ function home(){
   <div class="panel"><h2>Session code</h2>
   <p class="note">Pick any word. Every device that uses the same code sees the same table.</p>
   <div class="row"><input id="code" placeholder="e.g. dragonkeep" value="${esc(localStorage.getItem('code')||'')}" autocapitalize="off">
-  <button class="btn" data-go="dm">Open the DM screen</button>
-  <button class="btn alt" data-go="display">Open the player display</button></div></div></div>`;
+  <button class="btn" data-go="dm">DM screen</button>
+  <button class="btn alt" data-go="display">Tablet display</button><button class="btn alt" data-go="player">Player view</button></div></div></div>`;
   app.onclick=e=>{const g=e.target.dataset.go;if(!g)return;
     const code=$('#code').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'');
     if(!code)return $('#code').focus();
@@ -226,7 +250,7 @@ async function display(code){
   let IT=[],SH={},sid=null,su1=null,su2=null,lo=null,dis=null,prevS=null,gk='',dk='';
   const renderShop=()=>{
     $('#shopt').textContent=SH.name||'';
-    {const gh=IT.map(i=>`<div class="card" data-i="${i.id}"><div class="pic">${i.img?`<img src="${i.img}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}</div>`).join('');if(gh!==gk){gk=gh;$('#shopg').innerHTML=gh}}
+    {const gh=IT.map(i=>`<div class="card" data-i="${i.id}"><div class="pic">${i.img?`<img src="${i.img}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${i.weight?`<p class="wgt">${esc(i.weight)}</p>`:''}</div>`).join('');if(gh!==gk){gk=gh;$('#shopg').innerHTML=gh}}
     const oid=lo||(d.shopItemId&&d.shopItemId!==dis?d.shopItemId:null),it=IT.find(x=>x.id===oid);
     {const dh=it?`<div class="sheet"><div class="sin">${it.img?`<div class="pic2"><img src="${it.img}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}${it.weight?`<div class="wt">Weight: ${esc(it.weight)}</div>`:''}${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`:'';if(dh!==dk){dk=dh;$('#shopd').innerHTML=dh}}
     $('#shopd').classList.toggle('on',!!it);
@@ -300,7 +324,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-03 f';
+const VER='2026-11-03 h';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -442,6 +466,54 @@ async function prepMap(file){
   return{w,h,cols,rows,tiles,thumb:t.toDataURL('image/webp',.7)};
 }
 
+const WDC=[0,2,5,10];
+const EYE_SM='<svg class="esm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+// WXFX: weather effects. Key is the state id, or the id plus c for the cold season. Value: {speed:'text',dc:number,fx:'text'}
+const fxFor=(id,cd)=>WXFX[cd?id+'c':id]||WXFX[id]||null;
+function wxBoxHTML(cur,cd,w,day){
+  const x=WXS.find(y=>y.id===cur)||WXS[0],ic=Array.isArray(x.i)?x.i[cd?1:0]:x.i,f=fxFor(cur,cd);
+  const head=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${sname(cur,cd)}</b><small>Wind: ${WINDS[w]}</small></div>${day!=null?`<span class="day">Day ${day}</span>`:''}`;
+  const dc=f&&typeof f.dc==='number'?f.dc+WDC[w]:null;
+  const stats=f&&(f.speed||dc!=null)?`<div class="stats">${f.speed?`<span>Travel speed: ${esc(f.speed)}</span>`:''}${dc!=null?`<span>Survival DC ${dc}</span>`:''}</div>`:'';
+  const fx=f&&f.fx?`<details class="fxd"><summary>Effects</summary><div class="fx">${esc(Array.isArray(f.fx)?f.fx.join('\n'):f.fx)}</div></details>`:'';
+  return`<div class="rbox"><div class="rh">${head}</div>${stats}${fx}</div>`;
+}
+function player(code){
+  app.onclick=null;
+  app.innerHTML='<div class="pv"><div class="pvh"><h1>The Arcane Table</h1><div class="pvt"><button class="btn sm" data-t="quest">Quest</button><button class="btn sm" data-t="weather">Weather</button><button class="btn sm" data-t="shops">Shops</button></div></div><div id="pvb"></div><div id="pvd"></div></div>';
+  let d={},tab=sessionStorage.getItem('pvtab')||'quest',Q=null,qid=null,qu=null,psel=null,open=null,last='',lastD='';
+  const SHP={},subs={};
+  const card=i=>`<div class="card" data-i="${i.id}"><div class="pic">${i.img?`<img src="${i.img}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${i.weight?`<p class="wgt">${esc(i.weight)}</p>`:''}</div>`;
+  const render=()=>{
+    document.querySelectorAll('.pvt [data-t]').forEach(b=>b.classList.toggle('alt',b.dataset.t!==tab));
+    const keys=d.pshops||[];let h='',sheet='';
+    if(tab==='quest')h=Q?`<div class="qbig"><i class="pin"></i><div class="in"><h3>${esc(Q.title||'')}</h3><p>${esc(Q.text||'')}</p></div></div>`:'<div class="pvempty">No quest selected.</div>';
+    else if(tab==='weather')h=d.wxOn?wxBoxHTML(d.wx||'s1',!!d.cold,Math.min(3,d.wind|0)):'<div class="pvempty">No weather right now.</div>';
+    else if(!keys.length)h='<div class="pvempty">No shops are open.</div>';
+    else{
+      const k=keys.includes(psel)?psel:keys[0],S=SHP[k]||{name:'',items:[]};
+      h=(keys.length>1?'<div class="row" style="margin-bottom:10px">'+keys.map(x=>`<button class="btn sm ${x===k?'':'alt'}" data-s="${x}">${esc((SHP[x]||{}).name||'...')}</button>`).join('')+'</div>':'')+`<div class="pvname">${esc(S.name)}</div><div class="pvg">${S.items.map(card).join('')}</div>`;
+      const it=S.items.find(x=>x.id===open);
+      if(it)sheet=`<div class="sheet"><div class="sin">${it.img?`<div class="pic2"><img src="${it.img}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}${it.weight?`<div class="wt">Weight: ${esc(it.weight)}</div>`:''}${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`;
+    }
+    const key=tab+'|'+h;if(key!==last){last=key;$('#pvb').innerHTML=h}
+    if(sheet!==lastD){lastD=sheet;$('#pvd').innerHTML=sheet;$('#pvd').classList.toggle('on',!!sheet)}
+  };
+  const syncQ=()=>{const id=d.curQuest||null;if(id===qid)return;qu&&qu();qu=null;qid=id;Q=null;render();if(id)qu=onSnapshot(doc(db,'sessions',code,'quests',id),s=>{Q=s.exists()?s.data():null;render()})};
+  const syncS=()=>{const keys=d.pshops||[];
+    Object.keys(subs).forEach(k=>{if(!keys.includes(k)){subs[k].forEach(u=>u());delete subs[k];delete SHP[k]}});
+    keys.forEach(k=>{if(subs[k])return;const[rt,id]=k.split(':');SHP[k]={name:'',items:[]};
+      subs[k]=[onSnapshot(doc(db,'sessions',rt,'shops',id),s=>{if(SHP[k])SHP[k].name=(s.data()||{}).name||'';render()}),
+        onSnapshot(query(collection(db,'sessions',rt,'items'),where('shopId','==',id)),s=>{if(SHP[k])SHP[k].items=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>a.created-b.created);render()})]})};
+  unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};syncQ();syncS();render()}));
+  unsubs.push(()=>{qu&&qu();Object.values(subs).forEach(a=>a.forEach(u=>u()))});
+  app.onclick=e=>{
+    const t=e.target.closest('[data-t]');if(t){tab=t.dataset.t;sessionStorage.setItem('pvtab',tab);render();return}
+    if(e.target.closest('#pvd')){open=null;render();return}
+    const sb=e.target.closest('[data-s]');if(sb){psel=sb.dataset.s;render();return}
+    const c=e.target.closest('[data-i]');if(c){open=c.dataset.i;render()}};
+  render();
+}
 function parseTSV(t){
   const rows=[];let row=[],cell='',q=false;
   for(let i=0;i<t.length;i++){const ch=t[i];
@@ -465,13 +537,13 @@ async function shrink(file,max){
 function dm(code){
   const L=doc(db,'sessions',code,'live','state'),IM=collection(db,'sessions',code,'images'),QC=collection(db,'sessions',code,'quests');
   let live={},imgs=[],qs=[],shops=[],items=[],selShop=localStorage.getItem('selShop'),editIt=null,edit=null,MO=null,MS={},view={x:.5,y:.5,ft:60},mode=null,tmr=0,dirty=false;
-  const link=location.origin+location.pathname+'#display/'+code;
+  const link=location.origin+location.pathname+'#display/'+code,plink=location.origin+location.pathname+'#player/'+code;
   app.innerHTML=`<div class="wrap"><div class="row" style="justify-content:space-between"><div><h1>The Arcane Table</h1><div class="note" style="margin:0">Version ${VER}</div></div><button class="btn sm alt" id="pm" data-a="pm">Hide editing</button></div>
   <details class="panel" id="d-ctl" open><summary><h2>Controls</h2></summary><div class="row">
   <button class="btn" id="cv-bg" data-a="vbg">Background</button><button class="btn" id="cv-map" data-a="vmap">Map</button><button class="btn" id="cv-shop" data-a="vshop">Shop</button><button class="btn" id="cv-board" data-a="vboard">Quest board</button></div>
   <div class="row" style="margin-top:8px"><button class="btn" id="ct-wx" data-a="wxon">Weather</button><button class="btn" id="ct-night" data-a="night">Day</button><button class="btn" id="ct-tok" data-a="tok">Tokens</button>
   <button class="btn sm alt edit" data-a="clear">Clear tokens</button><button class="btn sm alt edit" data-a="home">Change session</button></div>
-  <div class="edit"><p class="note">Player display link for the tablet:</p><input id="lnk" readonly value="${esc(link)}" style="width:100%"></div></details>
+  <div class="edit"><p class="note">Player display link for the tablet:</p><input id="lnk" readonly value="${esc(link)}" style="width:100%"><p class="note">Player link for phones:</p><input id="lnk2" readonly value="${esc(plink)}" style="width:100%"></div></details>
   <details class="panel edit" id="d-up" open><summary><h2>Add to the library</h2></summary><div class="row">
   <select id="type"><option value="background">Background</option><option value="npc">NPC portrait</option><option value="monster">Monster token</option><option value="map">Map</option></select>
   <input id="nm" placeholder="Name (optional)"><input id="file" type="file" accept="image/*" multiple>
@@ -513,7 +585,7 @@ function dm(code){
   <details class="edit" id="d-imp" style="margin-top:10px"><summary><h2 style="font-size:17px">Import items</h2></summary>
   <p class="note">Rows from your sheet: Name, Cost, Weight, Description, Statblock, DM notes. Existing names are updated.</p>
   <textarea id="imt" rows="6" placeholder="Paste rows here"></textarea>
-  <div class="row" style="margin-top:8px"><button class="btn sm" data-a="imp">Import</button><button class="btn sm alt" data-a="exp">Copy shop as table</button></div><p class="note" id="imm"></p></details>
+  <div class="row" style="margin-top:8px"><button class="btn sm" data-a="imp">Import</button><button class="btn sm alt" data-a="exp">Copy shop as table</button></div><div class="row" style="margin-top:8px"><input id="imf" type="file" accept=".json"><button class="btn sm" data-a="impf">Import file</button></div><p class="note" id="imm"></p></details>
   <div id="shi"></div></details></div>`;
   if(localStorage.getItem('play')==='1'){$('.wrap').classList.add('play');$('#pm').textContent='Show editing'}
   document.querySelectorAll('details[id]').forEach(el=>{const k='open-'+el.id,v=localStorage.getItem(k);if(v!==null)el.open=v==='1';el.addEventListener('toggle',()=>localStorage.setItem(k,el.open?'1':'0'))});
@@ -531,7 +603,7 @@ function dm(code){
     
     shopDraw();wxDraw();ctlDraw();
     const qb=(a,id,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${id}">${t}</button>`;
-    $('#qs').innerHTML=qs.map(q=>`<div class="qrow ${q.posted?'on':''}"><div class="qt"><b>${esc(q.title||'Untitled')}${q.done?' (done)':''}</b><p>${esc(q.text||'')}</p></div><div class="row">${qb('qpin',q.id,q.posted?'Unpin':'Pin')}${qb('qdone',q.id,q.done?'Reopen':'Done',1)}${qb('qedit',q.id,'Edit',1,1)}${qb('qdel',q.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No quests yet.</p>';
+    $('#qs').innerHTML=qs.map(q=>`<div class="qrow ${q.posted?'on':''}"><div class="qt"><b>${esc(q.title||'Untitled')}${q.done?' (done)':''}</b><p>${esc(q.text||'')}</p></div><div class="row">${qb('qcur',q.id,live.curQuest===q.id?'Current':'Set current',live.curQuest===q.id?0:1)}${qb('qpin',q.id,q.posted?'Unpin':'Pin')}${qb('qdone',q.id,q.done?'Reopen':'Done',1)}${qb('qedit',q.id,'Edit',1,1)}${qb('qdel',q.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No quests yet.</p>';
   };
   function curView(){return live.showBoard?'board':(live.showShop&&live.shopId)?'shop':(live.showMap&&live.mapId)?'map':'scene'}
   function ctlDraw(){
@@ -552,9 +624,7 @@ function dm(code){
     const sel=$('#wxsel');
     if(sel.options.length!==G.presets.length||[...sel.options].some((o,i)=>o.value!==G.presets[i].id||o.textContent!==G.presets[i].name))sel.innerHTML=G.presets.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
     sel.value=P.id;
-    const x=WXS.find(y=>y.id===cur)||WXS[0],ic=Array.isArray(x.i)?x.i[cd?1:0]:x.i,fx=WXFX[cur];
-    const head=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${sname(cur,cd)}</b><small>Wind: ${WINDS[w]}</small></div><span class="day">Day ${G.n||0}</span>`;
-    $('#wxres').innerHTML=fx?`<details class="rbox"><summary>${head}</summary><div class="fx">${esc(Array.isArray(fx)?fx.join('\n'):fx)}</div></details>`:`<div class="rbox"><div class="rh">${head}</div></div>`;
+    $('#wxres').innerHTML=wxBoxHTML(cur,cd,w,G.n||0);
     syncPre();
   }
   function syncPre(force){
@@ -594,8 +664,8 @@ function dm(code){
     const sel=shops.find(x=>x.id===selShop),on=!!sel&&live.showShop&&live.shopId===sel.id;
     const bt=(a,id,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#csh').textContent='('+shops.length+')';
-    $('#shl').innerHTML=shops.map(x=>`<button class="btn sm ${x.id===selShop?'':'alt'}" data-a="shsel" data-id="${x.id}">${esc(x.name)}${x._r==='_shared'?' <small>shared</small>':''} (${items.filter(i=>i.shopId===x.id).length})</button>`).join('')||'<span class="note">No shops yet.</span>';
-    $('#shb').innerHTML=sel?bt('shren',sel.id,'Rename',1,1)+bt('shdel',sel.id,'Delete shop',1,1):'';
+    $('#shl').innerHTML=shops.map(x=>`<button class="btn sm ${x.id===selShop?'':'alt'}" data-a="shsel" data-id="${x.id}">${esc(x.name)}${x._r==='_shared'?' <small>shared</small>':''}${(live.pshops||[]).includes((x._r||code)+':'+x.id)?EYE_SM:''} (${items.filter(i=>i.shopId===x.id).length})</button>`).join('')||'<span class="note">No shops yet.</span>';
+    $('#shb').innerHTML=sel?bt('shpl',sel.id,(live.pshops||[]).includes((sel._r||code)+':'+sel.id)?'Hide from players':'Show to players',!(live.pshops||[]).includes((sel._r||code)+':'+sel.id))+bt('shren',sel.id,'Rename',1,1)+bt('shdel',sel.id,'Delete shop',1,1):'';
     $('#shi').innerHTML=sel?items.filter(i=>i.shopId===sel.id).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${i.img?`<img src="${i.img}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${i.weight?' / '+esc(i.weight):''}<p>${esc(i.desc||'')}</p>${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row">${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':'';
   }
   let shS={},itS={},ntS={},NT={};
@@ -679,10 +749,11 @@ function dm(code){
     if(a==='shadd'){const nm=$('#shn').value.trim();if(!nm)return;const r=doc(collection(db,'sessions',$('#shsh').checked?'_shared':code,'shops'));await setDoc(r,{name:nm,created:Date.now()});selShop=r.id;localStorage.setItem('selShop',r.id);$('#shn').value='';draw()}
     if(a==='shsel'){selShop=id;localStorage.setItem('selShop',id);draw()}
     if(a==='shshow'&&selShop){const on=live.showShop&&live.shopId===selShop;set(on?{showShop:false,shopItemId:null}:{showShop:true,shopId:selShop,shopRoot:(shops.find(x=>x.id===selShop)||{})._r||code,shopItemId:null,showBoard:false,showMap:false})}
+    if(a==='shpl'){const sh=shops.find(x=>x.id===id);if(sh){const k=(sh._r||code)+':'+sh.id;set({pshops:(live.pshops||[]).includes(k)?arrayRemove(k):arrayUnion(k)})}}
     if(a==='shren'){const sh=shops.find(x=>x.id===selShop),nn=sh&&prompt('Shop name',sh.name);if(nn&&nn.trim())updateDoc(doc(db,'sessions',sh._r||code,'shops',selShop),{name:nn.trim()})}
     if(a==='shdel'&&selShop&&confirm((shops.find(x=>x.id===selShop)||{})._r==='_shared'?'Delete this shared shop and all its items for every session?':'Delete this shop and all its items?')){const sd=selShop,rt=(shops.find(x=>x.id===sd)||{})._r||code;
       for(const i of items.filter(x=>x.shopId===sd)){await deleteDoc(doc(db,'sessions',rt,'items',i.id));await deleteDoc(doc(db,'sessions',rt,'notes',i.id))}
-      await deleteDoc(doc(db,'sessions',rt,'shops',sd));if(live.shopId===sd)set({showShop:false,shopItemId:null});selShop=null;localStorage.removeItem('selShop');draw()}
+      await deleteDoc(doc(db,'sessions',rt,'shops',sd));set({pshops:arrayRemove(rt+':'+sd)});if(live.shopId===sd)set({showShop:false,shopItemId:null});selShop=null;localStorage.removeItem('selShop');draw()}
     if(a==='itsave'){
       const msg=$('#itm'),name=$('#itn').value.trim();
       if(!selShop){msg.className='note err';msg.textContent='Select or add a shop first.';return}
@@ -711,6 +782,24 @@ function dm(code){
           if(note)await setDoc(doc(db,'sessions',sh._r,'notes',nid),{text:note})}
         $('#imt').value='';msg.textContent='Imported: '+add+' new, '+upd+' updated.';
       }catch(err){msg.className='note err';msg.textContent='Import failed: '+err.message}}
+    if(a==='impf'){
+      const f=$('#imf').files[0],msg=$('#imm');if(!f){msg.className='note err';msg.textContent='Choose a file first.';return}
+      try{
+        const txt=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsText(f)});
+        const arr=JSON.parse(txt);if(!Array.isArray(arr))throw new Error('Expected a list of items');
+        msg.className='note';msg.textContent='Importing...';let add=0,upd=0,ns=0;
+        const names=[...new Set(arr.map(x=>(x.shop||'Imported').trim()))],map={};
+        for(const nm of names){let sh=shops.find(x=>x._r==='_shared'&&(x.name||'').trim().toLowerCase()===nm.toLowerCase());
+          if(!sh){const r=doc(collection(db,'sessions','_shared','shops'));await setDoc(r,{name:nm,created:Date.now()+ns});sh={id:r.id};ns++}
+          map[nm]=sh}
+        for(const x of arr){const sh=map[(x.shop||'Imported').trim()],name=(x.name||'').trim();if(!name)continue;
+          const body={name,cost:x.cost||'',weight:x.weight||'',desc:x.description||x.desc||'',rules:x.rules||''};
+          const ex=items.find(i=>i._r==='_shared'&&i.shopId===sh.id&&(i.name||'').trim().toLowerCase()===name.toLowerCase());let nid;
+          if(ex){nid=ex.id;await updateDoc(doc(db,'sessions','_shared','items',nid),body);upd++}
+          else{nid=doc(collection(db,'sessions','_shared','items')).id;await setDoc(doc(db,'sessions','_shared','items',nid),{shopId:sh.id,img:'',created:Date.now()+add,...body});add++}
+          if(x.dmNote)await setDoc(doc(db,'sessions','_shared','notes',nid),{text:String(x.dmNote)})}
+        $('#imf').value='';msg.textContent='Imported '+names.length+' shops: '+add+' new items, '+upd+' updated.';
+      }catch(err){msg.className='note err';msg.textContent='Import failed: '+err.message}}
     if(a==='exp'){
       const sh=shops.find(x=>x.id===selShop),msg=$('#imm');if(!sh)return;
       const q=v=>/[\t\n\r"]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;
@@ -738,7 +827,8 @@ function dm(code){
       $('#qt').value='';$('#qx').value='';$('#qb').textContent='Add quest';}
     if(a==='qpin'||a==='qdone'){const q=qs.find(x=>x.id===id);if(q)updateDoc(doc(QC,id),a==='qpin'?{posted:!q.posted}:{done:!q.done})}
     if(a==='qedit'){const q=qs.find(x=>x.id===id);if(q){edit=id;$('#qt').value=q.title||'';$('#qx').value=q.text||'';$('#qb').textContent='Save quest';$('#qt').focus()}}
-    if(a==='qdel'&&confirm('Delete this quest?'))deleteDoc(doc(QC,id));
+    if(a==='qdel'&&confirm('Delete this quest?')){deleteDoc(doc(QC,id));if(live.curQuest===id)set({curQuest:null})}
+    if(a==='qcur')set({curQuest:live.curQuest===id?null:id});
     if(a==='up'){
       const files=[...$('#file').files],type=$('#type').value,msg=$('#msg');
       if(!files.length){msg.className='note err';msg.textContent='Choose at least one image first.';return}
