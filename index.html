@@ -194,6 +194,13 @@ summary h2{display:flex;align-items:center;gap:.4em}
 #pvd{position:fixed;inset:0;display:none;place-items:center;background:#000b;z-index:20;overflow:auto}
 #pvd.on{display:grid}
 #pvd .sheet{height:auto;width:min(94vw,72vh);aspect-ratio:589/700}
+
+.rbox .info{margin-left:8px;width:26px;height:26px;flex:none;border-radius:50%;border:1px solid var(--gold2);background:#2a170d;color:var(--gold);font:700 14px Cinzel,serif;cursor:pointer}
+.rbox .fxcat{margin:6px 0}
+.rbox .fxcat b{display:block;margin-bottom:2px;color:var(--gold);font:700 13px Cinzel,serif}
+.rbox .fxcat div{padding-left:8px;color:var(--parch);font:15px/1.3 Almendra,serif}
+.rbox .fxrules{margin:0 14px 12px;padding:8px 10px;border-radius:4px;background:#0005;color:var(--parch);font:15px/1.3 Almendra,serif}
+.rbox .fxrules b{display:block;margin:6px 0 2px;color:var(--gold);font:700 13px Cinzel,serif}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -264,7 +271,8 @@ async function display(code){
   $('#shopg').onclick=e=>{const c=e.target.closest('[data-i]');if(c){lo=c.dataset.i;renderShop()}};
   $('#shopd').onclick=()=>{if(lo)lo=null;else dis=d.shopItemId;renderShop()};
   const WXE=makeWeather($('#wx'));unsubs.push(()=>WXE.stop());
-  let wk='';const renderWx=()=>{$('#stage').classList.toggle('night',!!d.night);kick();const on=!!d.wxOn,s=WXS.find(x=>x.id===d.wx)||WXS[0],w=Math.min(3,d.wind|0),cd=!!d.cold,nt=!!d.night,k=[on,s.id,w,cd,nt].join();if(k===wk)return;wk=k;WXE.set(on?s:null,w,cd,nt);$('#wxb').innerHTML=on?wxBadge(s,w,cd):''};
+  let wk='';const renderWx=()=>{$('#stage').classList.toggle('night',!!d.night);kick();const on=!!d.wxOn,s=WXS.find(x=>x.id===d.wx)||WXS[0],w=Math.min(3,d.wind|0),cd=!!d.cold,nt=!!d.night,ss=d.season||(cd?'winter':'normal'),k=[on,s.id,w,cd,nt,ss].join();if(k===wk)return;wk=k;WXE.set(on?s:null,w,cd,nt);$('#wxb').innerHTML=on?wxBadge(s,w,cd,ss):''};
+  WXJP.then(()=>{wk='';renderWx()});
   const rot=id=>{let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))%7;return h-3};
   const paint=async()=>{
     const my=++seq,board=!!d.showBoard,shopOn=!board&&!!d.showShop&&!!d.shopId,mapOn=!board&&!shopOn&&!!d.showMap&&!!d.mapId;
@@ -324,7 +332,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-03 h';
+const VER='2026-11-03 i';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -333,8 +341,8 @@ const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M
  snow:'<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/>',
  bolt:'<path d="M13 2L5 13h6l-1 9 8-12h-6z"/>',
  fog:'<path d="M4 8h16M3 12h18M5 16h14M8 20h8"/>'};
-const wxBadge=(s,w,cd)=>{const ic=Array.isArray(s.i)?s.i[cd?1:0]:s.i;
-  return`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${s.n[cd&&s.n[1]?1:0]}</b><small>${WINDS[w]}</small></div>`};
+const wxBadge=(s,w,cd,ss)=>{const ic=Array.isArray(s.i)?s.i[cd?1:0]:s.i;
+  return`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${esc(wname(s.id,ss,cd))}</b><small>${WINDS[w]}</small></div>`};
 function makeWeather(cv){
   const c=cv.getContext('2d'),R=Math.random,cu={cl:0,fog:0,cr:0,cg:0,cb:0,ca:0,fr:0,ws:0,wf:1,rain:0,snow:0,str:0,cs:.13,nd:0};
   let tg=null,tw=0,tsn=false,tn=false,raf=0,last=0,flash=0,nextF=0,PR=[],PS=[],CS=[],FG=[],S=[];
@@ -404,7 +412,7 @@ function nextWx(cur,die,P){
 }
 const defPre=()=>[
  {id:'spring',name:'Spring',cold:false,d:{s:4,c:4,r:4},tc:['c1','c2','c3'],tr:['c1','c2','c3']},
- {id:'summer',name:'Summer',cold:false,d:{s:5,c:2,r:5},tc:['c1','c2','c3'],tr:['r1','r2','r3']},
+ {id:'summer',name:'Summer',cold:false,hot:true,d:{s:5,c:2,r:5},tc:['c1','c2','c3'],tr:['r1','r2','r3']},
  {id:'autumn',name:'Autumn',cold:false,d:{s:4,c:4,r:4},tc:['c1','c2','c3'],tr:['c1','c2','c3']},
  {id:'winter',name:'Winter',cold:true,d:{s:5,c:2,r:5},tc:['c1','c2','c3'],tr:['r1','r2','r3']}];
 const tokCache=new Map();
@@ -466,17 +474,32 @@ async function prepMap(file){
   return{w,h,cols,rows,tiles,thumb:t.toDataURL('image/webp',.7)};
 }
 
-const WDC=[0,2,5,10];
 const EYE_SM='<svg class="esm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
-// WXFX: weather effects. Key is the state id, or the id plus c for the cold season. Value: {speed:'text',dc:number,fx:'text'}
-const fxFor=(id,cd)=>WXFX[cd?id+'c':id]||WXFX[id]||null;
-function wxBoxHTML(cur,cd,w,day){
-  const x=WXS.find(y=>y.id===cur)||WXS[0],ic=Array.isArray(x.i)?x.i[cd?1:0]:x.i,f=fxFor(cur,cd);
-  const head=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${sname(cur,cd)}</b><small>Wind: ${WINDS[w]}</small></div>${day!=null?`<span class="day">Day ${day}</span>`:''}`;
-  const dc=f&&typeof f.dc==='number'?f.dc+WDC[w]:null;
-  const stats=f&&(f.speed||dc!=null)?`<div class="stats">${f.speed?`<span>Travel speed: ${esc(f.speed)}</span>`:''}${dc!=null?`<span>Survival DC ${dc}</span>`:''}</div>`:'';
-  const fx=f&&f.fx?`<details class="fxd"><summary>Effects</summary><div class="fx">${esc(Array.isArray(f.fx)?f.fx.join('\n'):f.fx)}</div></details>`:'';
-  return`<div class="rbox"><div class="rh">${head}</div>${stats}${fx}</div>`;
+// Weather effects come from weather_effects.json, so values can change without touching the code.
+let WXJ=null,wxRulesOn=false;
+const WXJP=typeof fetch==='function'?fetch('weather_effects.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('missing');return r.json()}).then(j=>{WXJ=j;return j}).catch(()=>null):Promise.resolve(null);
+const J2={s:'sun',c:'cloud',r:'rain'},jid=id=>J2[id[0]]+id[1];
+const seasonP=P=>P.cold?'winter':((P.hot===undefined?P.id==='summer':P.hot)?'summer':'normal');
+const wstate=(id,season)=>{const b=WXJ&&WXJ.states[jid(id)];return b?Object.assign({},b,(b.seasons&&b.seasons[season])||{}):null};
+const wname=(id,season,cd)=>{const x=wstate(id,season);return x?x.name:sname(id,cd)};
+function wxInfo(id,w,season){
+  const st=wstate(id,season);if(!st)return null;
+  const wd=WXJ.wind[['calm','breeze','gust','storm'][w]]||{travelMod:0,restDCMod:0,effects:[]};
+  const tr=Math.max(WXJ.travel.minPercent||25,st.travel+(wd.travelMod||0)),mi=Math.round(WXJ.travel.milesPerDay.normal*tr/100),ex=st.exposure||null,eff=[];
+  [...(st.effects||[]),...(wd.effects||[])].forEach(k=>{const e=WXJ.effects[k];if(!e||eff.includes(k))return;if(e.onlyIf&&('exposure.type == '+(ex?ex.type:''))!==e.onlyIf)return;eff.push(k)});
+  return{travel:tr+'% ('+mi+' mi/day)',rest:st.restDC+(wd.restDCMod||0),exposure:ex,eff};
+}
+function wxBoxHTML(cur,w,L,role,day){
+  const cd=!!L.cold,season=L.season||(cd?'winter':'normal'),x=WXS.find(y=>y.id===cur)||WXS[0],ic=Array.isArray(x.i)?x.i[cd?1:0]:x.i,inf=wxInfo(cur,w,season),dm=role==='dm';
+  const head=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${esc(wname(cur,season,cd))}</b><small>Wind: ${WINDS[w]}</small></div>${day!=null?`<span class="day">Day ${day}</span>`:''}${dm&&WXJ?'<button class="info" data-a="wxinfo" title="Rules">i</button>':''}`;
+  let stats='',list='',rules='';
+  if(inf){
+    stats=`<div class="stats"><span>Travel ${inf.travel}</span>${dm?`<span>Survival DC ${inf.rest}</span>${inf.exposure?`<span>Exposure DC ${inf.exposure.dc} (${esc(inf.exposure.type)})</span>`:''}`:''}</div>`;
+    const body=[['combat','Combat'],['movement','Movement'],['bonus','Bonus']].map(([k,n])=>{const l=inf.eff.filter(e=>WXJ.effects[e].cat===k);return l.length?`<div class="fxcat"><b>${n}</b>${l.map(e=>`<div>${esc(WXJ.effects[e].text)}</div>`).join('')}</div>`:''}).join('');
+    if(body)list=`<details class="fxd"${dm?'':' open'}><summary>Effects</summary>${body}</details>`;
+    if(dm&&wxRulesOn)rules=`<div class="fxrules"><b>Long rest</b>${(WXJ.rules.longRest||[]).map(t=>`<div>${esc(t)}</div>`).join('')}<b>Exposure</b>${(WXJ.rules.exposure||[]).map(t=>`<div>${esc(t)}</div>`).join('')}</div>`;
+  }
+  return`<div class="rbox"><div class="rh">${head}</div>${stats}${list}${rules}</div>`;
 }
 function player(code){
   app.onclick=null;
@@ -488,7 +511,7 @@ function player(code){
     document.querySelectorAll('.pvt [data-t]').forEach(b=>b.classList.toggle('alt',b.dataset.t!==tab));
     const keys=d.pshops||[];let h='',sheet='';
     if(tab==='quest')h=Q?`<div class="qbig"><i class="pin"></i><div class="in"><h3>${esc(Q.title||'')}</h3><p>${esc(Q.text||'')}</p></div></div>`:'<div class="pvempty">No quest selected.</div>';
-    else if(tab==='weather')h=d.wxOn?wxBoxHTML(d.wx||'s1',!!d.cold,Math.min(3,d.wind|0)):'<div class="pvempty">No weather right now.</div>';
+    else if(tab==='weather')h=d.wxOn?wxBoxHTML(d.wx||'s1',Math.min(3,d.wind|0),d,'player'):'<div class="pvempty">No weather right now.</div>';
     else if(!keys.length)h='<div class="pvempty">No shops are open.</div>';
     else{
       const k=keys.includes(psel)?psel:keys[0],S=SHP[k]||{name:'',items:[]};
@@ -513,6 +536,7 @@ function player(code){
     const sb=e.target.closest('[data-s]');if(sb){psel=sb.dataset.s;render();return}
     const c=e.target.closest('[data-i]');if(c){open=c.dataset.i;render()}};
   render();
+  WXJP.then(()=>{last='';render()});
 }
 function parseTSV(t){
   const rows=[];let row=[],cell='',q=false;
@@ -554,7 +578,7 @@ function dm(code){
   <div class="row" style="margin-top:8px"><button class="btn sm" data-a="wxwr">Wind</button><button class="btn sm" data-a="wxquick">New day</button><button class="btn sm alt" data-a="wxundo">Undo</button><button class="btn sm alt edit" data-a="wxrefill">Refill</button><select id="wxsel"></select></div>
   <div class="edit"><div id="wxl" style="margin-top:10px"></div><div class="row" id="wxw"></div></div>
   <details class="edit" id="d-wxe" style="margin-top:14px"><summary><h2 style="font-size:17px">Edit season presets</h2></summary>
-  <div class="row"><input id="pn" placeholder="Name"><label><input id="pc" type="checkbox"> Cold (snow, Cold, Freezing)</label></div>
+  <div class="row"><input id="pn" placeholder="Name"><label><input id="pc" type="checkbox"> Cold season</label><label><input id="ph" type="checkbox"> Hot season</label></div>
   <div class="row" style="margin-top:8px"><label>Sun dice <input id="pds" type="number" min="0" style="width:70px"></label><label>Cloud dice <input id="pdc" type="number" min="0" style="width:70px"></label><label>Rain dice <input id="pdr" type="number" min="0" style="width:70px"></label></div>
   <p class="note" style="margin:10px 0 4px">Cloud die on Sun 1, 2, 3 gives:</p><div class="row"><select id="tc0"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tc1"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tc2"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select></div>
   <p class="note" style="margin:10px 0 4px">Rain die on Sun 1, 2, 3 gives:</p><div class="row"><select id="tr0"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tr1"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tr2"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select></div>
@@ -618,29 +642,31 @@ function dm(code){
   function wxDraw(){
     const cd=!!live.cold,cur=live.wx||'s1',w=live.wind|0,P=curPre(),bag=G.bag||P.d;
     const b=(a,id,t,act)=>`<button class="btn sm ${act?'':'alt'}" data-a="${a}" data-id="${id}">${t}</button>`,cnt=n=>' <span class="cnt">'+n+'</span>';
-    $('#wxl').innerHTML=['s','c','r'].map(t=>`<div class="row" style="margin-bottom:6px">${WXS.filter(x=>x.id[0]===t).map(x=>b('wxset',x.id,sname(x.id,cd),cur===x.id)).join('')}</div>`).join('');
+    $('#wxl').innerHTML=['s','c','r'].map(t=>`<div class="row" style="margin-bottom:6px">${WXS.filter(x=>x.id[0]===t).map(x=>b('wxset',x.id,wname(x.id,live.season||(cd?'winter':'normal'),cd),cur===x.id)).join('')}</div>`).join('');
     $('#wxw').innerHTML=WINDS.map((n,i)=>b('wxwind',i,n,w===i)).join('');
     $('#wxds').innerHTML='Sun'+cnt(bag.s);$('#wxdc').innerHTML='Cloud'+cnt(bag.c);$('#wxdr').innerHTML=(cd?'Snow':'Rain')+cnt(bag.r);
     const sel=$('#wxsel');
     if(sel.options.length!==G.presets.length||[...sel.options].some((o,i)=>o.value!==G.presets[i].id||o.textContent!==G.presets[i].name))sel.innerHTML=G.presets.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
     sel.value=P.id;
-    $('#wxres').innerHTML=wxBoxHTML(cur,cd,w,G.n||0);
+    const wh=wxBoxHTML(cur,w,live,'dm',G.n||0);if(wh!==wxLast){wxLast=wh;$('#wxres').innerHTML=wh;const f=$('#wxres .fxd');if(f){f.open=wxFx;f.ontoggle=()=>{wxFx=f.open}}}
     syncPre();
   }
   function syncPre(force){
     const P=curPre(),f=(id,v)=>{const e=$(id);if(e&&(force||document.activeElement!==e))e.value=v};
-    f('#pn',P.name);$('#pc').checked=!!P.cold;f('#pds',P.d.s);f('#pdc',P.d.c);f('#pdr',P.d.r);
+    f('#pn',P.name);$('#pc').checked=!!P.cold;$('#ph').checked=!!(P.hot===undefined?P.id==='summer':P.hot);f('#pds',P.d.s);f('#pdc',P.d.c);f('#pdr',P.d.r);
     [0,1,2].forEach(i=>{f('#tc'+i,P.tc[i]);f('#tr'+i,P.tr[i])});
   }
-  let G={presets:defPre(),cur:'spring',bag:{s:4,c:4,r:4},day:0,hist:[]},wxMsg='';
+  let G={presets:defPre(),cur:'spring',bag:{s:4,c:4,r:4},day:0,hist:[]},wxMsg='',wxLast='',wxFx=false;
   const GD=doc(db,'sessions',code,'wxgen','cfg');
   const curPre=()=>G.presets.find(p=>p.id===G.cur)||G.presets[0];
   const saveG=o=>{Object.assign(G,o);return setDoc(GD,o,{merge:true})};
   unsubs.push(onSnapshot(GD,s=>{if(s.exists())G={...G,...s.data()};draw()}));
   const updPre=patch=>saveG({presets:G.presets.map(p=>p.id===G.cur?{...p,...patch}:p)});
   $('#pn').onchange=e=>updPre({name:e.target.value.trim()||'Preset'});
-  $('#wxsel').onchange=async e=>{const P=G.presets.find(p=>p.id===e.target.value);if(P){await saveG({cur:P.id,bag:{...P.d},day:0});await set({cold:!!P.cold});wxDraw();syncPre(true)}};
-  $('#pc').onchange=e=>{updPre({cold:e.target.checked});set({cold:e.target.checked})};
+  $('#wxsel').onchange=async e=>{const P=G.presets.find(p=>p.id===e.target.value);if(P){await saveG({cur:P.id,bag:{...P.d},day:0});await set({cold:!!P.cold,season:seasonP(P)});wxDraw();syncPre(true)}};
+  $('#pc').onchange=e=>{updPre({cold:e.target.checked});set({cold:e.target.checked,season:seasonP(curPre())})};
+  $('#ph').onchange=e=>{updPre({hot:e.target.checked});set({season:seasonP(curPre())})};
+  WXJP.then(()=>{wxLast='';wxDraw()});
   [['s','pds'],['c','pdc'],['r','pdr']].forEach(([k,id])=>$('#'+id).onchange=e=>updPre({d:{...curPre().d,[k]:Math.max(0,+e.target.value||0)}}));
   ['tc','tr'].forEach(k=>[0,1,2].forEach(i=>$('#'+k+i).onchange=e=>{const a=[...curPre()[k]];a[i]=e.target.value;updPre({[k]:a})}));
   async function drawDie(die){
@@ -732,6 +758,7 @@ function dm(code){
     if(a==='wxsnow')set({cold:!live.cold});
     if(a==='night')set({night:!live.night});
     if(a==='pm'){const w=$('.wrap'),p=w.classList.toggle('play');localStorage.setItem('play',p?'1':'0');t.textContent=p?'Show editing':'Hide editing'}
+    if(a==='wxinfo'){wxRulesOn=!wxRulesOn;wxLast='';wxDraw()}
     if(a==='wxd')drawDie(id);
     if(a==='wxwr'){const q=rollWind(1+Math.floor(Math.random()*6),live.wx||'s1');set({wind:q.w,wxOn:true})}
     if(a==='vbg'){if(curView()==='scene'&&live.backgroundId)set({backgroundId:null});else set({showBoard:false,showShop:false,showMap:false})}
@@ -743,9 +770,9 @@ function dm(code){
     if(a==='wxroll'){const q=rollWind(+id,live.wx||'s1');wxMsg=q.txt;wxDraw();set({wind:q.w,wxOn:true})}
     if(a==='wxundo'){const h=(G.hist||[]).slice(-1)[0];if(h){await set({wx:h.pw,wind:h.pwind});await saveG({bag:h.pbag,day:h.pday,n:h.pn||0,hist:G.hist.slice(0,-1)});wxMsg='Last draw undone.';wxDraw()}}
     if(a==='wxrefill'){await saveG({bag:{...curPre().d},day:0});wxMsg='Bag refilled.';wxDraw()}
-    if(a==='wxpre'){const P=G.presets.find(p=>p.id===id);if(P){await saveG({cur:id,bag:{...P.d},day:0});await set({cold:!!P.cold});wxMsg='Preset '+P.name+'. Bag refilled.';wxDraw();syncPre(true)}}
+    if(a==='wxpre'){const P=G.presets.find(p=>p.id===id);if(P){await saveG({cur:id,bag:{...P.d},day:0});await set({cold:!!P.cold,season:seasonP(P)});wxMsg='Preset '+P.name+'. Bag refilled.';wxDraw();syncPre(true)}}
     if(a==='pdup'){const n2={...curPre(),id:'p'+Date.now(),name:curPre().name+' copy'};await saveG({presets:[...G.presets,n2],cur:n2.id});syncPre(true)}
-    if(a==='pdel'&&G.presets.length>1&&confirm('Delete this preset?')){const pr=G.presets.filter(p=>p.id!==G.cur);await saveG({presets:pr,cur:pr[0].id,bag:{...pr[0].d},day:0});await set({cold:!!pr[0].cold});wxDraw();syncPre(true)}
+    if(a==='pdel'&&G.presets.length>1&&confirm('Delete this preset?')){const pr=G.presets.filter(p=>p.id!==G.cur);await saveG({presets:pr,cur:pr[0].id,bag:{...pr[0].d},day:0});await set({cold:!!pr[0].cold,season:seasonP(pr[0])});wxDraw();syncPre(true)}
     if(a==='shadd'){const nm=$('#shn').value.trim();if(!nm)return;const r=doc(collection(db,'sessions',$('#shsh').checked?'_shared':code,'shops'));await setDoc(r,{name:nm,created:Date.now()});selShop=r.id;localStorage.setItem('selShop',r.id);$('#shn').value='';draw()}
     if(a==='shsel'){selShop=id;localStorage.setItem('selShop',id);draw()}
     if(a==='shshow'&&selShop){const on=live.showShop&&live.shopId===selShop;set(on?{showShop:false,shopItemId:null}:{showShop:true,shopId:selShop,shopRoot:(shops.find(x=>x.id===selShop)||{})._r||code,shopItemId:null,showBoard:false,showMap:false})}

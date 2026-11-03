@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "notes": "Weather effects for the DM app. D&D 2024. Wind adds to the long rest DC: Calm 0, Breeze +2, Gust +5, Storm +10. Lookup: state (with season override) + wind. Travel and restDC are always shown; effect lines are optional reminders.",
+  "travel": {
+    "milesPerDay": { "slow": 18, "normal": 24, "fast": 30 },
+    "minPercent": 25,
+    "display": "Show percent and Normal pace miles/day, e.g. '75% (18 mi/day)'"
+  },
+  "states": {
+    "sun1":   { "name": "Clear",    "travel": 100, "restDC": 5,  "exposure": null, "effects": ["clearSight"] },
+    "sun2":   { "name": "Sunny",    "travel": 100, "restDC": 5,  "exposure": null, "effects": ["clearSight"],
+                "seasons": { "winter": { "name": "Cold", "restDC": 10 } } },
+    "sun3":   { "name": "Sunny",    "travel": 100, "restDC": 5,  "exposure": null, "effects": ["clearSight"],
+                "seasons": {
+                  "summer": { "name": "Hot",    "travel": 75,  "restDC": 10, "exposure": { "dc": 10, "type": "heat" }, "effects": ["hotFireSaves"] },
+                  "winter": { "name": "Frosty", "travel": 100, "restDC": 15, "exposure": { "dc": 10, "type": "cold" }, "effects": ["coldSaves", "icyGround"] }
+                } },
+    "cloud1": { "name": "Cloudy",   "travel": 100, "restDC": 5,  "exposure": null, "effects": ["clearSight"] },
+    "cloud2": { "name": "Overcast", "travel": 100, "restDC": 5,  "exposure": null, "effects": [] },
+    "cloud3": { "name": "Fog",      "travel": 75,  "restDC": 10, "exposure": null, "effects": ["fogObscured", "stealthAdv"] },
+    "rain1":  { "name": "Drizzle",  "travel": 100, "restDC": 10, "exposure": null, "effects": [],
+                "seasons": { "winter": { "name": "Light Snow" } } },
+    "rain2":  { "name": "Rain",     "travel": 75,  "restDC": 15, "exposure": null, "effects": ["lightObscured", "flamesOut", "stealthAdv", "hearingDisadv"],
+                "seasons": { "winter": { "name": "Snowfall", "effects": ["lightObscured", "flamesOut", "stealthAdv", "deepSnow"] } } },
+    "rain3":  { "name": "Downpour", "travel": 50,  "restDC": 20, "exposure": null, "effects": ["lightObscured", "heavyObscured60", "flamesOut", "rainFireResist", "muddyGround", "stealthAdv", "hearingDisadv"],
+                "seasons": { "winter": { "name": "Blizzard", "exposure": { "dc": 15, "type": "cold" }, "effects": ["lightObscured", "heavyObscured60", "flamesOut", "coldSaves", "deepSnow", "stealthAdv"] } } }
+  },
+  "wind": {
+    "calm":   { "name": "Calm",   "travelMod": 0,   "restDCMod": 0, "effects": [] },
+    "breeze": { "name": "Breeze", "travelMod": 0,   "restDCMod": 2, "effects": ["cloudDrift", "breezeHeat"] },
+    "gust":   { "name": "Gust",   "travelMod": 0,   "restDCMod": 5, "effects": ["rangeHalved", "cloudDisperse", "flyDifficult"] },
+    "storm":  { "name": "Storm",  "travelMod": -25, "restDCMod": 10, "effects": ["rangeHalved", "rangedDisadv", "concentrationDisadv", "cloudDisperse", "flyMustLand", "hearingDisadv"] }
+  },
+  "effects": {
+    "clearSight":          { "cat": "bonus",    "text": "Good visibility: Advantage on Perception to spot things far away" },
+    "stealthAdv":          { "cat": "bonus",    "text": "Advantage on Dexterity (Stealth) checks" },
+    "hearingDisadv":       { "cat": "bonus",    "text": "Noise: Disadvantage on Perception relying on hearing" },
+    "fogObscured":         { "cat": "combat",   "text": "Lightly Obscured within 30 ft, Heavily Obscured beyond" },
+    "lightObscured":       { "cat": "combat",   "text": "Lightly Obscured (Disadvantage on sight-based Perception)" },
+    "heavyObscured60":     { "cat": "combat",   "text": "Heavily Obscured beyond 60 ft" },
+    "flamesOut":           { "cat": "combat",   "text": "Unprotected flames go out; fire can't ignite objects" },
+    "rainFireResist":      { "cat": "combat",   "text": "Targets in the open have Resistance to Fire damage" },
+    "coldSaves":           { "cat": "combat",   "text": "Disadvantage on saves against Cold damage" },
+    "hotFireSaves":        { "cat": "combat",   "text": "Disadvantage on saves against Fire damage" },
+    "rangeHalved":         { "cat": "combat",   "text": "Ranged weapon ranges halved" },
+    "rangedDisadv":        { "cat": "combat",   "text": "Disadvantage on ranged weapon attacks" },
+    "concentrationDisadv": { "cat": "combat",   "text": "Disadvantage on saves to keep Concentration" },
+    "cloudDrift":          { "cat": "combat",   "text": "Cloud spells drift 10 ft downwind each round" },
+    "cloudDisperse":       { "cat": "combat",   "text": "Cloud spells disperse at the end of the caster's next turn" },
+    "muddyGround":         { "cat": "movement", "text": "Unpaved ground outdoors is Difficult Terrain" },
+    "deepSnow":            { "cat": "movement", "text": "Snow-covered ground outdoors is Difficult Terrain" },
+    "icyGround":           { "cat": "movement", "text": "Dashing on ice: DC 10 Dex (Acrobatics) or fall Prone" },
+    "flyDifficult":        { "cat": "movement", "text": "Flying counts as Difficult Terrain" },
+    "flyMustLand":         { "cat": "movement", "text": "Flyers without Hover must end their turn on the ground or fall" },
+    "breezeHeat":          { "cat": "bonus",    "text": "In Hot weather: Advantage on the heat exposure save", "onlyIf": "exposure.type == heat" }
+  },
+  "rules": {
+    "combine": "Season override replaces fields of the base state. Travel = state.travel + wind.travelMod, min 25. Rest DC = state.restDC + wind.restDCMod. Effect list = state effects + wind effects, no duplicates.",
+    "longRest": [
+      "One character rolls Wisdom (Survival) when making camp. Others can Help (Advantage).",
+      "Tent or tarp: -5 DC. Cave, building or Tiny Hut: no roll.",
+      "Success: normal Long Rest.",
+      "Fail: rest counts, but no Exhaustion removed and only half Hit Dice regained.",
+      "Fail by 5+: counts only as a Short Rest."
+    ],
+    "exposure": [
+      "End of each travel day: every creature makes a Constitution save vs the exposure DC. Fail: 1 Exhaustion.",
+      "Proper gear (cold-weather clothing, or plenty of water and shade) gives Advantage.",
+      "Resistance to Cold or Fire (matching type): automatic success."
+    ]
+  }
+}
