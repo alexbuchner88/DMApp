@@ -164,6 +164,10 @@ summary h2{display:flex;align-items:center;gap:.4em}
 
 #ver{position:absolute;left:1.5vmin;bottom:1vmin;z-index:9;font:12px Cinzel,serif;color:#fff;opacity:0;pointer-events:none;animation:verfade 9s ease-out 1}
 @keyframes verfade{0%{opacity:.7}70%{opacity:.7}100%{opacity:0}}
+
+#stage:not(.solo) #npcs{justify-content:flex-start;padding:0 3vmin 0 4vmin}
+#stage:not(.solo) #npcs figure{width:min(26vmin,235px)}
+#stage:not(.solo) #npcs figure.mon{width:min(42vmin,390px)}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -225,10 +229,10 @@ async function display(code){
     {const dh=it?`<div class="sheet"><div class="sin">${it.img?`<div class="pic2"><img src="${it.img}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`:'';if(dh!==dk){dk=dh;$('#shopd').innerHTML=dh}}
     $('#shopd').classList.toggle('on',!!it);
   };
-  const watchShop=id=>{
+  const watchShop=(id,rt)=>{
     if(id===sid)return;su1&&su1();su2&&su2();su1=su2=null;sid=id;IT=[];SH={};lo=null;renderShop();if(!id)return;
-    su1=onSnapshot(doc(db,'sessions',code,'shops',id),s=>{SH=s.data()||{};renderShop()});
-    su2=onSnapshot(query(collection(db,'sessions',code,'items'),where('shopId','==',id)),s=>{IT=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>a.created-b.created);renderShop()});
+    su1=onSnapshot(doc(db,'sessions',rt,'shops',id),s=>{SH=s.data()||{};renderShop()});
+    su2=onSnapshot(query(collection(db,'sessions',rt,'items'),where('shopId','==',id)),s=>{IT=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>a.created-b.created);renderShop()});
   };
   unsubs.push(()=>{su1&&su1();su2&&su2()});
   $('#shopg').onclick=e=>{const c=e.target.closest('[data-i]');if(c){lo=c.dataset.i;renderShop()}};
@@ -245,7 +249,7 @@ async function display(code){
     TL=tl;kick();const posted=qs.filter(q=>q.posted),st=$('#stage');
     st.classList.toggle('board',board);
     st.classList.toggle('solo',!b.data);
-    st.classList.toggle('empty',!board&&!mapOn&&!shopOn&&!b.data&&!n.length);st.classList.toggle('map',mapOn);st.classList.toggle('shop',shopOn);watchShop(shopOn?d.shopId:null);if(d.shopItemId!==prevS){prevS=d.shopItemId;dis=null}renderShop();mw.set(mapOn?d.mapId:null);
+    st.classList.toggle('empty',!board&&!mapOn&&!shopOn&&!b.data&&!n.length);st.classList.toggle('map',mapOn);st.classList.toggle('shop',shopOn);watchShop(shopOn?d.shopId:null,d.shopRoot||code);if(d.shopItemId!==prevS){prevS=d.shopItemId;dis=null}renderShop();mw.set(mapOn?d.mapId:null);
     if(mapOn&&d.mapView){if(curId!==d.mapId)cur=null;curId=d.mapId;tg={...d.mapView};kick()}if(!mapOn){curId=null;cur=null}
     $('#bg').style.backgroundImage=b.data?`url(${b.data})`:'';
     $('#idle').style.opacity=!board&&!mapOn&&!shopOn&&!b.data?1:0;
@@ -294,7 +298,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-03 d';
+const VER='2026-11-03 e';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -325,20 +329,20 @@ function makeWeather(cv){
     c.clearRect(0,0,W,H);
     const nf=1-.55*cu.nd;
     if(cu.ca>.003){c.fillStyle=`rgba(${cu.cr|0},${cu.cg|0},${cu.cb|0},${cu.ca})`;c.fillRect(0,0,W,H)}
-    if(cu.fr>.01){const g=c.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.hypot(W,H)/2);g.addColorStop(0,'rgba(200,230,255,0)');g.addColorStop(1,`rgba(200,230,255,${cu.fr*.4})`);c.fillStyle=g;c.fillRect(0,0,W,H)}
+    if(cu.fr>.01){const g=c.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.hypot(W,H)/2);g.addColorStop(0,'rgba(200,230,255,0)');g.addColorStop(1,`rgba(200,230,255,${cu.fr*.5})`);c.fillStyle=g;c.fillRect(0,0,W,H)}
     if(cu.cl>.01){
-      c.fillStyle=`rgba(10,14,22,${cu.cl*.05*nf})`;c.fillRect(0,0,W,H);
-      const big=Math.min(1,Math.max(0,(cu.cs-.13)/.27)),ap=(.22-.08*big)*cu.cl*nf,nc=Math.round(7-2*big);
+      c.fillStyle=`rgba(10,14,22,${cu.cl*.07*nf})`;c.fillRect(0,0,W,H);
+      const big=Math.min(1,Math.max(0,(cu.cs-.13)/.27)),ap=(.34-.12*big)*cu.cl*nf,nc=Math.round(7-2*big);
       for(let i=0;i<nc;i++){const b=CS[i],Rb=W*cu.cs*b.k;b.x+=b.v*(1+cu.ws*8);if(b.x-Rb*1.4>W)b.x=-Rb*1.4;
         const y=b.y+Math.sin(ts*.00008+b.ph)*H*.03;b.sub.forEach(q=>blob(b.x+q.dx*Rb,y+q.dy*Rb,q.r*Rb,'14,18,28',ap))}}
     if(cu.fog>.01){
       const fc=`${220-70*cu.nd|0},${226-66*cu.nd|0},${232-47*cu.nd|0}`;
       FG.forEach(b=>{b.x+=b.v*(.2+cu.ws*4);if(b.x-b.r*1.3>W)b.x=-b.r*1.3;
         const px=b.x+Math.sin(ts*.00014+b.ph)*W*.05,py=b.y+Math.cos(ts*.0001+b.ph*1.7)*H*.06,br=.7+.3*Math.sin(ts*.0004+b.ph*2);
-        blob(px,py,b.r*1.3,fc,cu.fog*.5*br)});
-      c.fillStyle=`rgba(${fc},${cu.fog*.22})`;c.fillRect(0,0,W,H)}
+        blob(px,py,b.r*1.3,fc,cu.fog*.65*br)});
+      c.fillStyle=`rgba(${fc},${cu.fog*.28})`;c.fillRect(0,0,W,H)}
     const nr=Math.round(cu.rain*PR.length);
-    if(nr){c.lineWidth=1.3;c.strokeStyle='rgba(185,205,225,.42)';c.beginPath();
+    if(nr){c.lineWidth=1.3;c.strokeStyle='rgba(185,205,225,.55)';c.beginPath();
       for(let i=0;i<nr;i++){const p=PR[i];p.x+=cu.ws*p.v*cu.wf;p.y+=p.v*cu.wf;
         if(p.y>H+20){p.y=-20;p.x=R()*(W+cu.ws*H)-cu.ws*H}else if(p.x>W+40){p.x=-40;p.y=R()*H}
         c.moveTo(p.x,p.y);c.lineTo(p.x+cu.ws*p.l,p.y+p.l)}c.stroke()}
@@ -348,7 +352,7 @@ function makeWeather(cv){
         if(p.y>H+20){p.y=-20;p.x=R()*(W+cu.ws*H*3)-cu.ws*H*2}else if(p.x>W+40){p.x=-40;p.y=R()*H}
         c.moveTo(p.x+p.r,p.y);c.arc(p.x,p.y,p.r,0,7)}c.fill()}
     const nst=Math.round(cu.str*S.length);
-    if(nst){c.strokeStyle=`rgba(255,255,255,${.08*Math.min(1,cu.str)})`;c.lineWidth=1.5;c.beginPath();
+    if(nst){c.strokeStyle=`rgba(255,255,255,${.13*Math.min(1,cu.str)})`;c.lineWidth=1.5;c.beginPath();
       for(let i=0;i<nst;i++){const q=S[i];q.x+=q.v;if(q.x-q.l>W){q.x=-q.l;q.y=R()*H}c.moveTo(q.x,q.y);c.lineTo(q.x-q.l,q.y+q.l*.05)}c.stroke()}
     if(tg&&tg.bolt&&ts>nextF){flash=1;nextF=ts+4000+R()*7000;if(R()<.4)setTimeout(()=>{flash=.8},180)}
     if(flash>0){c.fillStyle=`rgba(235,240,255,${flash*.5})`;c.fillRect(0,0,W,H);flash-=.07}
@@ -436,6 +440,17 @@ async function prepMap(file){
   return{w,h,cols,rows,tiles,thumb:t.toDataURL('image/webp',.7)};
 }
 
+function parseTSV(t){
+  const rows=[];let row=[],cell='',q=false;
+  for(let i=0;i<t.length;i++){const ch=t[i];
+    if(q){if(ch==='"'){if(t[i+1]==='"'){cell+='"';i++}else q=false}else cell+=ch}
+    else if(ch==='"'&&cell==='')q=true;
+    else if(ch==='\t'){row.push(cell);cell=''}
+    else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;row.push(cell);rows.push(row);row=[];cell=''}
+    else cell+=ch}
+  if(cell!==''||row.length){row.push(cell);rows.push(row)}
+  return rows.filter(r=>r.some(c=>c.trim()));
+}
 async function shrink(file,max){
   const bm=await createImageBitmap(file),r=Math.min(1,max/Math.max(bm.width,bm.height));
   const c=document.createElement('canvas');c.width=Math.round(bm.width*r);c.height=Math.round(bm.height*r);
@@ -488,11 +503,15 @@ function dm(code){
   <p class="note">New quests are pinned to the board right away. Unpin one to hide it from the players.</p></div><div id="qs"></div></details>
   <details class="panel" id="d-sh" open><summary><h2>Shops <span id="csh"></span><span class="eye" id="e-sh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
   <p class="note edit" style="margin:0 0 8px">Use a shop for stores, loot or party inventory. Tap a card on the tablet to read it.</p>
-  <div class="row edit"><input id="shn" placeholder="Shop or loot list name"><button class="btn" data-a="shadd">Add shop</button></div>
+  <div class="row edit"><input id="shn" placeholder="Shop or loot list name"><label><input id="shsh" type="checkbox" checked> Shared</label><button class="btn" data-a="shadd">Add shop</button></div>
   <div class="row" id="shl" style="margin:10px 0"></div><div class="row" id="shb"></div>
   <div class="edit" style="margin-top:10px"><div class="row"><input id="itn" placeholder="Item name" style="flex:2 1 160px"><input id="itc" placeholder="Cost, e.g. 50 gp" style="flex:1 1 110px"></div>
   <textarea id="itd" rows="2" placeholder="Description" style="margin-top:8px"></textarea><textarea id="itr" rows="2" placeholder="Statblock" style="margin-top:8px"></textarea>
   <div class="row" style="margin:8px 0"><input id="iti" type="file" accept="image/*"><button class="btn" id="itb" data-a="itsave">Add item</button></div><p class="note" id="itm"></p></div>
+  <details class="edit" id="d-imp" style="margin-top:10px"><summary><h2 style="font-size:17px">Import items</h2></summary>
+  <p class="note">Rows from your sheet: Title, Description, Statblock, Cost. Existing titles are updated.</p>
+  <textarea id="imt" rows="6" placeholder="Paste rows here"></textarea>
+  <div class="row" style="margin-top:8px"><button class="btn sm" data-a="imp">Import</button><button class="btn sm alt" data-a="exp">Copy shop as table</button></div><p class="note" id="imm"></p></details>
   <div id="shi"></div></details></div>`;
   if(localStorage.getItem('play')==='1'){$('.wrap').classList.add('play');$('#pm').textContent='Show editing'}
   document.querySelectorAll('details[id]').forEach(el=>{const k='open-'+el.id,v=localStorage.getItem(k);if(v!==null)el.open=v==='1';el.addEventListener('toggle',()=>localStorage.setItem(k,el.open?'1':'0'))});
@@ -573,12 +592,16 @@ function dm(code){
     const sel=shops.find(x=>x.id===selShop),on=!!sel&&live.showShop&&live.shopId===sel.id;
     const bt=(a,id,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#csh').textContent='('+shops.length+')';
-    $('#shl').innerHTML=shops.map(x=>`<button class="btn sm ${x.id===selShop?'':'alt'}" data-a="shsel" data-id="${x.id}">${esc(x.name)} (${items.filter(i=>i.shopId===x.id).length})</button>`).join('')||'<span class="note">No shops yet.</span>';
+    $('#shl').innerHTML=shops.map(x=>`<button class="btn sm ${x.id===selShop?'':'alt'}" data-a="shsel" data-id="${x.id}">${esc(x.name)}${x._r==='_shared'?' <small>shared</small>':''} (${items.filter(i=>i.shopId===x.id).length})</button>`).join('')||'<span class="note">No shops yet.</span>';
     $('#shb').innerHTML=sel?bt('shren',sel.id,'Rename',1,1)+bt('shdel',sel.id,'Delete shop',1,1):'';
     $('#shi').innerHTML=sel?items.filter(i=>i.shopId===sel.id).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${i.img?`<img src="${i.img}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}<p>${esc(i.desc||'')}</p></div></div><div class="row">${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':'';
   }
-  unsubs.push(onSnapshot(collection(db,'sessions',code,'shops'),s=>{shops=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.created-b.created);if(selShop&&!shops.some(x=>x.id===selShop))selShop=null;draw()}));
-  unsubs.push(onSnapshot(collection(db,'sessions',code,'items'),s=>{items=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.created-b.created);draw()}));
+  let shS={},itS={};
+  const mergeSh=()=>{shops=[...(shS[code]||[]),...(shS._shared||[])];items=[...(itS[code]||[]),...(itS._shared||[])];if(selShop&&shS[code]&&shS._shared&&!shops.some(x=>x.id===selShop))selShop=null};
+  [code,'_shared'].forEach(r=>{
+    unsubs.push(onSnapshot(collection(db,'sessions',r,'shops'),sn=>{shS[r]=sn.docs.map(d=>({id:d.id,_r:r,...d.data()})).sort((a,b)=>a.created-b.created);mergeSh();draw()}));
+    unsubs.push(onSnapshot(collection(db,'sessions',r,'items'),sn=>{itS[r]=sn.docs.map(d=>({id:d.id,_r:r,...d.data()})).sort((a,b)=>a.created-b.created);mergeSh();draw()}));
+  });
   const mc=$('#mc'),R2=makeRenderer(mc),ptr=new Map();let pinch=0;const lastT={};
   const mw=watchMap(code,(o,s)=>{MO=o;MS=s;syncIn();drawMap()});unsubs.push(()=>mw.stop());
   const dmToks=()=>(live.visibleNpcIds||[]).map(id=>imgs.find(x=>x.id===id)).filter(Boolean).map(x=>({id:x.id,mon:x.type==='monster',im:tokImg(x.id,x.data,drawMap)}));
@@ -640,7 +663,7 @@ function dm(code){
     if(a==='wxwr'){const q=rollWind(1+Math.floor(Math.random()*6),live.wx||'s1');set({wind:q.w,wxOn:true})}
     if(a==='vbg'){if(curView()==='scene'&&live.backgroundId)set({backgroundId:null});else set({showBoard:false,showShop:false,showMap:false})}
     if(a==='vmap'){if(curView()==='map')set({showMap:false});else{const mid=live.mapId||(imgs.find(i=>i.type==='map')||{}).id;if(mid)set({mapId:mid,...(live.mapId?{}:{mapView:{x:.5,y:.5,ft:60}}),showMap:true,showBoard:false,showShop:false})}}
-    if(a==='vshop'){if(curView()==='shop')set({showShop:false,shopItemId:null});else{const sid=selShop||live.shopId||(shops[0]||{}).id;if(sid)set({showShop:true,shopId:sid,shopItemId:null,showBoard:false,showMap:false})}}
+    if(a==='vshop'){if(curView()==='shop')set({showShop:false,shopItemId:null});else{const sid=selShop||live.shopId||(shops[0]||{}).id;if(sid)set({showShop:true,shopId:sid,shopRoot:(shops.find(x=>x.id===sid)||{})._r||code,shopItemId:null,showBoard:false,showMap:false})}}
     if(a==='vboard'){if(curView()==='board')set({showBoard:false});else set({showBoard:true,showMap:false,showShop:false})}
     if(a==='tok')set({tokOff:!live.tokOff});
     if(a==='wxquick')quick();
@@ -650,26 +673,45 @@ function dm(code){
     if(a==='wxpre'){const P=G.presets.find(p=>p.id===id);if(P){await saveG({cur:id,bag:{...P.d},day:0});await set({cold:!!P.cold});wxMsg='Preset '+P.name+'. Bag refilled.';wxDraw();syncPre(true)}}
     if(a==='pdup'){const n2={...curPre(),id:'p'+Date.now(),name:curPre().name+' copy'};await saveG({presets:[...G.presets,n2],cur:n2.id});syncPre(true)}
     if(a==='pdel'&&G.presets.length>1&&confirm('Delete this preset?')){const pr=G.presets.filter(p=>p.id!==G.cur);await saveG({presets:pr,cur:pr[0].id,bag:{...pr[0].d},day:0});await set({cold:!!pr[0].cold});wxDraw();syncPre(true)}
-    if(a==='shadd'){const nm=$('#shn').value.trim();if(!nm)return;const r=doc(collection(db,'sessions',code,'shops'));await setDoc(r,{name:nm,created:Date.now()});selShop=r.id;localStorage.setItem('selShop',r.id);$('#shn').value='';draw()}
+    if(a==='shadd'){const nm=$('#shn').value.trim();if(!nm)return;const r=doc(collection(db,'sessions',$('#shsh').checked?'_shared':code,'shops'));await setDoc(r,{name:nm,created:Date.now()});selShop=r.id;localStorage.setItem('selShop',r.id);$('#shn').value='';draw()}
     if(a==='shsel'){selShop=id;localStorage.setItem('selShop',id);draw()}
-    if(a==='shshow'&&selShop){const on=live.showShop&&live.shopId===selShop;set(on?{showShop:false,shopItemId:null}:{showShop:true,shopId:selShop,shopItemId:null,showBoard:false,showMap:false})}
-    if(a==='shren'){const sh=shops.find(x=>x.id===selShop),nn=sh&&prompt('Shop name',sh.name);if(nn&&nn.trim())updateDoc(doc(db,'sessions',code,'shops',selShop),{name:nn.trim()})}
-    if(a==='shdel'&&selShop&&confirm('Delete this shop and all its items?')){const sd=selShop;
-      for(const i of items.filter(x=>x.shopId===sd))await deleteDoc(doc(db,'sessions',code,'items',i.id));
-      await deleteDoc(doc(db,'sessions',code,'shops',sd));if(live.shopId===sd)set({showShop:false,shopItemId:null});selShop=null;localStorage.removeItem('selShop');draw()}
+    if(a==='shshow'&&selShop){const on=live.showShop&&live.shopId===selShop;set(on?{showShop:false,shopItemId:null}:{showShop:true,shopId:selShop,shopRoot:(shops.find(x=>x.id===selShop)||{})._r||code,shopItemId:null,showBoard:false,showMap:false})}
+    if(a==='shren'){const sh=shops.find(x=>x.id===selShop),nn=sh&&prompt('Shop name',sh.name);if(nn&&nn.trim())updateDoc(doc(db,'sessions',sh._r||code,'shops',selShop),{name:nn.trim()})}
+    if(a==='shdel'&&selShop&&confirm((shops.find(x=>x.id===selShop)||{})._r==='_shared'?'Delete this shared shop and all its items for every session?':'Delete this shop and all its items?')){const sd=selShop,rt=(shops.find(x=>x.id===sd)||{})._r||code;
+      for(const i of items.filter(x=>x.shopId===sd))await deleteDoc(doc(db,'sessions',rt,'items',i.id));
+      await deleteDoc(doc(db,'sessions',rt,'shops',sd));if(live.shopId===sd)set({showShop:false,shopItemId:null});selShop=null;localStorage.removeItem('selShop');draw()}
     if(a==='itsave'){
       const msg=$('#itm'),name=$('#itn').value.trim();
       if(!selShop){msg.className='note err';msg.textContent='Select or add a shop first.';return}
       if(!name){msg.className='note err';msg.textContent='Give the item a name.';return}
       try{msg.className='note';msg.textContent='Saving...';
         const f=$('#iti').files[0],img=f?await shrink(f,480):null,body={name,cost:$('#itc').value.trim(),desc:$('#itd').value.trim(),rules:$('#itr').value.trim(),...(img?{img}:{})};
-        if(editIt)await updateDoc(doc(db,'sessions',code,'items',editIt),body);
-        else await setDoc(doc(collection(db,'sessions',code,'items')),{shopId:selShop,img:'',created:Date.now(),...body});
+        if(editIt)await updateDoc(doc(db,'sessions',(items.find(x=>x.id===editIt)||{})._r||code,'items',editIt),body);
+        else await setDoc(doc(collection(db,'sessions',(shops.find(x=>x.id===selShop)||{})._r||code,'items')),{shopId:selShop,img:'',created:Date.now(),...body});
         editIt=null;['#itn','#itc','#itd','#itr','#iti'].forEach(k=>$(k).value='');$('#itb').textContent='Add item';msg.textContent='Saved.';
       }catch(err){msg.className='note err';msg.textContent='Could not save: '+err.message}}
     if(a==='itedit'){const i=items.find(x=>x.id===id);if(i){editIt=id;$('#itn').value=i.name||'';$('#itc').value=i.cost||'';$('#itd').value=i.desc||'';$('#itr').value=i.rules||'';$('#itb').textContent='Save item';$('#itn').focus()}}
-    if(a==='itdel'&&confirm('Delete this item?')){if(editIt===id){editIt=null;$('#itb').textContent='Add item'}deleteDoc(doc(db,'sessions',code,'items',id))}
-    if(a==='itshow'){const i=items.find(x=>x.id===id);if(i){const on=live.showShop&&live.shopId===i.shopId;set(on?{shopItemId:live.shopItemId===id?null:id}:{showShop:true,shopId:i.shopId,shopItemId:id,showBoard:false,showMap:false})}}
+    if(a==='itdel'&&confirm('Delete this item?')){if(editIt===id){editIt=null;$('#itb').textContent='Add item'}deleteDoc(doc(db,'sessions',(items.find(x=>x.id===id)||{})._r||code,'items',id))}
+    if(a==='imp'){
+      const msg=$('#imm'),sh=shops.find(x=>x.id===selShop);
+      if(!sh){msg.className='note err';msg.textContent='Select a shop first.';return}
+      let rows=parseTSV($('#imt').value);if(rows.length&&/^title$/i.test(rows[0][0].trim()))rows=rows.slice(1);
+      if(!rows.length){msg.className='note err';msg.textContent='Nothing to import.';return}
+      msg.className='note';msg.textContent='Importing...';let add=0,upd=0;
+      try{for(const r of rows){const name=(r[0]||'').trim();if(!name)continue;
+          const body={name,desc:(r[1]||'').trim(),rules:(r[2]||'').trim(),cost:(r[3]||'').trim()};
+          const ex=items.find(i=>i.shopId===sh.id&&(i.name||'').trim().toLowerCase()===name.toLowerCase());
+          if(ex){await updateDoc(doc(db,'sessions',sh._r,'items',ex.id),body);upd++}
+          else{await setDoc(doc(collection(db,'sessions',sh._r,'items')),{shopId:sh.id,img:'',created:Date.now()+add,...body});add++}}
+        $('#imt').value='';msg.textContent='Imported: '+add+' new, '+upd+' updated.';
+      }catch(err){msg.className='note err';msg.textContent='Import failed: '+err.message}}
+    if(a==='exp'){
+      const sh=shops.find(x=>x.id===selShop),msg=$('#imm');if(!sh)return;
+      const q=v=>/[\t\n\r"]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;
+      const t=['Title\tDescription\tStatblock\tCost',...items.filter(i=>i.shopId===sh.id).map(i=>[i.name,i.desc,i.rules,i.cost].map(v=>q(v||'')).join('\t'))].join('\n');
+      try{await navigator.clipboard.writeText(t);msg.className='note';msg.textContent='Copied '+(t.split('\n').length-1)+' items. Paste them into your sheet.'}
+      catch(e){$('#imt').value=t;msg.className='note';msg.textContent='Clipboard blocked. The table is in the box above.'}}
+    if(a==='itshow'){const i=items.find(x=>x.id===id);if(i){const on=live.showShop&&live.shopId===i.shopId;set(on?{shopItemId:live.shopItemId===id?null:id}:{showShop:true,shopId:i.shopId,shopRoot:i._r,shopItemId:id,showBoard:false,showMap:false})}}
     if(a==='map')set({mapId:id,mapView:{x:.5,y:.5,ft:60}});
     if(a==='mshow'&&live.mapId)set({showMap:!live.showMap,...(!live.showMap?{showBoard:false,showShop:false}:{})});
     if(a==='mlight'&&MO){const L=lights().map(l=>({...l})),n={x:view.x,y:view.y};L.push(n);MS.lights=L;addEx(n);dirty=true;flush();drawMap()}
