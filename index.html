@@ -147,6 +147,20 @@ label{font-family:Cinzel,Georgia,serif;font-size:15px}
 
 .wrap.play .edit{display:none!important}
 #pm{flex:none}
+
+summary h2{display:flex;align-items:center;gap:.4em}
+.eye{display:none;margin-left:auto;color:var(--arc)}
+.eye.on{display:inline-flex}
+.eye svg{width:22px;height:22px;filter:drop-shadow(0 0 4px var(--arc))}
+.cnt{display:inline-block;min-width:1.6em;margin-left:.2em;padding:0 .35em;border-radius:99px;background:#2a170d;color:var(--gold);font-size:.85em;text-align:center}
+.rbox{border:2px solid var(--gold2);border-radius:6px;background:linear-gradient(#4a2c18,#2a170d);color:var(--gold);box-shadow:inset 0 0 20px #0008}
+.rbox>summary,.rbox .rh{display:flex;align-items:center;gap:12px;padding:10px 14px}
+.rbox svg{width:34px;height:34px;flex:none}
+.rbox b{display:block;font:700 18px Cinzel,serif}
+.rbox small{display:block;font:15px Almendra,serif;color:var(--parch)}
+.rbox .day{margin-left:auto;font:700 15px Cinzel,serif}
+.rbox .fx{padding:0 14px 12px;color:var(--parch);white-space:pre-wrap;font:16px Almendra,serif}
+#stage.night #npcs figure.mon{filter:brightness(.55) saturate(.8)}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -188,13 +202,13 @@ function home(){
 
 async function display(code){
   app.onclick=null;
-  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="npcs"></div><canvas id="mapc"></canvas><div id="night"></div><canvas id="wx"></canvas><div id="wxb"></div><div id="board"><div id="papers"></div></div><div id="shopc"><div id="shopt"></div><div id="shopg"></div></div><div id="shopd"></div></div>';
+  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="night"></div><div id="npcs"></div><canvas id="mapc"></canvas><canvas id="wx"></canvas><div id="wxb"></div><div id="board"><div id="papers"></div></div><div id="shopc"><div id="shopt"></div><div id="shopg"></div></div><div id="shopd"></div></div>';
   try{navigator.wakeLock&&navigator.wakeLock.request('screen')}catch(e){}
   const cache=new Map();
   const get=async id=>{if(!id)return{};if(!cache.has(id)){const s=await getDoc(doc(db,'sessions',code,'images',id));cache.set(id,s.exists()?s.data():{})}return cache.get(id)};
   let d={},qs=[],seq=0;
   const cv=$('#mapc'),RM=makeRenderer(cv);let MO=null,MS={},tg=null,cur=null,raf=0,curId=null,TL=[];
-  const stepM=()=>{raf=0;if(!MO||!tg)return;if(!cur)cur={...tg};const k=.25;cur.x+=(tg.x-cur.x)*k;cur.y+=(tg.y-cur.y)*k;cur.ft+=(tg.ft-cur.ft)*k;RM(MO,MS,cur,1,mkToks(TL,MS));
+  const stepM=()=>{raf=0;if(!MO||!tg)return;if(!cur)cur={...tg};const k=.25;cur.x+=(tg.x-cur.x)*k;cur.y+=(tg.y-cur.y)*k;cur.ft+=(tg.ft-cur.ft)*k;RM(MO,MS,cur,1,mkToks(TL,MS),!!d.night);
     if(Math.abs(tg.x-cur.x)>2e-4||Math.abs(tg.y-cur.y)>2e-4||Math.abs(tg.ft-cur.ft)>.02)raf=requestAnimationFrame(stepM)};
   const kick=()=>{if(!raf)raf=requestAnimationFrame(stepM)};
   const mw=watchMap(code,(o,s)=>{MO=o;MS=s;kick()});unsubs.push(()=>mw.stop());
@@ -217,13 +231,13 @@ async function display(code){
   $('#shopg').onclick=e=>{const c=e.target.closest('[data-i]');if(c){lo=c.dataset.i;renderShop()}};
   $('#shopd').onclick=()=>{if(lo)lo=null;else dis=d.shopItemId;renderShop()};
   const WXE=makeWeather($('#wx'));unsubs.push(()=>WXE.stop());
-  let wk='';const renderWx=()=>{$('#stage').classList.toggle('night',!!d.night);const on=!!d.wxOn,s=WXS.find(x=>x.id===d.wx)||WXS[0],w=Math.min(3,d.wind|0),cd=!!d.cold,k=[on,s.id,w,cd].join();if(k===wk)return;wk=k;WXE.set(on?s:null,w,cd);$('#wxb').innerHTML=on?wxBadge(s,w,cd):''};
+  let wk='';const renderWx=()=>{$('#stage').classList.toggle('night',!!d.night);kick();const on=!!d.wxOn,s=WXS.find(x=>x.id===d.wx)||WXS[0],w=Math.min(3,d.wind|0),cd=!!d.cold,k=[on,s.id,w,cd].join();if(k===wk)return;wk=k;WXE.set(on?s:null,w,cd);$('#wxb').innerHTML=on?wxBadge(s,w,cd):''};
   const rot=id=>{let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))%7;return h-3};
   const paint=async()=>{
     const my=++seq,board=!!d.showBoard,shopOn=!board&&!!d.showShop&&!!d.shopId,mapOn=!board&&!shopOn&&!!d.showMap&&!!d.mapId;
     const b=board||mapOn||shopOn?{}:await get(d.backgroundId);
-    const tl=mapOn?(await Promise.all((d.visibleNpcIds||[]).map(async id=>{const x=await get(id);return x.data?{id,mon:x.type==='monster',im:tokImg(id,x.data,kick)}:null}))).filter(Boolean):[];
-    const n=board||mapOn||shopOn?[]:(await Promise.all((d.visibleNpcIds||[]).map(get))).filter(x=>x.data);
+    const tl=mapOn&&!d.tokOff?(await Promise.all((d.visibleNpcIds||[]).map(async id=>{const x=await get(id);return x.data?{id,mon:x.type==='monster',im:tokImg(id,x.data,kick)}:null}))).filter(Boolean):[];
+    const n=board||mapOn||shopOn||d.tokOff?[]:(await Promise.all((d.visibleNpcIds||[]).map(get))).filter(x=>x.data);
     if(my!==seq)return;
     TL=tl;kick();const posted=qs.filter(q=>q.posted),st=$('#stage');
     st.classList.toggle('board',board);
@@ -276,6 +290,7 @@ const WXS=[
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
 const WINDS=['Still','Breeze','Gust','Storm'];
+const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
  cloud:'<path d="M7 18h10a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6 1.5A3.4 3.4 0 0 0 7 18z"/>',
  rain:'<g transform="translate(0,-3)"><path d="M7 18h10a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6 1.5A3.4 3.4 0 0 0 7 18z"/></g><path d="M8 19l-1 3M12 19l-1 3M16 19l-1 3"/>',
@@ -361,14 +376,19 @@ function drawToks(c,toks,ox,oy,mw,mh,pxft,sc,R,Ls,mode){
   });
 }
 function makeRenderer(cv){
-  const ctx=cv.getContext('2d'),fog=document.createElement('canvas'),fx=fog.getContext('2d'),ex=document.createElement('canvas'),ec=ex.getContext('2d');
+  const ctx=cv.getContext('2d'),fog=document.createElement('canvas'),fx=fog.getContext('2d'),ex=document.createElement('canvas'),ec=ex.getContext('2d'),nl=document.createElement('canvas'),nx=nl.getContext('2d');
   let key='',last=null;
   const soft=(c,x,y,R,col)=>{const g=c.createRadialGradient(x,y,0,x,y,R);g.addColorStop(0,col+'1)');g.addColorStop(.55,col+'1)');g.addColorStop(1,col+'0)');c.fillStyle=g;c.beginPath();c.arc(x,y,R,0,7);c.fill()};
-  return(MO,MS,v,fa,toks=[])=>{
+  return(MO,MS,v,fa,toks=[],night=false)=>{
     const W=cv.width,H=cv.height;ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);if(!MO||W<2)return;
     const m=MO.meta,pxft=m.w/((MS.sq||30)*5),sc=(W/v.ft)/pxft,mw=m.w*sc,mh=m.h*sc,ox=W/2-v.x*mw,oy=H/2-v.y*mh;
     ctx.drawImage(MO.canvas,ox,oy,mw,mh);
-    const Ls=MS.lights||[{x:.5,y:.5}];if(MS.rev){drawToks(ctx,toks,ox,oy,mw,mh,pxft,sc,(MS.lft||30)*pxft*sc,Ls,'rev');return}
+    const Ls=MS.lights||[{x:.5,y:.5}];
+    if(night){const Rn=(MS.lft||30)*pxft*sc*1.25;if(nl.width!==W||nl.height!==H){nl.width=W;nl.height=H}
+      nx.globalCompositeOperation='source-over';nx.fillStyle='rgb(58,70,125)';nx.fillRect(0,0,W,H);nx.globalCompositeOperation='destination-out';
+      Ls.forEach(l=>soft(nx,ox+l.x*mw,oy+l.y*mh,Rn,'rgba(0,0,0,'));
+      ctx.globalCompositeOperation='multiply';ctx.drawImage(nl,0,0);ctx.globalCompositeOperation='source-over'}
+    if(MS.rev){drawToks(ctx,toks,ox,oy,mw,mh,pxft,sc,(MS.lft||30)*pxft*sc,Ls,'rev');return}
     const lf=MS.lft||30,R=lf*pxft*sc,es=Math.min(1,1024/Math.max(m.w,m.h));
     if(MO!==last){last=MO;key=''}
     const k=[MS.sq,lf,MS.ex].join('|');
@@ -413,46 +433,42 @@ function dm(code){
   const link=location.origin+location.pathname+'#display/'+code;
   app.innerHTML=`<div class="wrap"><div class="row" style="justify-content:space-between"><h1>The Arcane Table</h1><button class="btn sm alt" id="pm" data-a="pm">Hide editing</button></div>
   <details class="panel" id="d-ctl" open><summary><h2>Controls</h2></summary><div class="row">
-  <button class="btn" id="bt" data-a="board">Show quest board</button>
-  <button class="btn" data-a="black">Remove background</button><button class="btn alt" data-a="clear">Clear all tokens</button>
-  <button class="btn alt" data-a="home">Change session</button></div>
+  <button class="btn" id="cv-bg" data-a="vbg">Background</button><button class="btn" id="cv-map" data-a="vmap">Map</button><button class="btn" id="cv-shop" data-a="vshop">Shop</button><button class="btn" id="cv-board" data-a="vboard">Quest board</button></div>
+  <div class="row" style="margin-top:8px"><button class="btn" id="ct-wx" data-a="wxon">Weather</button><button class="btn" id="ct-night" data-a="night">Day</button><button class="btn" id="ct-tok" data-a="tok">Tokens</button>
+  <button class="btn sm alt edit" data-a="clear">Clear tokens</button><button class="btn sm alt edit" data-a="home">Change session</button></div>
   <div class="edit"><p class="note">Player display link for the tablet:</p><input id="lnk" readonly value="${esc(link)}" style="width:100%"></div></details>
-  <details class="panel" id="d-wx" open><summary><h2>Weather</h2></summary>
-  <div class="row" style="margin-bottom:10px"><button class="btn" id="wxt" data-a="wxon">Show weather</button><button class="btn" data-a="wxquick">New day</button><button class="btn sm alt" id="wxn" data-a="night">Night</button></div>
-  <p class="note" style="margin:0 0 4px">Daily draw. Preset:</p><div class="row" id="wxp"></div>
-  <p class="note" id="wxbag" style="margin:8px 0"></p>
-  <div class="row"><button class="btn" data-a="wxd" data-id="s">Sun</button><button class="btn" data-a="wxd" data-id="c">Cloud</button><button class="btn" id="wxdr" data-a="wxd" data-id="r">Rain</button><button class="btn sm alt" data-a="wxundo">Undo</button><button class="btn sm alt" data-a="wxrefill">Refill</button></div>
-  <div id="wxh" style="margin-top:8px"></div>
-  <p class="note" style="margin:12px 0 4px">Wind roll (d6)</p><div class="row" id="wxr"></div><p class="note" id="wxm"></p>
-  <div class="edit"><p class="note" style="margin:12px 0 4px">Set weather directly</p><div id="wxl"></div>
-  <p class="note" style="margin:6px 0 4px">Set wind directly</p><div class="row" id="wxw"></div></div>
+  <details class="panel edit" id="d-up" open><summary><h2>Add to the library</h2></summary><div class="row">
+  <select id="type"><option value="background">Background</option><option value="npc">NPC portrait</option><option value="monster">Monster token</option><option value="map">Map</option></select>
+  <input id="nm" placeholder="Name (optional)"><input id="file" type="file" accept="image/*" multiple>
+  <button class="btn" data-a="up">Add image</button></div><p class="note" id="msg">Several files at once keep their file names. Rename any image later with the pencil on its tile.</p></details>
+  <details class="panel" id="d-wx" open><summary><h2>Weather <span class="eye" id="e-wx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
+  <div id="wxres"></div>
+  <div class="row" style="margin-top:10px"><button class="btn" id="wxds" data-a="wxd" data-id="s">Sun</button><button class="btn" id="wxdc" data-a="wxd" data-id="c">Cloud</button><button class="btn" id="wxdr" data-a="wxd" data-id="r">Rain</button></div>
+  <div class="row" style="margin-top:8px"><button class="btn sm" data-a="wxwr">Wind</button><button class="btn sm" data-a="wxquick">New day</button><button class="btn sm alt" data-a="wxundo">Undo</button><button class="btn sm alt edit" data-a="wxrefill">Refill</button><select id="wxsel"></select></div>
+  <div class="edit"><div id="wxl" style="margin-top:10px"></div><div class="row" id="wxw"></div></div>
   <details class="edit" id="d-wxe" style="margin-top:14px"><summary><h2 style="font-size:17px">Edit season presets</h2></summary>
   <div class="row"><input id="pn" placeholder="Name"><label><input id="pc" type="checkbox"> Cold (snow, Cold, Freezing)</label></div>
   <div class="row" style="margin-top:8px"><label>Sun dice <input id="pds" type="number" min="0" style="width:70px"></label><label>Cloud dice <input id="pdc" type="number" min="0" style="width:70px"></label><label>Rain dice <input id="pdr" type="number" min="0" style="width:70px"></label></div>
   <p class="note" style="margin:10px 0 4px">Cloud die on Sun 1, 2, 3 gives:</p><div class="row"><select id="tc0"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tc1"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tc2"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select></div>
   <p class="note" style="margin:10px 0 4px">Rain die on Sun 1, 2, 3 gives:</p><div class="row"><select id="tr0"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tr1"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tr2"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select></div>
   <div class="row" style="margin-top:10px"><button class="btn sm alt" data-a="pdup">Duplicate preset</button><button class="btn sm alt" data-a="pdel">Delete preset</button></div></details></details>
-  <details class="panel edit" id="d-up" open><summary><h2>Add to the library</h2></summary><div class="row">
-  <select id="type"><option value="background">Background</option><option value="npc">NPC portrait</option><option value="monster">Monster token</option><option value="map">Map</option></select>
-  <input id="nm" placeholder="Name (optional)"><input id="file" type="file" accept="image/*" multiple>
-  <button class="btn" data-a="up">Add image</button></div><p class="note" id="msg">Several files at once keep their file names. Rename any image later with the pencil on its tile.</p></details>
-  <details class="panel" id="d-map" open><summary><h2>Maps <span id="cmp"></span></h2></summary>
+  <details class="panel" id="d-bg" open><summary><h2>Backgrounds <span id="cb"></span><span class="eye" id="e-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="bgs"></div></details>
+  <details class="panel" id="d-map" open><summary><h2>Maps <span id="cmp"></span><span class="eye" id="e-map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
   <div class="grid" id="mps" style="margin-bottom:12px"></div>
   <canvas id="mc"></canvas>
-  <div class="row" style="margin-top:10px"><button class="btn" id="mshow" data-a="mshow">Show map</button>
+  <div class="row" style="margin-top:10px">
   <button class="btn sm alt" data-a="mlight">Add light</button><button class="btn sm alt" data-a="mrm">Remove light</button><button class="btn sm alt" data-a="mreset">Reset explored</button></div>
   <div class="row" style="margin-top:10px"><label>Grid squares across <input id="msq" type="number" min="5" value="30" style="width:90px"></label>
   <label>Light radius (ft) <input id="mft" type="number" min="5" value="30" style="width:90px"></label>
   <label><input id="mrev" type="checkbox"> Reveal whole map</label></div>
   <p class="note">Drag to pan. Pinch or use the mouse wheel to zoom. Drag a purple dot to move a light. Areas the light has passed stay dimly visible.</p></details>
-  <details class="panel" id="d-bg" open><summary><h2>Backgrounds <span id="cb"></span></h2></summary><div class="grid" id="bgs"></div></details>
-  <details class="panel" id="d-np" open><summary><h2>NPCs <span id="cn"></span></h2></summary><div class="grid" id="nps"></div></details>
-  <details class="panel" id="d-mo" open><summary><h2>Monsters <span id="cm"></span></h2></summary><div class="grid" id="mos"></div></details>
-  <details class="panel" id="d-q" open><summary><h2>Quests <span id="cq"></span></h2></summary>
+  <details class="panel" id="d-np" open><summary><h2>NPCs <span id="cn"></span><span class="eye" id="e-np"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="nps"></div></details>
+  <details class="panel" id="d-mo" open><summary><h2>Monsters <span id="cm"></span><span class="eye" id="e-mo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="mos"></div></details>
+  <details class="panel" id="d-q" open><summary><h2>Quests <span id="cq"></span><span class="eye" id="e-q"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
   <div class="edit"><input id="qt" placeholder="Quest title" style="width:100%;margin-bottom:8px"><textarea id="qx" rows="3" placeholder="Quest text"></textarea>
   <div class="row" style="margin:8px 0"><button class="btn" id="qb" data-a="qsave">Add quest</button></div>
   <p class="note">New quests are pinned to the board right away. Unpin one to hide it from the players.</p></div><div id="qs"></div></details>
-  <details class="panel" id="d-sh" open><summary><h2>Shops <span id="csh"></span></h2></summary>
+  <details class="panel" id="d-sh" open><summary><h2>Shops <span id="csh"></span><span class="eye" id="e-sh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
   <p class="note edit" style="margin:0 0 8px">Use a shop for stores, loot or party inventory. Tap a card on the tablet to read it.</p>
   <div class="row edit"><input id="shn" placeholder="Shop or loot list name"><button class="btn" data-a="shadd">Add shop</button></div>
   <div class="row" id="shl" style="margin:10px 0"></div><div class="row" id="shb"></div>
@@ -472,26 +488,33 @@ function dm(code){
     $('#cm').textContent='('+mo.length+')';
     $('#mps').innerHTML=mp.map(i=>tile(i,live.mapId===i.id,'map')).join('')||'<p class="note">No maps yet.</p>';$('#cmp').textContent='('+mp.length+')';
     $('#cb').textContent='('+bg.length+')';$('#cn').textContent='('+np.length+')';$('#cq').textContent='('+qs.length+')';
-    $('#bt').textContent=live.showBoard?'Hide quest board':'Show quest board';
-    $('#mshow').textContent=live.showMap?'Hide map':'Show map';
-    shopDraw();wxDraw();
+    
+    
+    shopDraw();wxDraw();ctlDraw();
     const qb=(a,id,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#qs').innerHTML=qs.map(q=>`<div class="qrow ${q.posted?'on':''}"><div class="qt"><b>${esc(q.title||'Untitled')}${q.done?' (done)':''}</b><p>${esc(q.text||'')}</p></div><div class="row">${qb('qpin',q.id,q.posted?'Unpin':'Pin')}${qb('qdone',q.id,q.done?'Reopen':'Done',1)}${qb('qedit',q.id,'Edit',1,1)}${qb('qdel',q.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No quests yet.</p>';
   };
+  function curView(){return live.showBoard?'board':(live.showShop&&live.shopId)?'shop':(live.showMap&&live.mapId)?'map':'scene'}
+  function ctlDraw(){
+    const v=curView(),on=(id,a)=>{const e=$(id);if(e)e.classList.toggle('alt',!a)};
+    on('#cv-bg',v==='scene'&&!!live.backgroundId);on('#cv-map',v==='map');on('#cv-shop',v==='shop');on('#cv-board',v==='board');
+    on('#ct-wx',!!live.wxOn);on('#ct-night',!!live.night);on('#ct-tok',!live.tokOff);
+    $('#ct-night').textContent=live.night?'Night':'Day';
+    const eye=(id,a)=>{const e=$('#e-'+id);if(e)e.classList.toggle('on',!!a)},act=t=>!live.tokOff&&imgs.some(i=>i.type===t&&(live.visibleNpcIds||[]).includes(i.id));
+    eye('bg',v==='scene'&&live.backgroundId);eye('map',v==='map');eye('sh',v==='shop');eye('q',v==='board');eye('wx',live.wxOn);eye('np',act('npc'));eye('mo',act('monster'));
+  }
   function wxDraw(){
     const cd=!!live.cold,cur=live.wx||'s1',w=live.wind|0,P=curPre(),bag=G.bag||P.d;
-    const b=(a,id,t,act)=>`<button class="btn sm ${act?'':'alt'}" data-a="${a}" data-id="${id}">${t}</button>`;
-    const dn=d=>d==='s'?'Sun':d==='c'?'Cloud':cd?'Snow':'Rain';
+    const b=(a,id,t,act)=>`<button class="btn sm ${act?'':'alt'}" data-a="${a}" data-id="${id}">${t}</button>`,cnt=n=>' <span class="cnt">'+n+'</span>';
     $('#wxl').innerHTML=['s','c','r'].map(t=>`<div class="row" style="margin-bottom:6px">${WXS.filter(x=>x.id[0]===t).map(x=>b('wxset',x.id,sname(x.id,cd),cur===x.id)).join('')}</div>`).join('');
     $('#wxw').innerHTML=WINDS.map((n,i)=>b('wxwind',i,n,w===i)).join('');
-    $('#wxr').innerHTML=[1,2,3,4,5,6].map(n=>b('wxroll',n,n,0)).join('');
-    $('#wxm').textContent=wxMsg;
-    $('#wxp').innerHTML=G.presets.map(p=>b('wxpre',p.id,esc(p.name),p.id===P.id)).join('');
-    $('#wxbag').textContent='Day '+G.day+' of 10. Left in the bag: Sun '+bag.s+', Cloud '+bag.c+', '+dn('r')+' '+bag.r+'.';
-    $('#wxdr').textContent=dn('r');
-    $('#wxh').innerHTML=(G.hist||[]).slice(-5).reverse().map(h=>`<div class="note">${dn(h.die)} die: ${sname(h.from,cd)} to ${sname(h.to,cd)}</div>`).join('');
-    $('#wxt').textContent=live.wxOn?'Hide weather':'Show weather';
-    $('#wxn').textContent=live.night?'Day':'Night';
+    $('#wxds').innerHTML='Sun'+cnt(bag.s);$('#wxdc').innerHTML='Cloud'+cnt(bag.c);$('#wxdr').innerHTML=(cd?'Snow':'Rain')+cnt(bag.r);
+    const sel=$('#wxsel');
+    if(sel.options.length!==G.presets.length||[...sel.options].some((o,i)=>o.value!==G.presets[i].id||o.textContent!==G.presets[i].name))sel.innerHTML=G.presets.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
+    sel.value=P.id;
+    const x=WXS.find(y=>y.id===cur)||WXS[0],ic=Array.isArray(x.i)?x.i[cd?1:0]:x.i,fx=WXFX[cur];
+    const head=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${sname(cur,cd)}</b><small>Wind: ${WINDS[w]}</small></div><span class="day">Day ${G.n||0}</span>`;
+    $('#wxres').innerHTML=fx?`<details class="rbox"><summary>${head}</summary><div class="fx">${esc(Array.isArray(fx)?fx.join('\n'):fx)}</div></details>`:`<div class="rbox"><div class="rh">${head}</div></div>`;
     syncPre();
   }
   function syncPre(force){
@@ -506,15 +529,16 @@ function dm(code){
   unsubs.push(onSnapshot(GD,s=>{if(s.exists())G={...G,...s.data()};draw()}));
   const updPre=patch=>saveG({presets:G.presets.map(p=>p.id===G.cur?{...p,...patch}:p)});
   $('#pn').onchange=e=>updPre({name:e.target.value.trim()||'Preset'});
+  $('#wxsel').onchange=async e=>{const P=G.presets.find(p=>p.id===e.target.value);if(P){await saveG({cur:P.id,bag:{...P.d},day:0});await set({cold:!!P.cold});wxDraw();syncPre(true)}};
   $('#pc').onchange=e=>{updPre({cold:e.target.checked});set({cold:e.target.checked})};
   [['s','pds'],['c','pdc'],['r','pdr']].forEach(([k,id])=>$('#'+id).onchange=e=>updPre({d:{...curPre().d,[k]:Math.max(0,+e.target.value||0)}}));
   ['tc','tr'].forEach(k=>[0,1,2].forEach(i=>$('#'+k+i).onchange=e=>{const a=[...curPre()[k]];a[i]=e.target.value;updPre({[k]:a})}));
   async function drawDie(die){
     const P=curPre(),cd=!!P.cold,from=live.wx||'s1',to=nextWx(from,die,P);
-    const h={die,from,to,pw:from,pwind:live.wind|0,pbag:{...G.bag},pday:G.day};
+    const h={die,from,to,pw:from,pwind:live.wind|0,pbag:{...G.bag},pday:G.day,pn:G.n||0};
     let bag={...G.bag},day=G.day+1,note='';bag[die]=Math.max(0,bag[die]-1);
     if(day>=10){bag={...P.d};day=0;note=' The bag was refilled.'}
-    await saveG({bag,day,hist:[...(G.hist||[]),h].slice(-12)});
+    await saveG({bag,day,n:(G.n||0)+1,hist:[...(G.hist||[]),h].slice(-12)});
     await set({wx:to,wxOn:true});
     wxMsg=(die==='s'?'Sun':die==='c'?'Cloud':cd?'Snow':'Rain')+' die: '+sname(from,cd)+' to '+sname(to,cd)+'.'+note+' Now enter the wind roll.';wxDraw();
     return to;
@@ -531,7 +555,7 @@ function dm(code){
     const bt=(a,id,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#csh').textContent='('+shops.length+')';
     $('#shl').innerHTML=shops.map(x=>`<button class="btn sm ${x.id===selShop?'':'alt'}" data-a="shsel" data-id="${x.id}">${esc(x.name)} (${items.filter(i=>i.shopId===x.id).length})</button>`).join('')||'<span class="note">No shops yet.</span>';
-    $('#shb').innerHTML=sel?bt('shshow',sel.id,on?'Hide shop':'Show shop')+bt('shren',sel.id,'Rename',1,1)+bt('shdel',sel.id,'Delete shop',1,1):'';
+    $('#shb').innerHTML=sel?bt('shren',sel.id,'Rename',1,1)+bt('shdel',sel.id,'Delete shop',1,1):'';
     $('#shi').innerHTML=sel?items.filter(i=>i.shopId===sel.id).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${i.img?`<img src="${i.img}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}<p>${esc(i.desc||'')}</p></div></div><div class="row">${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':'';
   }
   unsubs.push(onSnapshot(collection(db,'sessions',code,'shops'),s=>{shops=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.created-b.created);if(selShop&&!shops.some(x=>x.id===selShop))selShop=null;draw()}));
@@ -547,7 +571,7 @@ function dm(code){
     if(w<2)return;if(mc.width!==w||mc.height!==h){mc.width=w;mc.height=h}
     const x=mc.getContext('2d');
     if(!MO){x.fillStyle='#000';x.fillRect(0,0,w,h);x.fillStyle='#d4a84b';x.font=(16*d)+'px Cinzel,serif';x.textAlign='center';x.fillText('Tap a map in the Maps list',w/2,h/2);return}
-    R2(MO,MS,view,.62,mkToks(dmToks(),MS));const c=cam();
+    R2(MO,MS,view,.62,mkToks(dmToks(),MS),!!live.night);const c=cam();
     lights().forEach(l=>{x.beginPath();x.arc(c.ox+l.x*c.m.w*c.sc,c.oy+l.y*c.m.h*c.sc,12*d,0,7);x.fillStyle='#9a78ff';x.fill();x.lineWidth=3*d;x.strokeStyle='#fff';x.stroke()});
   }
   const saveM=o=>mw.id&&setDoc(doc(db,'sessions',code,'maps',mw.id),o,{merge:true});
@@ -593,9 +617,15 @@ function dm(code){
     if(a==='night')set({night:!live.night});
     if(a==='pm'){const w=$('.wrap'),p=w.classList.toggle('play');localStorage.setItem('play',p?'1':'0');t.textContent=p?'Show editing':'Hide editing'}
     if(a==='wxd')drawDie(id);
+    if(a==='wxwr'){const q=rollWind(1+Math.floor(Math.random()*6),live.wx||'s1');set({wind:q.w,wxOn:true})}
+    if(a==='vbg'){if(curView()==='scene'&&live.backgroundId)set({backgroundId:null});else set({showBoard:false,showShop:false,showMap:false})}
+    if(a==='vmap'){if(curView()==='map')set({showMap:false});else{const mid=live.mapId||(imgs.find(i=>i.type==='map')||{}).id;if(mid)set({mapId:mid,...(live.mapId?{}:{mapView:{x:.5,y:.5,ft:60}}),showMap:true,showBoard:false,showShop:false})}}
+    if(a==='vshop'){if(curView()==='shop')set({showShop:false,shopItemId:null});else{const sid=selShop||live.shopId||(shops[0]||{}).id;if(sid)set({showShop:true,shopId:sid,shopItemId:null,showBoard:false,showMap:false})}}
+    if(a==='vboard'){if(curView()==='board')set({showBoard:false});else set({showBoard:true,showMap:false,showShop:false})}
+    if(a==='tok')set({tokOff:!live.tokOff});
     if(a==='wxquick')quick();
     if(a==='wxroll'){const q=rollWind(+id,live.wx||'s1');wxMsg=q.txt;wxDraw();set({wind:q.w,wxOn:true})}
-    if(a==='wxundo'){const h=(G.hist||[]).slice(-1)[0];if(h){await set({wx:h.pw,wind:h.pwind});await saveG({bag:h.pbag,day:h.pday,hist:G.hist.slice(0,-1)});wxMsg='Last draw undone.';wxDraw()}}
+    if(a==='wxundo'){const h=(G.hist||[]).slice(-1)[0];if(h){await set({wx:h.pw,wind:h.pwind});await saveG({bag:h.pbag,day:h.pday,n:h.pn||0,hist:G.hist.slice(0,-1)});wxMsg='Last draw undone.';wxDraw()}}
     if(a==='wxrefill'){await saveG({bag:{...curPre().d},day:0});wxMsg='Bag refilled.';wxDraw()}
     if(a==='wxpre'){const P=G.presets.find(p=>p.id===id);if(P){await saveG({cur:id,bag:{...P.d},day:0});await set({cold:!!P.cold});wxMsg='Preset '+P.name+'. Bag refilled.';wxDraw();syncPre(true)}}
     if(a==='pdup'){const n2={...curPre(),id:'p'+Date.now(),name:curPre().name+' copy'};await saveG({presets:[...G.presets,n2],cur:n2.id});syncPre(true)}
