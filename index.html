@@ -246,7 +246,7 @@ input[type=checkbox]{min-height:0;width:20px;height:20px;padding:0;flex:none}
 .pvbox{position:relative;aspect-ratio:16/10;background:#000;overflow:hidden}
 #pvf{position:absolute;left:0;top:0;width:1280px;height:800px;border:0;transform-origin:0 0;pointer-events:none;background:#000}
 .pvbox #mc{position:absolute;inset:0;width:100%;height:100%;max-height:none;aspect-ratio:auto;border:0;border-radius:0}
-#stage.pv #ver,#stage.pv .snd{display:none!important}
+#stage.prev #ver,#stage.prev .snd{display:none!important}
 
 .rbox button.day{margin-left:auto;padding:2px 12px;border:1px solid var(--gold2);border-radius:6px;background:#0005;color:var(--gold);font:700 15px Cinzel,serif;cursor:pointer}
 .pvtools{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:6px 8px;background:linear-gradient(#3a2212,#22120a);color:var(--parch)}
@@ -296,7 +296,7 @@ function home(){
 async function display(code,pv){
   app.onclick=null;
   app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div id="bg2"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="night"></div><div id="dusk"></div><div id="glow"></div><canvas id="mapc"></canvas><canvas id="wx"></canvas><div id="npcs"></div><div id="wxb"></div><div id="tcard"></div><div id="board"><div id="papers"></div></div><div id="shopc"><div id="shopt"></div><div id="shopg"></div></div><div id="shopd"></div><div id="ver">'+VER+'</div><button id="snd" class="snd">Tap to enable sound</button></div>';
-  if(pv)$('#stage').classList.add('pv');else try{navigator.wakeLock&&navigator.wakeLock.request('screen')}catch(e){}
+  if(pv)$('#stage').classList.add('prev');else try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(e){}
   const cache=new Map();
   const get=async id=>{if(!id)return{};if(!cache.has(id)){const s=await getDoc(doc(db,'sessions',code,'images',id));cache.set(id,s.exists()?s.data():{})}return cache.get(id)};
   let d={},qs=[],seq=0;
@@ -406,7 +406,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-05 s';
+const VER='2026-11-05 t';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -804,7 +804,7 @@ function dm(code){
   const link=location.origin+location.pathname+'#display/'+code,plink=location.origin+location.pathname+'#player/'+code;
   app.innerHTML=`<div class="wrap"><div id="muhost" class="muhost"><div id="mui"></div></div>
   <button id="pvbtn" class="pvbtn alt" data-a="pvtoggle" title="Preview of the players' screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>
-  <div id="pvwin" class="pvwin"><div class="pvbar"><b>Players' screen</b><span style="flex:1"></span><button class="btn sm alt" id="pvmode" data-a="pvmode" style="display:none">Players' view</button><button class="btn sm alt" data-a="pvsize">Size</button><button class="btn sm alt" data-a="pvtoggle">Close</button></div><div id="pvbox" class="pvbox"><iframe id="pvf" title="Players' screen"></iframe><canvas id="mc"></canvas></div><div id="pvtools" class="pvtools" style="display:none"><button class="btn sm alt" data-a="mlight">Add light</button><button class="btn sm alt" data-a="mrm">Remove light</button><button class="btn sm alt" data-a="mreset">Reset explored</button><label><input id="mrev" type="checkbox"> Reveal all</label><span class="edit" style="display:contents"><label>Squares <input id="msq" type="number" min="5" value="30"></label><label>Light ft <input id="mft" type="number" min="5" value="30"></label></span></div></div></div>
+  <div id="pvwin" class="pvwin"><div class="pvbar"><b>Players' screen</b><span style="flex:1"></span><button class="btn sm alt" id="pvmode" data-a="pvmode" style="display:none">Players' view</button><button class="btn sm alt" data-a="pvsize">Size</button><button class="btn sm alt" data-a="pvtoggle">Close</button></div><div id="pvbox" class="pvbox"><iframe id="pvf" title="Players' screen"></iframe><canvas id="mc"></canvas></div><div id="pvtools" class="pvtools" style="display:none"><button class="btn sm alt" data-a="mlight">Add light</button><button class="btn sm alt" data-a="mrm">Remove light</button><button class="btn sm alt" data-a="mreset">Reset explored</button><label><input id="mrev" type="checkbox"> Reveal all</label><span class="edit" style="display:contents"><label>Squares <input id="msq" type="number" min="5" value="30"></label><label>Light ft <input id="mft" type="number" min="5" value="30"></label></span></div></div>
   
   <div class="row" style="justify-content:space-between"><div><h1>The Arcane Table</h1><div class="note" style="margin:0">Version ${VER}</div></div><button class="btn sm alt" id="pm" data-a="pm">Hide editing</button></div>
   <details class="panel" id="d-ctl" open><summary><h2>Controls</h2></summary><div class="row">
