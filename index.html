@@ -285,7 +285,7 @@ async function display(code){
   $('#shopg').onclick=e=>{const c=e.target.closest('[data-i]');if(c){lo=c.dataset.i;renderShop()}};
   $('#shopd').onclick=()=>{if(lo)lo=null;else dis=d.shopItemId;renderShop()};
   const WXE=makeWeather($('#wx'));unsubs.push(()=>WXE.stop());
-  let wk='';const renderWx=()=>{$('#stage').classList.toggle('night',!!d.night);kick();const on=!!d.wxOn,s=WXS.find(x=>x.id===d.wx)||WXS[0],w=Math.min(3,d.wind|0),cd=!!d.cold,nt=!!d.night,ss=d.season||(cd?'winter':'normal'),k=[on,s.id,w,cd,nt,ss].join();if(k===wk)return;wk=k;WXE.set(on?s:null,w,cd,nt);$('#wxb').innerHTML=on?wxBadge(s,w,cd,ss):''};
+  let wk='';const renderWx=()=>{$('#stage').classList.toggle('night',!!d.night);kick();const ew=effWx(d),on=ew.on,s=WXS.find(x=>x.id===ew.wx)||WXS[0],w=Math.min(3,ew.wind|0),cd=!!d.cold,nt=!!d.night,ss=d.season||(cd?'winter':'normal'),k=[on,s.id,w,cd,nt,ss].join();if(k===wk)return;wk=k;WXE.set(on?s:null,w,cd,nt);$('#wxb').innerHTML=on?wxBadge(s,w,cd,ss):''};
   WXJP.then(()=>{wk='';renderWx()});
   const rot=id=>{let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))%7;return h-3};
   const paint=async()=>{
@@ -346,7 +346,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-04 k';
+const VER='2026-11-04 l';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -406,7 +406,7 @@ function makeWeather(cv){
     if(flash>0){c.fillStyle=`rgba(235,240,255,${flash*.5})`;c.fillRect(0,0,W,H);flash-=.07}
   };
   return{
-    set(s,w,sn,nt){tg=s?{...s,tint:Array.isArray(s.tint)?s.tint[sn?1:0]:s.tint,fr:Array.isArray(s.fr)?s.fr[sn?1:0]:(s.fr||0),bolt:s.id==='r3'&&w>=3&&!sn}:null;tw=w;tsn=sn;tn=!!nt;
+    set(s,w,sn,nt){tg=s?{...s,tint:Array.isArray(s.tint)?s.tint[sn?1:0]:s.tint,fr:Array.isArray(s.fr)?s.fr[sn?1:0]:(s.fr||0),bolt:s.id==='r3'&&w>=3&&!sn}:null;tw=s?w:0;tsn=sn;tn=!!nt;
       if(!raf){if(!PR.length)build();last=0;raf=requestAnimationFrame(frame)}},
     stop(){cancelAnimationFrame(raf);raf=0}};
 }
@@ -525,10 +525,19 @@ const FXI={
  drop:'<path d="M12 3c4 5 6 8 6 11a6 6 0 0 1-12 0c0-3 2-6 6-11z"/>'};
 const ico=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${FXI[n]||FXI.dot}</svg>`;
 const DEFCATS=[{key:'senses',name:'Senses',icon:'eye'},{key:'damage',name:'Damage',icon:'flame'},{key:'movement',name:'Movement',icon:'mountain'},{key:'combat',name:'Combat',icon:'bow'},{key:'survival',name:'Survival',icon:'thermo'}];
-function wxBoxHTML(cur,w,L,role,day,sel){
+const AREAWX=[['auto','Area: follow weather'],['none','Area: no weather'],['s1','Area: Clear'],['s2','Area: Sunny'],['c1','Area: Cloudy'],['c2','Area: Overcast'],['c3','Area: Fog'],['r1','Area: Drizzle'],['r2','Area: Rain'],['r3','Area: Downpour']];
+// The weather that applies here: the background or map can switch it off or force a state.
+function effWx(L){
+  const v=L.showBoard?'board':(L.showShop&&L.shopId)?'shop':(L.showMap&&L.mapId)?'map':'scene',ov=v==='map'?L.mapWx:(v==='scene'&&L.backgroundId)?L.bgWx:null;
+  if(ov==='none')return{on:false,wx:L.wx||'s1',wind:0,area:'none'};
+  if(ov&&ov!=='auto')return{on:true,wx:ov,wind:0,area:ov};
+  return{on:!!L.wxOn,wx:L.wx||'s1',wind:L.wind|0,area:null};
+}
+function wxBoxHTML(cur,w,L,role,day,sel,area){
   const cd=!!L.cold,season=L.season||(cd?'winter':'normal'),x=WXS.find(y=>y.id===cur)||WXS[0],ic=Array.isArray(x.i)?x.i[cd?1:0]:x.i,inf=wxInfo(cur,w,season),dm=role==='dm';
   const head=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${esc(wname(cur,season,cd))}</b><small>Wind: ${WINDS[w]}</small></div>${day!=null?`<span class="day">Day ${day}</span>`:''}${dm&&WXJ?'<button class="info" data-a="wxinfo" title="Rules">i</button>':''}`;
   let stats='',list='',rules='';
+  const an=area?`<div class="stats"><span>${area==='none'?'This area: no weather shown':'This area: weather set by the area'}</span></div>`:'';
   if(inf){
     stats=`<div class="stats"><span>Travel ${inf.travel}</span>${dm?`<span>Survival DC ${inf.rest}</span>${inf.exposure?`<span>Exposure DC ${inf.exposure.dc} (${esc(inf.exposure.type)})</span>`:''}`:''}</div>`;
     const cats=WXJ.categories||DEFCATS,known=cats.map(c=>c.key);
@@ -538,7 +547,7 @@ function wxBoxHTML(cur,w,L,role,day,sel){
     if(body)list=`<div class="fxbox">${body}${seltext}</div>`;
     if(dm&&wxRulesOn)rules=`<div class="fxrules"><b>Long rest</b>${(WXJ.rules.longRest||[]).map(t=>`<div>${esc(t)}</div>`).join('')}<b>Exposure</b>${(WXJ.rules.exposure||[]).map(t=>`<div>${esc(t)}</div>`).join('')}</div>`;
   }
-  return`<div class="rbox"><div class="rh">${head}</div>${stats}${list}${rules}</div>`;
+  return`<div class="rbox"><div class="rh">${head}</div>${an}${stats}${list}${rules}</div>`;
 }
 function player(code){
   app.onclick=null;
@@ -550,7 +559,7 @@ function player(code){
     document.querySelectorAll('.pvt [data-t]').forEach(b=>b.classList.toggle('alt',b.dataset.t!==tab));
     const keys=d.pshops||[];let h='',sheet='';
     if(tab==='quest')h=Q?`<div class="qbig"><i class="pin"></i><div class="in"><h3>${esc(Q.title||'')}</h3><p>${esc(Q.text||'')}</p></div></div>`:'<div class="pvempty">No quest selected.</div>';
-    else if(tab==='weather')h=d.wxOn?wxBoxHTML(d.wx||'s1',Math.min(3,d.wind|0),d,'player',null,fxSel):'<div class="pvempty">No weather right now.</div>';
+    else if(tab==='weather'){const ew=effWx(d);h=ew.on?wxBoxHTML(ew.wx,Math.min(3,ew.wind|0),d,'player',null,fxSel):'<div class="pvempty">No weather here.</div>'}
     else if(!keys.length)h='<div class="pvempty">No shops are open.</div>';
     else{
       const k=keys.includes(psel)?psel:keys[0],S=SHP[k]||{name:'',items:[]};
@@ -615,7 +624,7 @@ function dm(code){
   <details class="panel" id="d-wx" open><summary><h2>Weather <span class="eye" id="e-wx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
   <div id="wxres"></div>
   <div class="row" style="margin-top:10px"><button class="btn" id="wxds" data-a="wxd" data-id="s">Sun</button><button class="btn" id="wxdc" data-a="wxd" data-id="c">Cloud</button><button class="btn" id="wxdr" data-a="wxd" data-id="r">Rain</button></div>
-  <div class="row" style="margin-top:8px"><button class="btn sm" data-a="wxwr">Wind</button><button class="btn sm" data-a="wxquick">New day</button><button class="btn sm alt" data-a="wxundo">Undo</button><button class="btn sm alt edit" data-a="wxrefill">Refill</button><select id="wxsel"></select></div>
+  <div class="row" style="margin-top:8px"><button class="btn sm" data-a="wxwr">Wind</button><button class="btn sm" data-a="wxquick">New day</button><button class="btn sm alt" data-a="wxundo">Undo</button><button class="btn sm alt edit" data-a="wxrefill">Refill</button><select id="wxsel"></select><select id="wxarea"></select></div>
   <div class="edit"><div id="wxl" style="margin-top:10px"></div><div class="row" id="wxw"></div></div>
   <details class="edit" id="d-wxe" style="margin-top:14px"><summary><h2 style="font-size:17px">Edit season presets</h2></summary>
   <div class="row"><input id="pn" placeholder="Name"><label><input id="pc" type="checkbox"> Cold season</label><label><input id="ph" type="checkbox"> Hot season</label></div>
@@ -669,6 +678,8 @@ function dm(code){
     const qb=(a,id,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#qs').innerHTML=qs.map(q=>`<div class="qrow ${q.posted?'on':''}"><div class="qt"><b>${esc(q.title||'Untitled')}${q.done?' (done)':''}</b><p>${esc(q.text||'')}</p></div><div class="row">${qb('qcur',q.id,live.curQuest===q.id?'Current':'Set current',live.curQuest===q.id?0:1)}${qb('qpin',q.id,q.posted?'Unpin':'Pin')}${qb('qdone',q.id,q.done?'Reopen':'Done',1)}${qb('qedit',q.id,'Edit',1,1)}${qb('qdel',q.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No quests yet.</p>';
   };
+  function wxOf(id){return(imgs.find(x=>x.id===id)||{}).wx||'auto'}
+  function areaId(){const v=curView();return v==='map'?live.mapId:v==='scene'?live.backgroundId:null}
   function curView(){return live.showBoard?'board':(live.showShop&&live.shopId)?'shop':(live.showMap&&live.mapId)?'map':'scene'}
   function ctlDraw(){
     const mm=imgs.find(i=>i.id===live.mapId);$('#mpn').textContent=mm?'('+mm.name+')':'';
@@ -685,10 +696,12 @@ function dm(code){
     $('#wxl').innerHTML=['s','c','r'].map(t=>`<div class="row" style="margin-bottom:6px">${WXS.filter(x=>x.id[0]===t).map(x=>b('wxset',x.id,wname(x.id,live.season||(cd?'winter':'normal'),cd),cur===x.id)).join('')}</div>`).join('');
     $('#wxw').innerHTML=WINDS.map((n,i)=>b('wxwind',i,n,w===i)).join('');
     $('#wxds').innerHTML='Sun'+cnt(bag.s);$('#wxdc').innerHTML='Cloud'+cnt(bag.c);$('#wxdr').innerHTML=(cd?'Snow':'Rain')+cnt(bag.r);
+    const ar=$('#wxarea');if(!ar.options.length)ar.innerHTML=AREAWX.map(([k,n])=>`<option value="${k}">${n}</option>`).join('');
+    const aid=areaId();ar.disabled=!aid;ar.value=aid?wxOf(aid):'auto';
     const sel=$('#wxsel');
     if(sel.options.length!==G.presets.length||[...sel.options].some((o,i)=>o.value!==G.presets[i].id||o.textContent!==G.presets[i].name))sel.innerHTML=G.presets.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
     sel.value=P.id;
-    const wh=wxBoxHTML(cur,w,live,'dm',G.n||0,wxFxSel);if(wh!==wxLast){wxLast=wh;$('#wxres').innerHTML=wh}
+    const ef=effWx(live),forced=ef.area&&ef.area!=='none',wh=wxBoxHTML(forced?ef.wx:cur,forced?0:w,live,'dm',G.n||0,wxFxSel,ef.area);if(wh!==wxLast){wxLast=wh;$('#wxres').innerHTML=wh}
     syncPre();
   }
   function syncPre(force){
@@ -703,6 +716,7 @@ function dm(code){
   unsubs.push(onSnapshot(GD,s=>{if(s.exists())G={...G,...s.data()};draw()}));
   const updPre=patch=>saveG({presets:G.presets.map(p=>p.id===G.cur?{...p,...patch}:p)});
   $('#pn').onchange=e=>updPre({name:e.target.value.trim()||'Preset'});
+  $('#wxarea').onchange=async e=>{const v=curView(),aid=areaId(),val=e.target.value;if(!aid)return;await updateDoc(doc(IM,aid),{wx:val});await set(v==='map'?{mapWx:val}:{bgWx:val})};
   $('#wxsel').onchange=async e=>{const P=G.presets.find(p=>p.id===e.target.value);if(P){await saveG({cur:P.id,bag:{...P.d},day:0});await set({cold:!!P.cold,season:seasonP(P)});wxDraw();syncPre(true)}};
   $('#pc').onchange=e=>{updPre({cold:e.target.checked});set({cold:e.target.checked,season:seasonP(curPre())})};
   $('#ph').onchange=e=>{updPre({hot:e.target.checked});set({season:seasonP(curPre())})};
@@ -787,7 +801,7 @@ function dm(code){
   const set=o=>setDoc(L,o,{merge:true});
   app.onclick=async e=>{
     const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,id=t.dataset.id;
-    if(a==='bg')set({backgroundId:live.backgroundId===id?null:id});
+    if(a==='bg')set({backgroundId:live.backgroundId===id?null:id,bgWx:wxOf(id)});
     if(a==='npc'&&MO&&live.showMap&&!(live.visibleNpcIds||[]).includes(id)){MS.tk={...(MS.tk||{}),[id]:{x:view.x,y:view.y}};dirty=true;flush()}
     if(a==='npc')set({visibleNpcIds:(live.visibleNpcIds||[]).includes(id)?arrayRemove(id):arrayUnion(id)});
     if(a==='black')set({backgroundId:null});
@@ -803,7 +817,7 @@ function dm(code){
     if(a==='wxd')drawDie(id);
     if(a==='wxwr'){const q=rollWind(1+Math.floor(Math.random()*6),live.wx||'s1');set({wind:q.w,wxOn:true})}
     if(a==='vbg'){if(curView()==='scene'&&live.backgroundId)set({backgroundId:null});else set({showBoard:false,showShop:false,showMap:false})}
-    if(a==='vmap'){if(curView()==='map')set({showMap:false});else{const mid=live.mapId||(imgs.find(i=>i.type==='map')||{}).id;if(mid)set({mapId:mid,...(live.mapId?{}:{mapView:{x:.5,y:.5,ft:60}}),showMap:true,showBoard:false,showShop:false})}}
+    if(a==='vmap'){if(curView()==='map')set({showMap:false});else{const mid=live.mapId||(imgs.find(i=>i.type==='map')||{}).id;if(mid)set({mapId:mid,mapWx:wxOf(mid),...(live.mapId?{}:{mapView:{x:.5,y:.5,ft:60}}),showMap:true,showBoard:false,showShop:false})}}
     if(a==='vshop'){if(curView()==='shop')set({showShop:false,shopItemId:null});else{const sid=selShop||live.shopId||(shops[0]||{}).id;if(sid)set({showShop:true,shopId:sid,shopRoot:(shops.find(x=>x.id===sid)||{})._r||code,shopItemId:null,showBoard:false,showMap:false})}}
     if(a==='vboard'){if(curView()==='board')set({showBoard:false});else set({showBoard:true,showMap:false,showShop:false})}
     if(a==='tok')set({tokOff:!live.tokOff});
@@ -875,7 +889,7 @@ function dm(code){
       try{await navigator.clipboard.writeText(t);msg.className='note';msg.textContent='Copied '+(t.split('\n').length-1)+' items. Paste them into your sheet.'}
       catch(e){$('#imt').value=t;msg.className='note';msg.textContent='Clipboard blocked. The table is in the box above.'}}
     if(a==='itshow'){const i=items.find(x=>x.id===id);if(i){const on=live.showShop&&live.shopId===i.shopId;set(on?{shopItemId:live.shopItemId===id?null:id}:{showShop:true,shopId:i.shopId,shopRoot:i._r,shopItemId:id,showBoard:false,showMap:false})}}
-    if(a==='map')set({mapId:id,mapView:{x:.5,y:.5,ft:60}});
+    if(a==='map')set({mapId:id,mapWx:wxOf(id),mapView:{x:.5,y:.5,ft:60}});
     if(a==='mshow'&&live.mapId)set({showMap:!live.showMap,...(!live.showMap?{showBoard:false,showShop:false}:{})});
     if(a==='mlight'&&MO){const L=lights().map(l=>({...l})),n={x:view.x,y:view.y};L.push(n);MS.lights=L;addEx(n);dirty=true;flush();drawMap()}
     if(a==='mrm'&&MO&&lights().length>1){MS.lights=lights().slice(0,-1);dirty=true;flush();drawMap()}
