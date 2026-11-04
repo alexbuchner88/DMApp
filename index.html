@@ -243,7 +243,8 @@ input[type=checkbox]{min-height:0;width:20px;height:20px;padding:0;flex:none}
 @media(max-width:760px){.pvwin{width:94vw;right:3vw}}
 .pvbar{display:flex;align-items:center;gap:6px;padding:4px 8px;background:linear-gradient(#4a2c18,#2a170d);color:var(--gold);font:700 13px Cinzel,serif}
 .pvbar .btn{min-height:30px;padding:2px 10px;font-size:12px}
-.pvbox{position:relative;aspect-ratio:16/10;background:#000;overflow:hidden}
+.pvbox{position:relative;width:100%;background:#000;overflow:hidden}
+.pvbox::before{content:"";display:block;padding-top:62.5%}
 #pvf{position:absolute;left:0;top:0;width:1280px;height:800px;border:0;transform-origin:0 0;pointer-events:none;background:#000}
 .pvbox #mc{position:absolute;inset:0;width:100%;height:100%;max-height:none;aspect-ratio:auto;border:0;border-radius:0}
 #stage.prev #ver,#stage.prev .snd{display:none!important}
@@ -253,7 +254,7 @@ input[type=checkbox]{min-height:0;width:20px;height:20px;padding:0;flex:none}
 .pvtools .btn{min-height:30px;padding:2px 10px;font-size:12px}
 .pvtools label{display:flex;align-items:center;gap:4px;font:13px Almendra,serif}
 .pvtools input[type=number]{width:64px;min-height:28px;padding:2px 6px;font-size:14px}
-.pvwin.big{width:min(98vw,calc((100vh - 120px)*1.6));right:1vw}
+.pvwin.big{width:min(98vw,calc((100vh - 200px)*1.6));right:1vw}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -406,7 +407,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-05 t';
+const VER='2026-11-05 u';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -418,13 +419,13 @@ const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M
 const wxBadge=(s,w,cd,ss)=>{const ic=Array.isArray(s.i)?s.i[cd?1:0]:s.i;
   return`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${esc(wname(s.id,ss,cd))}</b><small>${WINDS[w]}</small></div>`};
 function makeWeather(cv){
-  const c=cv.getContext('2d'),R=Math.random,cu={cl:0,fog:0,cr:0,cg:0,cb:0,ca:0,fr:0,ws:0,wf:1,rain:0,snow:0,str:0,cs:.13,nd:0,gl:0,dr:0,tc:0,mg:0,wt:0,fi:0,uk:0,hn:0,fe:0,ff:0,mo:0};
+  const c=cv.getContext('2d'),R=Math.random,cu={cl:0,fog:0,cr:0,cg:0,cb:0,ca:0,fr:0,ws:0,wf:1,rain:0,snow:0,str:0,cs:.13,nd:0,vr:0,vs:0,gl:0,dr:0,tc:0,mg:0,wt:0,fi:0,uk:0,hn:0,fe:0,ff:0,mo:0};
   const AMK={drip:'dr',torch:'tc',magic:'mg',water:'wt',fire:'fi',dark:'uk',haunt:'hn',fey:'fe',fly:'ff',moon:'mo'},AK=Object.values(AMK);
   let tg=null,tw=0,tsn=false,tn=false,gl0=0,am0='',raf=0,last=0,flash=0,nextF=0,PR=[],PS=[],CS=[],FG=[],S=[],DR=[],MT=[],BB=[],EM=[],SPO=[],PT=[],FF=[],ST=[];
   const size=()=>{if(cv.width!==cv.clientWidth||cv.height!==cv.clientHeight){cv.width=cv.clientWidth;cv.height=cv.clientHeight}};
   const build=()=>{size();const W=cv.width||1280,H=cv.height||800,k=W*H/1e6;
-    PR=Array.from({length:Math.round(700*k)},()=>({x:R()*W,y:R()*H,l:10+R()*14,v:11+R()*8}));
-    PS=Array.from({length:Math.round(650*k)},()=>({x:R()*W,y:R()*H,r:1.2+R()*2.6,ph:R()*6.3,sv:.8+R()*1.6}));
+    PR=Array.from({length:Math.round(1600*k)},()=>({x:R()*W,y:R()*H,l:10+R()*14,v:11+R()*8}));
+    PS=Array.from({length:Math.round(1600*k)},()=>({x:R()*W,y:R()*H,r:1.2+R()*2.6,ph:R()*6.3,sv:.8+R()*1.6}));
     CS=Array.from({length:7},()=>({x:R()*W,y:R()*H,v:.15+R()*.25,k:.8+R()*.4,ph:R()*6.3,sub:Array.from({length:4},()=>({dx:(R()-.5)*1.1,dy:(R()-.5)*.8,r:.5+R()*.5}))}));
     FG=Array.from({length:9},()=>({x:R()*W,y:R()*H,r:W*(.2+R()*.2),v:.2+R()*.3,ph:R()*6.3}));
     S=Array.from({length:26},()=>({x:R()*W,y:R()*H,l:80+R()*140,v:18+R()*14}));
@@ -437,12 +438,12 @@ function makeWeather(cv){
     FF=P(20,()=>({x:R()*W,y:R()*H,ph:R()*6.3,s:.3+R()*.5,a:R()*6.3}));
     ST=P(46,()=>({x:R()*W,y:R()*H*.45,r:.6+R()*1.4,ph:R()*6.3}))};
   const blob=(x,y,r,col,a)=>{const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${col},${a})`);g.addColorStop(1,`rgba(${col},0)`);c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2)};
-  const target=()=>{const s=tg||{},t=(s.tint||'0,0,0,0').split(',').map(Number),L=[0,140,320,650][s.p||0];
-    return{cl:s.cl||0,fog:s.fog||0,cr:t[0],cg:t[1],cb:t[2],ca:t[3],fr:s.fr||0,ws:[0,.1,.35,.7][tw],wf:[1,1.1,1.5,2][tw],rain:tsn?0:L/700,snow:tsn?L/650:0,str:tw>=3?1:tw>=2?.55:0,cs:(s.cl||0)<.5?.13:.4,nd:tn?1:0,gl:gl0,dr:am0==='drip'?1:0,tc:am0==='torch'?1:0,mg:am0==='magic'?1:0,...Object.fromEntries(Object.entries(AMK).map(([n,k])=>[k,am0===n?1:0]))}};
+  const target=()=>{const s=tg||{},t=(s.tint||'0,0,0,0').split(',').map(Number),L=[0,150,460,1500][s.p||0];
+    return{cl:s.cl||0,fog:s.fog||0,cr:t[0],cg:t[1],cb:t[2],ca:t[3],fr:s.fr||0,ws:[0,.1,.35,.7][tw],wf:[1,1.1,1.5,2][tw],rain:tsn?0:L/1600,snow:tsn?L/1600:0,vr:tsn?0:[0,.05,.14,.34][s.p||0],vs:tsn?[0,.06,.2,.5][s.p||0]:0,str:tw>=3?1:tw>=2?.55:0,cs:(s.cl||0)<.5?.13:.4,nd:tn?1:0,gl:gl0,dr:am0==='drip'?1:0,tc:am0==='torch'?1:0,mg:am0==='magic'?1:0,...Object.fromEntries(Object.entries(AMK).map(([n,k])=>[k,am0===n?1:0]))}};
   const frame=ts=>{
     raf=requestAnimationFrame(frame);size();const W=cv.width,H=cv.height,dt=Math.min(100,ts-(last||ts));last=ts;
     const T=target(),k=1-Math.exp(-dt/900);for(const q in T)cu[q]+=(T[q]-cu[q])*k;
-    if(Math.max(T.cl,T.fog,T.ca,T.fr,T.rain,T.snow,T.str,T.gl,T.dr,T.tc,T.mg)===0&&AK.every(k=>T[k]===0)&&AK.every(k=>cu[k]<.004)&&Math.max(cu.cl,cu.fog,cu.ca,cu.fr,cu.rain,cu.snow,cu.str,cu.gl,cu.dr,cu.tc,cu.mg)<.004){c.clearRect(0,0,W,H);cancelAnimationFrame(raf);raf=0;return}
+    if(Math.max(T.cl,T.fog,T.ca,T.fr,T.rain,T.snow,T.str,T.gl,T.vr,T.vs,T.dr,T.tc,T.mg)===0&&AK.every(k=>T[k]===0)&&AK.every(k=>cu[k]<.004)&&Math.max(cu.cl,cu.fog,cu.ca,cu.fr,cu.rain,cu.snow,cu.str,cu.gl,cu.vr,cu.vs,cu.dr,cu.tc,cu.mg)<.004){c.clearRect(0,0,W,H);cancelAnimationFrame(raf);raf=0;return}
     c.clearRect(0,0,W,H);
     const nf=1-.55*cu.nd;
     if(cu.ca>.003){c.fillStyle=`rgba(${cu.cr|0},${cu.cg|0},${cu.cb|0},${cu.ca})`;c.fillRect(0,0,W,H)}
@@ -462,16 +463,19 @@ function makeWeather(cv){
       const gx=W*1.02,gy=-H*.04,pl=.85+.15*Math.sin(ts*.0009),gg=c.createRadialGradient(gx,gy,0,gx,gy,Math.hypot(W,H)*.8);
       gg.addColorStop(0,`rgba(255,250,225,${.9*cu.gl*pl})`);gg.addColorStop(.3,`rgba(255,232,170,${.34*cu.gl*pl})`);gg.addColorStop(1,'rgba(255,220,150,0)');
       c.fillStyle=gg;c.fillRect(0,0,W,H);}
+    {const nd=cu.nd;
+      if(cu.vr>.003){c.fillStyle=`rgba(${125-70*nd|0},${140-75*nd|0},${158-70*nd|0},${cu.vr})`;c.fillRect(0,0,W,H)}
+      if(cu.vs>.003){c.fillStyle=`rgba(${232-120*nd|0},${238-120*nd|0},${248-110*nd|0},${cu.vs})`;c.fillRect(0,0,W,H)}}
     const nr=Math.round(cu.rain*PR.length);
-    if(nr){c.lineWidth=1.3;c.strokeStyle='rgba(185,205,225,.55)';c.beginPath();
+    if(nr){const sx=1+cu.rain*.7;c.lineWidth=1.1+cu.rain;c.strokeStyle=`rgba(190,210,230,${.45+cu.rain*.3})`;c.beginPath();
       for(let i=0;i<nr;i++){const p=PR[i];p.x+=cu.ws*p.v*cu.wf;p.y+=p.v*cu.wf;
         if(p.y>H+20){p.y=-20;p.x=R()*(W+cu.ws*H)-cu.ws*H}else if(p.x>W+40){p.x=-40;p.y=R()*H}
-        c.moveTo(p.x,p.y);c.lineTo(p.x+cu.ws*p.l,p.y+p.l)}c.stroke()}
+        c.moveTo(p.x,p.y);c.lineTo(p.x+cu.ws*p.l*sx,p.y+p.l*sx)}c.stroke()}
     const ns=Math.round(cu.snow*PS.length);
     if(ns){c.fillStyle='rgba(255,255,255,.85)';c.beginPath();
       for(let i=0;i<ns;i++){const p=PS[i];p.x+=Math.sin(p.y*.02+p.ph)*.6+cu.ws*7*cu.wf;p.y+=p.sv*cu.wf;
         if(p.y>H+20){p.y=-20;p.x=R()*(W+cu.ws*H*3)-cu.ws*H*2}else if(p.x>W+40){p.x=-40;p.y=R()*H}
-        c.moveTo(p.x+p.r,p.y);c.arc(p.x,p.y,p.r,0,7)}c.fill()}
+        const rr=p.r*(1+cu.snow*.45);c.moveTo(p.x+rr,p.y);c.arc(p.x,p.y,rr,0,7)}c.fill()}
     const nst=Math.round(cu.str*S.length);
     if(nst){c.strokeStyle=`rgba(255,255,255,${.13*Math.min(1,cu.str)})`;c.lineWidth=1.5;c.beginPath();
       for(let i=0;i<nst;i++){const q=S[i];q.x+=q.v;if(q.x-q.l>W){q.x=-q.l;q.y=R()*H}c.moveTo(q.x,q.y);c.lineTo(q.x-q.l,q.y+q.l*.05)}c.stroke()}
@@ -965,7 +969,7 @@ function dm(code){
   }
   let pvOn=localStorage.getItem('pvOn')==='1',pvBig=localStorage.getItem('pvBig')==='1',pvPl=false,lastV=null;
   const pvLink=link+'/preview';
-  function pvFit(){const f=$('#pvf'),b=$('#pvbox');if(f&&b&&b.clientWidth){b.style.height=Math.round(b.clientWidth*.625)+'px';f.style.transform='scale('+(b.clientWidth/1280)+')'}}
+  function pvFit(){const f=$('#pvf'),b=$('#pvbox');if(f&&b&&b.clientWidth)f.style.transform='scale('+(b.clientWidth/1280)+')'}
   function pvSave(){localStorage.setItem('pvOn',pvOn?'1':'0');localStorage.setItem('pvBig',pvBig?'1':'0')}
   // The preview shows the real player screen in a frame. In map mode it shows the map you control instead, with a switch to the players' view.
   function pvDraw(){
