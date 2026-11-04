@@ -1,23 +1,25 @@
 {
   "version": 1,
-  "notes": "Weather effects for the DM app. D&D 2024. Wind adds to the long rest DC: Calm 0, Breeze +2, Gust +5, Storm +10. Lookup: state (with season override) + wind. Travel and restDC are always shown; effect lines are optional reminders.",
+  "notes": "Weather effects for the DM app. D&D 2024. Wind adds to the long rest DC: Calm 0, Breeze +2, Gust +5, Storm +10. Wind also changes the exposure DC: cold +1/+2/+4, heat -1/-2/-4 (exposureMod). Lookup: state (with season override) + wind. Travel and restDC are always shown; effect lines are optional reminders.",
   "travel": {
     "milesPerDay": { "slow": 18, "normal": 24, "fast": 30 },
     "minPercent": 25,
     "display": "Show percent and Normal pace miles/day, e.g. '75% (18 mi/day)'"
   },
+  "exposureMinDC": 5,
   "states": {
     "sun1":   { "name": "Clear",    "travel": 100, "restDC": 5,  "exposure": null, "effects": ["clearSight"] },
     "sun2":   { "name": "Sunny",    "travel": 100, "restDC": 5,  "exposure": null, "effects": ["clearSight"],
                 "seasons": { "winter": { "name": "Cold", "restDC": 10 } } },
     "sun3":   { "name": "Sunny",    "travel": 100, "restDC": 5,  "exposure": null, "effects": ["clearSight"],
                 "seasons": {
-                  "summer": { "name": "Hot",    "travel": 75,  "restDC": 10, "exposure": { "dc": 10, "type": "heat" }, "effects": ["hotFireSaves"] },
-                  "winter": { "name": "Frosty", "travel": 100, "restDC": 15, "exposure": { "dc": 10, "type": "cold" }, "effects": ["coldSaves", "icyGround"] }
+                  "summer": { "name": "Hot",    "travel": 75,  "restDC": 10, "exposure": { "dc": 14, "type": "heat" }, "effects": ["hotFireSaves"] },
+                  "winter": { "name": "Frosty", "travel": 100, "restDC": 15, "exposure": { "dc": 12, "type": "cold" }, "effects": ["coldSaves", "icyGround"] }
                 } },
     "cloud1": { "name": "Cloudy",   "travel": 100, "restDC": 5,  "exposure": null, "effects": ["clearSight"] },
     "cloud2": { "name": "Overcast", "travel": 100, "restDC": 5,  "exposure": null, "effects": [] },
-    "cloud3": { "name": "Fog",      "travel": 75,  "restDC": 10, "exposure": null, "effects": ["fogObscured", "stealthAdv"] },
+    "cloud3": { "name": "Fog",      "travel": 75,  "restDC": 10, "exposure": null, "effects": ["fogObscured", "stealthAdv"],
+                "seasons": { "winter": { "name": "Icy", "effects": ["fogObscured", "stealthAdv", "icyGround"] } } },
     "rain1":  { "name": "Drizzle",  "travel": 100, "restDC": 10, "exposure": null, "effects": [],
                 "seasons": { "winter": { "name": "Light Snow" } } },
     "rain2":  { "name": "Rain",     "travel": 75,  "restDC": 15, "exposure": null, "effects": ["lightObscured", "flamesOut", "stealthAdv", "hearingDisadv"],
@@ -26,10 +28,10 @@
                 "seasons": { "winter": { "name": "Blizzard", "exposure": { "dc": 15, "type": "cold" }, "effects": ["lightObscured", "heavyObscured60", "flamesOut", "coldSaves", "deepSnow", "stealthAdv"] } } }
   },
   "wind": {
-    "calm":   { "name": "Calm",   "travelMod": 0,   "restDCMod": 0, "effects": [] },
-    "breeze": { "name": "Breeze", "travelMod": 0,   "restDCMod": 2, "effects": ["cloudDrift", "breezeHeat"] },
-    "gust":   { "name": "Gust",   "travelMod": 0,   "restDCMod": 5, "effects": ["rangeHalved", "cloudDisperse", "flyDifficult"] },
-    "storm":  { "name": "Storm",  "travelMod": -25, "restDCMod": 10, "effects": ["rangeHalved", "rangedDisadv", "concentrationDisadv", "cloudDisperse", "flyMustLand", "hearingDisadv"] }
+    "calm":   { "name": "Calm",   "travelMod": 0,   "restDCMod": 0, "exposureMod": { "cold": 0, "heat": 0 }, "effects": [] },
+    "breeze": { "name": "Breeze", "travelMod": 0,   "restDCMod": 2, "exposureMod": { "cold": 1, "heat": -1 }, "effects": ["cloudDrift", "breezeHeat"] },
+    "gust":   { "name": "Gust",   "travelMod": 0,   "restDCMod": 5, "exposureMod": { "cold": 2, "heat": -2 }, "effects": ["rangeHalved", "cloudDisperse", "flyDifficult"] },
+    "storm":  { "name": "Storm",  "travelMod": -25, "restDCMod": 10, "exposureMod": { "cold": 4, "heat": -4 }, "effects": ["rangeHalved", "rangedDisadv", "concentrationDisadv", "cloudDisperse", "flyDifficult", "flyMustLand", "hearingDisadv"] }
   },
   "effects": {
     "clearSight":          { "cat": "bonus",    "text": "Good visibility: Advantage on Perception to spot things far away" },
@@ -57,16 +59,16 @@
   "rules": {
     "combine": "Season override replaces fields of the base state. Travel = state.travel + wind.travelMod, min 25. Rest DC = state.restDC + wind.restDCMod. Effect list = state effects + wind effects, no duplicates.",
     "longRest": [
-      "One character rolls Wisdom (Survival) when making camp. Others can Help (Advantage).",
+      "All characters roll for Survival as a group (50% must succeed) or individually.",
       "Tent or tarp: -5 DC. Cave, building or Tiny Hut: no roll.",
-      "Success: normal Long Rest.",
-      "Fail: rest counts, but no Exhaustion removed and only half Hit Dice regained.",
-      "Fail by 5+: counts only as a Short Rest."
+      "Fail: Long Rest but gain 1 Exhaustion and only half Hit Dice.",
+      "Fail by 5+: Short Rest and 1 Exhaustion"
     ],
     "exposure": [
-      "End of each travel day: every creature makes a Constitution save vs the exposure DC. Fail: 1 Exhaustion.",
-      "Proper gear (cold-weather clothing, or plenty of water and shade) gives Advantage.",
-      "Resistance to Cold or Fire (matching type): automatic success."
+      "Every 4 hours of exposure make a constitution save vs the exposure DC. Fail: 1 Exhaustion.",
+      "Protective gear gives Advantage.",
+      "Fire or Cold resistance: automatic success.",
+      "Wind raises the exposure DC in the cold and lowers it in the heat (never below the minimum DC)."
     ]
   }
 }

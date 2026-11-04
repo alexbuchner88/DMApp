@@ -332,7 +332,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-03 i';
+const VER='2026-11-03 j';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -485,7 +485,7 @@ const wname=(id,season,cd)=>{const x=wstate(id,season);return x?x.name:sname(id,
 function wxInfo(id,w,season){
   const st=wstate(id,season);if(!st)return null;
   const wd=WXJ.wind[['calm','breeze','gust','storm'][w]]||{travelMod:0,restDCMod:0,effects:[]};
-  const tr=Math.max(WXJ.travel.minPercent||25,st.travel+(wd.travelMod||0)),mi=Math.round(WXJ.travel.milesPerDay.normal*tr/100),ex=st.exposure||null,eff=[];
+  const tr=Math.max(WXJ.travel.minPercent||25,st.travel+(wd.travelMod||0)),mi=Math.round(WXJ.travel.milesPerDay.normal*tr/100),ex0=st.exposure||null,ex=ex0?{...ex0,dc:Math.max(WXJ.exposureMinDC||5,ex0.dc+((wd.exposureMod||{})[ex0.type]||0))}:null,eff=[];
   [...(st.effects||[]),...(wd.effects||[])].forEach(k=>{const e=WXJ.effects[k];if(!e||eff.includes(k))return;if(e.onlyIf&&('exposure.type == '+(ex?ex.type:''))!==e.onlyIf)return;eff.push(k)});
   return{travel:tr+'% ('+mi+' mi/day)',rest:st.restDC+(wd.restDCMod||0),exposure:ex,eff};
 }
