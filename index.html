@@ -407,7 +407,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-05 u';
+const VER='2026-11-05 v';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -419,13 +419,13 @@ const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M
 const wxBadge=(s,w,cd,ss)=>{const ic=Array.isArray(s.i)?s.i[cd?1:0]:s.i;
   return`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${esc(wname(s.id,ss,cd))}</b><small>${WINDS[w]}</small></div>`};
 function makeWeather(cv){
-  const c=cv.getContext('2d'),R=Math.random,cu={cl:0,fog:0,cr:0,cg:0,cb:0,ca:0,fr:0,ws:0,wf:1,rain:0,snow:0,str:0,cs:.13,nd:0,vr:0,vs:0,gl:0,dr:0,tc:0,mg:0,wt:0,fi:0,uk:0,hn:0,fe:0,ff:0,mo:0};
+  const c=cv.getContext('2d'),R=Math.random,cu={cl:0,fog:0,cr:0,cg:0,cb:0,ca:0,fr:0,ws:0,wf:1,rain:0,snow:0,str:0,cs:.13,nd:0,vr:0,vs:0,tp:0,gl:0,dr:0,tc:0,mg:0,wt:0,fi:0,uk:0,hn:0,fe:0,ff:0,mo:0};
   const AMK={drip:'dr',torch:'tc',magic:'mg',water:'wt',fire:'fi',dark:'uk',haunt:'hn',fey:'fe',fly:'ff',moon:'mo'},AK=Object.values(AMK);
   let tg=null,tw=0,tsn=false,tn=false,gl0=0,am0='',raf=0,last=0,flash=0,nextF=0,PR=[],PS=[],CS=[],FG=[],S=[],DR=[],MT=[],BB=[],EM=[],SPO=[],PT=[],FF=[],ST=[];
   const size=()=>{if(cv.width!==cv.clientWidth||cv.height!==cv.clientHeight){cv.width=cv.clientWidth;cv.height=cv.clientHeight}};
   const build=()=>{size();const W=cv.width||1280,H=cv.height||800,k=W*H/1e6;
-    PR=Array.from({length:Math.round(1600*k)},()=>({x:R()*W,y:R()*H,l:10+R()*14,v:11+R()*8}));
-    PS=Array.from({length:Math.round(1600*k)},()=>({x:R()*W,y:R()*H,r:1.2+R()*2.6,ph:R()*6.3,sv:.8+R()*1.6}));
+    PR=Array.from({length:Math.round(1600*k)},()=>({x:R()*W,y:R()*H,l:10+R()*14,v:11+R()*8,z:R(),j:R()*2-1,w2:0}));
+    PS=Array.from({length:Math.round(1600*k)},()=>({x:R()*W,y:R()*H,r:1.2+R()*2.6,ph:R()*6.3,sv:.8+R()*1.6,z:R(),j:R()*2-1}));
     CS=Array.from({length:7},()=>({x:R()*W,y:R()*H,v:.15+R()*.25,k:.8+R()*.4,ph:R()*6.3,sub:Array.from({length:4},()=>({dx:(R()-.5)*1.1,dy:(R()-.5)*.8,r:.5+R()*.5}))}));
     FG=Array.from({length:9},()=>({x:R()*W,y:R()*H,r:W*(.2+R()*.2),v:.2+R()*.3,ph:R()*6.3}));
     S=Array.from({length:26},()=>({x:R()*W,y:R()*H,l:80+R()*140,v:18+R()*14}));
@@ -439,11 +439,11 @@ function makeWeather(cv){
     ST=P(46,()=>({x:R()*W,y:R()*H*.45,r:.6+R()*1.4,ph:R()*6.3}))};
   const blob=(x,y,r,col,a)=>{const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${col},${a})`);g.addColorStop(1,`rgba(${col},0)`);c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2)};
   const target=()=>{const s=tg||{},t=(s.tint||'0,0,0,0').split(',').map(Number),L=[0,150,460,1500][s.p||0];
-    return{cl:s.cl||0,fog:s.fog||0,cr:t[0],cg:t[1],cb:t[2],ca:t[3],fr:s.fr||0,ws:[0,.1,.35,.7][tw],wf:[1,1.1,1.5,2][tw],rain:tsn?0:L/1600,snow:tsn?L/1600:0,vr:tsn?0:[0,.05,.14,.34][s.p||0],vs:tsn?[0,.06,.2,.5][s.p||0]:0,str:tw>=3?1:tw>=2?.55:0,cs:(s.cl||0)<.5?.13:.4,nd:tn?1:0,gl:gl0,dr:am0==='drip'?1:0,tc:am0==='torch'?1:0,mg:am0==='magic'?1:0,...Object.fromEntries(Object.entries(AMK).map(([n,k])=>[k,am0===n?1:0]))}};
+    return{cl:s.cl||0,fog:s.fog||0,cr:t[0],cg:t[1],cb:t[2],ca:t[3],fr:s.fr||0,ws:[0,.12,.55,1.1][tw],wf:[1,1.1,1.7,2.4][tw],rain:tsn?0:L/1600,snow:tsn?L/1600:0,vr:tsn?0:[0,.05,.14,.34][s.p||0],tp:tsn?0:[0,.06,.2,.42][s.p||0],vs:tsn?[0,.06,.2,.5][s.p||0]:0,str:tw>=3?1:tw>=2?.55:0,cs:(s.cl||0)<.5?.13:.4,nd:tn?1:0,gl:gl0,dr:am0==='drip'?1:0,tc:am0==='torch'?1:0,mg:am0==='magic'?1:0,...Object.fromEntries(Object.entries(AMK).map(([n,k])=>[k,am0===n?1:0]))}};
   const frame=ts=>{
     raf=requestAnimationFrame(frame);size();const W=cv.width,H=cv.height,dt=Math.min(100,ts-(last||ts));last=ts;
     const T=target(),k=1-Math.exp(-dt/900);for(const q in T)cu[q]+=(T[q]-cu[q])*k;
-    if(Math.max(T.cl,T.fog,T.ca,T.fr,T.rain,T.snow,T.str,T.gl,T.vr,T.vs,T.dr,T.tc,T.mg)===0&&AK.every(k=>T[k]===0)&&AK.every(k=>cu[k]<.004)&&Math.max(cu.cl,cu.fog,cu.ca,cu.fr,cu.rain,cu.snow,cu.str,cu.gl,cu.vr,cu.vs,cu.dr,cu.tc,cu.mg)<.004){c.clearRect(0,0,W,H);cancelAnimationFrame(raf);raf=0;return}
+    if(Math.max(T.cl,T.fog,T.ca,T.fr,T.rain,T.snow,T.str,T.gl,T.vr,T.vs,T.tp,T.dr,T.tc,T.mg)===0&&AK.every(k=>T[k]===0)&&AK.every(k=>cu[k]<.004)&&Math.max(cu.cl,cu.fog,cu.ca,cu.fr,cu.rain,cu.snow,cu.str,cu.gl,cu.vr,cu.vs,cu.tp,cu.dr,cu.tc,cu.mg)<.004){c.clearRect(0,0,W,H);cancelAnimationFrame(raf);raf=0;return}
     c.clearRect(0,0,W,H);
     const nf=1-.55*cu.nd;
     if(cu.ca>.003){c.fillStyle=`rgba(${cu.cr|0},${cu.cg|0},${cu.cb|0},${cu.ca})`;c.fillRect(0,0,W,H)}
@@ -464,20 +464,26 @@ function makeWeather(cv){
       gg.addColorStop(0,`rgba(255,250,225,${.9*cu.gl*pl})`);gg.addColorStop(.3,`rgba(255,232,170,${.34*cu.gl*pl})`);gg.addColorStop(1,'rgba(255,220,150,0)');
       c.fillStyle=gg;c.fillRect(0,0,W,H);}
     {const nd=cu.nd;
+      if(cu.tp>.003){const tg3=c.createLinearGradient(0,0,0,H*.62);tg3.addColorStop(0,`rgba(12,18,30,${cu.tp*(1-.45*nd)})`);tg3.addColorStop(1,'rgba(12,18,30,0)');c.fillStyle=tg3;c.fillRect(0,0,W,H*.62)}
       if(cu.vr>.003){c.fillStyle=`rgba(${125-70*nd|0},${140-75*nd|0},${158-70*nd|0},${cu.vr})`;c.fillRect(0,0,W,H)}
       if(cu.vs>.003){c.fillStyle=`rgba(${232-120*nd|0},${238-120*nd|0},${248-110*nd|0},${cu.vs})`;c.fillRect(0,0,W,H)}}
+    const gust=1+Math.min(1,cu.ws*1.6)*(.3*Math.sin(ts*.0013)+.2*Math.sin(ts*.0031+1.2));
     const nr=Math.round(cu.rain*PR.length);
-    if(nr){const sx=1+cu.rain*.7;c.lineWidth=1.1+cu.rain;c.strokeStyle=`rgba(190,210,230,${.45+cu.rain*.3})`;c.beginPath();
-      for(let i=0;i<nr;i++){const p=PR[i];p.x+=cu.ws*p.v*cu.wf;p.y+=p.v*cu.wf;
-        if(p.y>H+20){p.y=-20;p.x=R()*(W+cu.ws*H)-cu.ws*H}else if(p.x>W+40){p.x=-40;p.y=R()*H}
-        c.moveTo(p.x,p.y);c.lineTo(p.x+cu.ws*p.l*sx,p.y+p.l*sx)}c.stroke()}
+    if(nr){const sx=1+cu.rain*.7,wsg=cu.ws*gust;
+      for(let i=0;i<nr;i++){const p=PR[i],d=.65+.7*p.z,w2=wsg*(1+p.j*.18);p.x+=w2*p.v*d*cu.wf;p.y+=p.v*d*cu.wf;p.w2=w2;
+        if(p.y>H*(.55+.45*p.z)+20){p.y=-20;p.x=R()*(W+wsg*H)-wsg*H}else if(p.x>W+40){p.x=-40;p.y=R()*H}}
+      for(let pass=0;pass<2;pass++){
+        c.lineWidth=(1.1+cu.rain)*(pass?1:.65);c.strokeStyle=`rgba(190,210,230,${(.45+cu.rain*.3)*(pass?1:.55)})`;c.beginPath();
+        for(let i=0;i<nr;i++){const p=PR[i];if((p.z>=.5)!==!!pass)continue;const L2=p.l*sx*(.55+.8*p.z);c.moveTo(p.x,p.y);c.lineTo(p.x+p.w2*L2,p.y+L2)}c.stroke()}}
     const ns=Math.round(cu.snow*PS.length);
-    if(ns){c.fillStyle='rgba(255,255,255,.85)';c.beginPath();
-      for(let i=0;i<ns;i++){const p=PS[i];p.x+=Math.sin(p.y*.02+p.ph)*.6+cu.ws*7*cu.wf;p.y+=p.sv*cu.wf;
-        if(p.y>H+20){p.y=-20;p.x=R()*(W+cu.ws*H*3)-cu.ws*H*2}else if(p.x>W+40){p.x=-40;p.y=R()*H}
-        const rr=p.r*(1+cu.snow*.45);c.moveTo(p.x+rr,p.y);c.arc(p.x,p.y,rr,0,7)}c.fill()}
+    if(ns){const wsg=cu.ws*gust;
+      for(let i=0;i<ns;i++){const p=PS[i],d=.6+.8*p.z;p.x+=(Math.sin(p.y*.02+p.ph)*.6+wsg*5.5*cu.wf*(1+p.j*.15))*d;p.y+=p.sv*d*cu.wf;
+        if(p.y>H*(.55+.45*p.z)+20){p.y=-20;p.x=R()*(W+wsg*H*3)-wsg*H*2}else if(p.x>W+40){p.x=-40;p.y=R()*H}}
+      for(let pass=0;pass<2;pass++){
+        c.fillStyle=`rgba(255,255,255,${pass?.88:.5})`;c.beginPath();
+        for(let i=0;i<ns;i++){const p=PS[i];if((p.z>=.5)!==!!pass)continue;const rr=p.r*(.5+.9*p.z)*(1+cu.snow*.45);c.moveTo(p.x+rr,p.y);c.arc(p.x,p.y,rr,0,7)}c.fill()}}
     const nst=Math.round(cu.str*S.length);
-    if(nst){c.strokeStyle=`rgba(255,255,255,${.13*Math.min(1,cu.str)})`;c.lineWidth=1.5;c.beginPath();
+    if(nst){c.strokeStyle=`rgba(255,255,255,${.18*Math.min(1,cu.str)})`;c.lineWidth=1.5;c.beginPath();
       for(let i=0;i<nst;i++){const q=S[i];q.x+=q.v;if(q.x-q.l>W){q.x=-q.l;q.y=R()*H}c.moveTo(q.x,q.y);c.lineTo(q.x-q.l,q.y+q.l*.05)}c.stroke()}
     if(cu.dr>.01){
       c.fillStyle=`rgba(60,105,125,${.14*cu.dr})`;c.fillRect(0,0,W,H);
