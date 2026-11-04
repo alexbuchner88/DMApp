@@ -201,6 +201,20 @@ summary h2{display:flex;align-items:center;gap:.4em}
 .rbox .fxcat div{padding-left:8px;color:var(--parch);font:15px/1.3 Almendra,serif}
 .rbox .fxrules{margin:0 14px 12px;padding:8px 10px;border-radius:4px;background:#0005;color:var(--parch);font:15px/1.3 Almendra,serif}
 .rbox .fxrules b{display:block;margin:6px 0 2px;color:var(--gold);font:700 13px Cinzel,serif}
+
+.rbox .fxbox{display:flex;flex-direction:column;gap:6px;padding:2px 14px 12px}
+.rbox .fxrow{display:flex;gap:8px;align-items:flex-start}
+.rbox .fxc{flex:none;display:grid;place-items:center;width:26px;height:28px;color:var(--parch);opacity:.75}
+.rbox .fxc svg{width:18px;height:18px}
+.rbox .chips{display:flex;flex-wrap:wrap;gap:6px}
+.rbox .chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px 3px 7px;border-radius:14px;border:1px solid #fff4;background:#0004;color:var(--parch);font:15px Almendra,serif;cursor:pointer}
+.rbox .chip svg{width:17px;height:17px;flex:none}
+.rbox .chip.buff{border-color:#7fb069;color:#bfe8ab}
+.rbox .chip.nerf{border-color:#c4624a;color:#f4b9a9}
+.rbox .chip.buff::after{content:"▲";font-size:8px;margin-left:1px}
+.rbox .chip.nerf::after{content:"▼";font-size:8px;margin-left:1px}
+.rbox .chip.on{background:#fff2;box-shadow:0 0 0 1px currentColor}
+.rbox .fxtext{padding:6px 10px;border-radius:4px;background:#0006;color:var(--parch);font:15px/1.3 Almendra,serif}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -332,7 +346,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-03 j';
+const VER='2026-11-04 k';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -489,14 +503,39 @@ function wxInfo(id,w,season){
   [...(st.effects||[]),...(wd.effects||[])].forEach(k=>{const e=WXJ.effects[k];if(!e||eff.includes(k))return;if(e.onlyIf&&('exposure.type == '+(ex?ex.type:''))!==e.onlyIf)return;eff.push(k)});
   return{travel:tr+'% ('+mi+' mi/day)',rest:st.restDC+(wd.restDCMod||0),exposure:ex,eff};
 }
-function wxBoxHTML(cur,w,L,role,day){
+const FXI={
+ dot:'<circle cx="12" cy="12" r="3"/>',
+ eye:'<path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/>',
+ eyeHalf:'<path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><path d="M7 11h10M9 14h6"/>',
+ eyeOff:'<path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><path d="M3 3l18 18"/>',
+ ear:'<path d="M7 9a5 5 0 0 1 10 0c0 3-2.5 4-2.5 6.5a3 3 0 0 1-5.5 1.5"/><path d="M12 9a2 2 0 0 1 2 2"/>',
+ earOff:'<path d="M7 9a5 5 0 0 1 10 0c0 3-2.5 4-2.5 6.5a3 3 0 0 1-5.5 1.5"/><path d="M12 9a2 2 0 0 1 2 2"/><path d="M3 3l18 18"/>',
+ mask:'<path d="M12 3c-4 0-7 3-7 7v11l3-2 2 2 2-2 2 2 2-2 3 2V10c0-4-3-7-7-7z"/><path d="M9.5 10h.01M14.5 10h.01"/>',
+ snow:'<path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7"/><path d="M9 4l3 2 3-2M9 20l3-2 3 2"/>',
+ bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+ flame:'<path d="M12 22c4 0 7-3 7-7 0-3-2-5-3-7-1 2-2 3-4 3 0-3-1-5-3-7-1 3-4 5-4 11 0 4 3 7 7 7z"/>',
+ flameOff:'<path d="M12 22c4 0 7-3 7-7 0-3-2-5-3-7-1 2-2 3-4 3 0-3-1-5-3-7-1 3-4 5-4 11 0 4 3 7 7 7z"/><path d="M3 3l18 18"/>',
+ shield:'<path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/>',
+ mountain:'<path d="M2 20l7-12 4 7 3-4 6 9z"/>',
+ wing:'<path d="M2 15c2-5 6-7 10-3 4-4 8-2 10 3"/><path d="M12 12v8"/>',
+ bow:'<path d="M5 3c8 3 8 15 0 18"/><path d="M5 12h16M17 8l4 4-4 4"/>',
+ cloud:'<path d="M7 18h10a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6 1.5A3.4 3.4 0 0 0 7 18z"/>',
+ focus:'<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+ thermo:'<path d="M10 14V5a2 2 0 1 1 4 0v9a4 4 0 1 1-4 0z"/><path d="M12 9v7"/>',
+ drop:'<path d="M12 3c4 5 6 8 6 11a6 6 0 0 1-12 0c0-3 2-6 6-11z"/>'};
+const ico=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${FXI[n]||FXI.dot}</svg>`;
+const DEFCATS=[{key:'senses',name:'Senses',icon:'eye'},{key:'damage',name:'Damage',icon:'flame'},{key:'movement',name:'Movement',icon:'mountain'},{key:'combat',name:'Combat',icon:'bow'},{key:'survival',name:'Survival',icon:'thermo'}];
+function wxBoxHTML(cur,w,L,role,day,sel){
   const cd=!!L.cold,season=L.season||(cd?'winter':'normal'),x=WXS.find(y=>y.id===cur)||WXS[0],ic=Array.isArray(x.i)?x.i[cd?1:0]:x.i,inf=wxInfo(cur,w,season),dm=role==='dm';
   const head=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${esc(wname(cur,season,cd))}</b><small>Wind: ${WINDS[w]}</small></div>${day!=null?`<span class="day">Day ${day}</span>`:''}${dm&&WXJ?'<button class="info" data-a="wxinfo" title="Rules">i</button>':''}`;
   let stats='',list='',rules='';
   if(inf){
     stats=`<div class="stats"><span>Travel ${inf.travel}</span>${dm?`<span>Survival DC ${inf.rest}</span>${inf.exposure?`<span>Exposure DC ${inf.exposure.dc} (${esc(inf.exposure.type)})</span>`:''}`:''}</div>`;
-    const body=[['combat','Combat'],['movement','Movement'],['bonus','Bonus']].map(([k,n])=>{const l=inf.eff.filter(e=>WXJ.effects[e].cat===k);return l.length?`<div class="fxcat"><b>${n}</b>${l.map(e=>`<div>${esc(WXJ.effects[e].text)}</div>`).join('')}</div>`:''}).join('');
-    if(body)list=`<details class="fxd"${dm?'':' open'}><summary>Effects</summary>${body}</details>`;
+    const cats=WXJ.categories||DEFCATS,known=cats.map(c=>c.key);
+    const chip=e=>{const f=WXJ.effects[e];return`<button class="chip ${f.tone||'neutral'}${e===sel?' on':''}" ${dm?`data-a="wxfx" data-id="${e}"`:`data-fx="${e}"`} title="${esc(f.text)}">${ico(f.icon)}<span>${esc(f.short||f.text)}</span></button>`};
+    const body=cats.map(c=>{const l=inf.eff.filter(e=>{const k=WXJ.effects[e].cat;return(known.includes(k)?k:known[known.length-1])===c.key});return l.length?`<div class="fxrow"><span class="fxc" title="${esc(c.name)}">${ico(c.icon)}</span><div class="chips">${l.map(chip).join('')}</div></div>`:''}).join('');
+    const seltext=sel&&inf.eff.includes(sel)?`<div class="fxtext">${esc(WXJ.effects[sel].text)}</div>`:'';
+    if(body)list=`<div class="fxbox">${body}${seltext}</div>`;
     if(dm&&wxRulesOn)rules=`<div class="fxrules"><b>Long rest</b>${(WXJ.rules.longRest||[]).map(t=>`<div>${esc(t)}</div>`).join('')}<b>Exposure</b>${(WXJ.rules.exposure||[]).map(t=>`<div>${esc(t)}</div>`).join('')}</div>`;
   }
   return`<div class="rbox"><div class="rh">${head}</div>${stats}${list}${rules}</div>`;
@@ -504,14 +543,14 @@ function wxBoxHTML(cur,w,L,role,day){
 function player(code){
   app.onclick=null;
   app.innerHTML='<div class="pv"><div class="pvh"><h1>The Arcane Table</h1><div class="pvt"><button class="btn sm" data-t="quest">Quest</button><button class="btn sm" data-t="weather">Weather</button><button class="btn sm" data-t="shops">Shops</button></div></div><div id="pvb"></div><div id="pvd"></div></div>';
-  let d={},tab=sessionStorage.getItem('pvtab')||'quest',Q=null,qid=null,qu=null,psel=null,open=null,last='',lastD='';
+  let d={},tab=sessionStorage.getItem('pvtab')||'quest',Q=null,qid=null,qu=null,psel=null,open=null,fxSel=null,last='',lastD='';
   const SHP={},subs={};
   const card=i=>`<div class="card" data-i="${i.id}"><div class="pic">${i.img?`<img src="${i.img}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${i.weight?`<p class="wgt">${esc(i.weight)}</p>`:''}</div>`;
   const render=()=>{
     document.querySelectorAll('.pvt [data-t]').forEach(b=>b.classList.toggle('alt',b.dataset.t!==tab));
     const keys=d.pshops||[];let h='',sheet='';
     if(tab==='quest')h=Q?`<div class="qbig"><i class="pin"></i><div class="in"><h3>${esc(Q.title||'')}</h3><p>${esc(Q.text||'')}</p></div></div>`:'<div class="pvempty">No quest selected.</div>';
-    else if(tab==='weather')h=d.wxOn?wxBoxHTML(d.wx||'s1',Math.min(3,d.wind|0),d,'player'):'<div class="pvempty">No weather right now.</div>';
+    else if(tab==='weather')h=d.wxOn?wxBoxHTML(d.wx||'s1',Math.min(3,d.wind|0),d,'player',null,fxSel):'<div class="pvempty">No weather right now.</div>';
     else if(!keys.length)h='<div class="pvempty">No shops are open.</div>';
     else{
       const k=keys.includes(psel)?psel:keys[0],S=SHP[k]||{name:'',items:[]};
@@ -531,6 +570,7 @@ function player(code){
   unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};syncQ();syncS();render()}));
   unsubs.push(()=>{qu&&qu();Object.values(subs).forEach(a=>a.forEach(u=>u()))});
   app.onclick=e=>{
+    const fb=e.target.closest('[data-fx]');if(fb){fxSel=fxSel===fb.dataset.fx?null:fb.dataset.fx;render();return}
     const t=e.target.closest('[data-t]');if(t){tab=t.dataset.t;sessionStorage.setItem('pvtab',tab);render();return}
     if(e.target.closest('#pvd')){open=null;render();return}
     const sb=e.target.closest('[data-s]');if(sb){psel=sb.dataset.s;render();return}
@@ -648,7 +688,7 @@ function dm(code){
     const sel=$('#wxsel');
     if(sel.options.length!==G.presets.length||[...sel.options].some((o,i)=>o.value!==G.presets[i].id||o.textContent!==G.presets[i].name))sel.innerHTML=G.presets.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
     sel.value=P.id;
-    const wh=wxBoxHTML(cur,w,live,'dm',G.n||0);if(wh!==wxLast){wxLast=wh;$('#wxres').innerHTML=wh;const f=$('#wxres .fxd');if(f){f.open=wxFx;f.ontoggle=()=>{wxFx=f.open}}}
+    const wh=wxBoxHTML(cur,w,live,'dm',G.n||0,wxFxSel);if(wh!==wxLast){wxLast=wh;$('#wxres').innerHTML=wh}
     syncPre();
   }
   function syncPre(force){
@@ -656,7 +696,7 @@ function dm(code){
     f('#pn',P.name);$('#pc').checked=!!P.cold;$('#ph').checked=!!(P.hot===undefined?P.id==='summer':P.hot);f('#pds',P.d.s);f('#pdc',P.d.c);f('#pdr',P.d.r);
     [0,1,2].forEach(i=>{f('#tc'+i,P.tc[i]);f('#tr'+i,P.tr[i])});
   }
-  let G={presets:defPre(),cur:'spring',bag:{s:4,c:4,r:4},day:0,hist:[]},wxMsg='',wxLast='',wxFx=false;
+  let G={presets:defPre(),cur:'spring',bag:{s:4,c:4,r:4},day:0,hist:[]},wxMsg='',wxLast='',wxFxSel=null;
   const GD=doc(db,'sessions',code,'wxgen','cfg');
   const curPre=()=>G.presets.find(p=>p.id===G.cur)||G.presets[0];
   const saveG=o=>{Object.assign(G,o);return setDoc(GD,o,{merge:true})};
@@ -758,6 +798,7 @@ function dm(code){
     if(a==='wxsnow')set({cold:!live.cold});
     if(a==='night')set({night:!live.night});
     if(a==='pm'){const w=$('.wrap'),p=w.classList.toggle('play');localStorage.setItem('play',p?'1':'0');t.textContent=p?'Show editing':'Hide editing'}
+    if(a==='wxfx'){wxFxSel=wxFxSel===id?null:id;wxLast='';wxDraw()}
     if(a==='wxinfo'){wxRulesOn=!wxRulesOn;wxLast='';wxDraw()}
     if(a==='wxd')drawDie(id);
     if(a==='wxwr'){const q=rollWind(1+Math.floor(Math.random()*6),live.wx||'s1');set({wind:q.w,wxOn:true})}
