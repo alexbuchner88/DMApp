@@ -220,9 +220,12 @@ summary h2{display:flex;align-items:center;gap:.4em}
 
 .selname{color:#8a4b10;font-weight:400;font-style:italic;margin-left:.2em}
 
-#dawn{position:absolute;inset:0;background:linear-gradient(180deg,#a98bb8 0%,#f2b57f 62%,#f7cb92 100%);mix-blend-mode:multiply;opacity:0;pointer-events:none;transition:opacity 1.5s}
+#dusk{position:absolute;inset:0;background:linear-gradient(180deg,#a98bb8 0%,#f2b57f 62%,#f7cb92 100%);mix-blend-mode:multiply;opacity:0;pointer-events:none;transition:opacity 1.5s}
 #glow{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 108%,rgba(255,160,70,.55),rgba(255,120,60,0) 62%);mix-blend-mode:screen;opacity:0;pointer-events:none;transition:opacity 1.5s}
-#stage.dawn #dawn,#stage.dawn #glow{opacity:1}
+#stage.dusk #dusk,#stage.dusk #glow{opacity:1}
+
+.muhost{position:fixed;right:8px;bottom:8px;width:320px;height:152px;opacity:0;pointer-events:none;z-index:30;overflow:hidden;border-radius:12px}
+.muhost iframe{width:100%;height:100%;border:0}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -264,7 +267,7 @@ function home(){
 
 async function display(code){
   app.onclick=null;
-  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="night"></div><div id="dawn"></div><div id="glow"></div><canvas id="mapc"></canvas><canvas id="wx"></canvas><div id="npcs"></div><div id="wxb"></div><div id="board"><div id="papers"></div></div><div id="shopc"><div id="shopt"></div><div id="shopg"></div></div><div id="shopd"></div><div id="ver">'+VER+'</div><button id="snd" class="snd">Tap to enable sound</button></div>';
+  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="night"></div><div id="dusk"></div><div id="glow"></div><canvas id="mapc"></canvas><canvas id="wx"></canvas><div id="npcs"></div><div id="wxb"></div><div id="board"><div id="papers"></div></div><div id="shopc"><div id="shopt"></div><div id="shopg"></div></div><div id="shopd"></div><div id="ver">'+VER+'</div><button id="snd" class="snd">Tap to enable sound</button></div>';
   try{navigator.wakeLock&&navigator.wakeLock.request('screen')}catch(e){}
   const cache=new Map();
   const get=async id=>{if(!id)return{};if(!cache.has(id)){const s=await getDoc(doc(db,'sessions',code,'images',id));cache.set(id,s.exists()?s.data():{})}return cache.get(id)};
@@ -293,7 +296,7 @@ async function display(code){
   $('#shopg').onclick=e=>{const c=e.target.closest('[data-i]');if(c){lo=c.dataset.i;renderShop()}};
   $('#shopd').onclick=()=>{if(lo)lo=null;else dis=d.shopItemId;renderShop()};
   const WXE=makeWeather($('#wx'));unsubs.push(()=>WXE.stop());
-  let wk='';const renderWx=()=>{{const td=todOf(d);$('#stage').classList.toggle('night',td==='night');$('#stage').classList.toggle('dawn',td==='dawn')}kick();const ew=effWx(d),on=ew.on,s=WXS.find(x=>x.id===ew.wx)||WXS[0],w=Math.min(3,ew.wind|0),cd=!!d.cold,td0=todOf(d),nt=td0==='night',ss=d.season||(cd?'winter':'normal'),gl=(on&&!cd?(ew.wx==='s3'?(ss==='summer'?1:.45):(ew.wx==='s2'&&ss==='summer'?.35:0)):0)*(td0==='night'?0:td0==='dawn'?.6:1),am=ew.amb||'',k=[on,s.id,w,cd,nt,ss,gl,am].join();if(k===wk)return;wk=k;WXE.set(on?s:null,w,cd,nt,gl,am);$('#wxb').innerHTML=on?wxBadge(s,w,cd,ss):''};
+  let wk='';const renderWx=()=>{{const td=todOf(d);$('#stage').classList.toggle('night',td==='night');$('#stage').classList.toggle('dusk',td==='dusk')}kick();const ew=effWx(d),on=ew.on,s=WXS.find(x=>x.id===ew.wx)||WXS[0],w=Math.min(3,ew.wind|0),cd=!!d.cold,td0=todOf(d),nt=td0==='night',ss=d.season||(cd?'winter':'normal'),gl=(on&&!cd?(ew.wx==='s3'?(ss==='summer'?1:.45):(ew.wx==='s2'&&ss==='summer'?.35:0)):0)*(td0==='night'?0:td0==='dusk'?.6:1),am=ew.amb||'',k=[on,s.id,w,cd,nt,ss,gl,am].join();if(k===wk)return;wk=k;WXE.set(on?s:null,w,cd,nt,gl,am);$('#wxb').innerHTML=on?wxBadge(s,w,cd,ss):''};
   WXJP.then(()=>{wk='';renderWx()});
   const MX=makeMixer();unsubs.push(()=>MX.stop());
   const applyAudio=()=>{
@@ -363,7 +366,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-04 o';
+const VER='2026-11-04 p';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -410,9 +413,7 @@ function makeWeather(cv){
     if(cu.gl>.01){
       const gx=W*1.02,gy=-H*.04,pl=.85+.15*Math.sin(ts*.0009),gg=c.createRadialGradient(gx,gy,0,gx,gy,Math.hypot(W,H)*.8);
       gg.addColorStop(0,`rgba(255,250,225,${.9*cu.gl*pl})`);gg.addColorStop(.3,`rgba(255,232,170,${.34*cu.gl*pl})`);gg.addColorStop(1,'rgba(255,220,150,0)');
-      c.fillStyle=gg;c.fillRect(0,0,W,H);
-      c.save();c.globalAlpha=.09*cu.gl;c.strokeStyle='rgb(255,240,200)';c.lineWidth=16;c.beginPath();
-      for(let i=0;i<4;i++){const a=2.45+i*.17;c.moveTo(gx,gy);c.lineTo(gx+Math.cos(a)*W*1.4,gy+Math.sin(a)*W*1.4)}c.stroke();c.restore()}
+      c.fillStyle=gg;c.fillRect(0,0,W,H);}
     const nr=Math.round(cu.rain*PR.length);
     if(nr){c.lineWidth=1.3;c.strokeStyle='rgba(185,205,225,.55)';c.beginPath();
       for(let i=0;i<nr;i++){const p=PR[i];p.x+=cu.ws*p.v*cu.wf;p.y+=p.v*cu.wf;
@@ -428,20 +429,20 @@ function makeWeather(cv){
       for(let i=0;i<nst;i++){const q=S[i];q.x+=q.v;if(q.x-q.l>W){q.x=-q.l;q.y=R()*H}c.moveTo(q.x,q.y);c.lineTo(q.x-q.l,q.y+q.l*.05)}c.stroke()}
     if(cu.dr>.01){
       c.fillStyle=`rgba(60,105,125,${.14*cu.dr})`;c.fillRect(0,0,W,H);
-      if(R()<dt/1000*3.2*cu.dr)DR.push({x:R()*W,y:H*(.3+R()*.65),t:ts});
+      if(R()<dt/1000*3.2*cu.dr)DR.push({x:R()*W,y:H*(.84+R()*.13),t:ts});
       c.lineWidth=2;
       for(let i=DR.length-1;i>=0;i--){const q=DR[i],age=ts-q.t;
-        if(age<230){const p=age/230;c.strokeStyle=`rgba(200,225,245,${.8*cu.dr})`;c.beginPath();c.moveTo(q.x,q.y-120+p*120);c.lineTo(q.x,q.y-100+p*118);c.stroke()}
-        else if(age<1500){const p=(age-230)/1270,rr=8+p*52;c.strokeStyle=`rgba(200,225,245,${(1-p)*.85*cu.dr})`;c.beginPath();c.ellipse(q.x,q.y,rr,rr*.4,0,0,7);c.stroke();c.beginPath();c.ellipse(q.x,q.y,rr*.55,rr*.22,0,0,7);c.stroke()}
+        if(age<300){const p=age/300;c.strokeStyle=`rgba(200,225,245,${.8*cu.dr})`;c.beginPath();c.moveTo(q.x,q.y-300+p*300);c.lineTo(q.x,q.y-270+p*296);c.stroke()}
+        else if(age<1500){const p=(age-300)/1200,rr=8+p*52;c.strokeStyle=`rgba(200,225,245,${(1-p)*.85*cu.dr})`;c.beginPath();c.ellipse(q.x,q.y,rr,rr*.3,0,0,7);c.stroke();c.beginPath();c.ellipse(q.x,q.y,rr*.55,rr*.16,0,0,7);c.stroke()}
         else DR.splice(i,1)}}
     if(cu.tc>.01){
-      const fl=.5+.25*Math.sin(ts*.011)+.15*Math.sin(ts*.027+1.3)+.1*Math.sin(ts*.061+.7)+(R()-.5)*.08,cx=W*.5+Math.sin(ts*.0013)*W*.02,cy=H*.62+Math.cos(ts*.0017)*H*.015,m=Math.min(W,H),k=cu.tc;
-      const vg=c.createRadialGradient(cx,cy,m*(.16+.06*fl),cx,cy,Math.hypot(W,H)*.62);
-      vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(.5,`rgba(8,4,0,${.3*k})`);vg.addColorStop(1,`rgba(4,2,0,${.8*k})`);
+      const fl=.5+.2*Math.sin(ts*.0016)+.12*Math.sin(ts*.0037+1.3)+.06*Math.sin(ts*.0089+.7),cx=W*.5+Math.sin(ts*.0005)*W*.015,cy=H*.62+Math.cos(ts*.0007)*H*.01,m=Math.min(W,H),k=cu.tc;
+      const vg=c.createRadialGradient(cx,cy,m*(.18+.03*fl),cx,cy,Math.hypot(W,H)*.62);
+      vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(.5,`rgba(8,4,0,${.22*k})`);vg.addColorStop(1,`rgba(4,2,0,${.68*k})`);
       c.fillStyle=vg;c.fillRect(0,0,W,H);
-      c.fillStyle=`rgba(255,140,40,${(.05+.09*fl)*k})`;c.fillRect(0,0,W,H);
+      c.fillStyle=`rgba(255,140,40,${(.06+.05*fl)*k})`;c.fillRect(0,0,W,H);
       c.save();c.globalCompositeOperation='lighter';const tg2=c.createRadialGradient(cx,cy,0,cx,cy,m*.62);
-      tg2.addColorStop(0,`rgba(255,170,80,${(.1+.12*fl)*k})`);tg2.addColorStop(1,'rgba(255,140,40,0)');c.fillStyle=tg2;c.fillRect(0,0,W,H);c.restore()}
+      tg2.addColorStop(0,`rgba(255,170,80,${(.11+.07*fl)*k})`);tg2.addColorStop(1,'rgba(255,140,40,0)');c.fillStyle=tg2;c.fillRect(0,0,W,H);c.restore()}
     if(cu.mg>.01){
       const k=cu.mg,pu=.5+.5*Math.sin(ts*.0007);
       c.fillStyle=`rgba(110,100,255,${(.06+.05*pu)*k})`;c.fillRect(0,0,W,H);
@@ -505,7 +506,7 @@ function makeRenderer(cv){
       nx.globalCompositeOperation='source-over';nx.fillStyle='rgb(58,70,125)';nx.fillRect(0,0,W,H);nx.globalCompositeOperation='destination-out';
       Ls.forEach(l=>soft(nx,ox+l.x*mw,oy+l.y*mh,Rn,'rgba(0,0,0,'));
       ctx.globalCompositeOperation='multiply';ctx.drawImage(nl,0,0);ctx.globalCompositeOperation='source-over'}
-    else if(tod==='dawn'){const g2=ctx.createLinearGradient(0,0,0,H);g2.addColorStop(0,'rgb(170,140,190)');g2.addColorStop(.6,'rgb(245,185,130)');g2.addColorStop(1,'rgb(250,205,150)');ctx.globalCompositeOperation='multiply';ctx.fillStyle=g2;ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='source-over'}
+    else if(tod==='dusk'){const g2=ctx.createLinearGradient(0,0,0,H);g2.addColorStop(0,'rgb(170,140,190)');g2.addColorStop(.6,'rgb(245,185,130)');g2.addColorStop(1,'rgb(250,205,150)');ctx.globalCompositeOperation='multiply';ctx.fillStyle=g2;ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='source-over'}
     if(MS.rev){drawToks(ctx,toks,ox,oy,mw,mh,pxft,sc,(MS.lft||30)*pxft*sc,Ls,'rev');return}
     const lf=MS.lft||30,R=lf*pxft*sc,es=Math.min(1,1024/Math.max(m.w,m.h));
     if(MO!==last){last=MO;key=''}
@@ -576,7 +577,7 @@ const ico=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const DEFCATS=[{key:'senses',name:'Senses',icon:'eye'},{key:'damage',name:'Damage',icon:'flame'},{key:'movement',name:'Movement',icon:'mountain'},{key:'combat',name:'Combat',icon:'bow'},{key:'survival',name:'Survival',icon:'thermo'}];
 const AREAWX=[['auto','Area: follow weather'],['none','Area: no weather'],['drip','Area: Drippy / wet'],['torch','Area: Torchlit'],['magic','Area: Magical'],['s1','Area: Clear'],['s2','Area: Sunny'],['c1','Area: Cloudy'],['c2','Area: Overcast'],['c3','Area: Fog'],['r1','Area: Drizzle'],['r2','Area: Rain'],['r3','Area: Downpour']];
 // The weather that applies here: the background or map can switch it off or force a state.
-const todOf=L=>L.tod||(L.night?'night':'day');
+const todOf=L=>{const t=L.tod==='dawn'?'dusk':L.tod;return t||(L.night?'night':'day')};
 function effWx(L){
   const v=L.showBoard?'board':(L.showShop&&L.shopId)?'shop':(L.showMap&&L.mapId)?'map':'scene',ov=v==='map'?L.mapWx:(v==='scene'&&L.backgroundId&&!L.bgOff)?L.bgWx:null;
   if(ov==='none')return{on:false,wx:L.wx||'s1',wind:0,area:'none'};
@@ -706,7 +707,7 @@ function dm(code){
   const L=doc(db,'sessions',code,'live','state'),IM=collection(db,'sessions',code,'images'),QC=collection(db,'sessions',code,'quests');
   let live={},imgs=[],qs=[],shops=[],items=[],selShop=localStorage.getItem('selShop'),editIt=null,edit=null,MO=null,MS={},view={x:.5,y:.5,ft:60},mode=null,tmr=0,dirty=false;
   const link=location.origin+location.pathname+'#display/'+code,plink=location.origin+location.pathname+'#player/'+code;
-  app.innerHTML=`<div class="wrap"><div class="row" style="justify-content:space-between"><div><h1>The Arcane Table</h1><div class="note" style="margin:0">Version ${VER}</div></div><button class="btn sm alt" id="pm" data-a="pm">Hide editing</button></div>
+  app.innerHTML=`<div class="wrap"><div id="muhost" class="muhost"><div id="mui"></div></div><div class="row" style="justify-content:space-between"><div><h1>The Arcane Table</h1><div class="note" style="margin:0">Version ${VER}</div></div><button class="btn sm alt" id="pm" data-a="pm">Hide editing</button></div>
   <details class="panel" id="d-ctl" open><summary><h2>Controls</h2></summary><div class="row">
   <button class="btn" id="cv-bg" data-a="vbg">Background</button><button class="btn" id="cv-map" data-a="vmap">Map</button><button class="btn" id="cv-shop" data-a="vshop">Shop</button><button class="btn" id="cv-board" data-a="vboard">Quest board</button></div>
   <div class="row" style="margin-top:8px"><button class="btn" id="ct-wx" data-a="wxon">Weather</button><button class="btn" id="ct-night" data-a="night">Day</button><button class="btn" id="ct-tok" data-a="tok">Tokens</button><button class="btn" id="ct-snd" data-a="snd">Sound</button><button class="btn alt" id="ct-mu" data-a="mtoggle" disabled>Play music</button><input id="sndvol" type="range" min="0" max="100" value="70" title="Tablet volume" style="width:110px">
@@ -729,7 +730,7 @@ function dm(code){
   <div class="row" style="margin-top:10px"><button class="btn sm alt" data-a="pdup">Duplicate preset</button><button class="btn sm alt" data-a="pdel">Delete preset</button></div></details></details>
   <details class="panel" id="d-mu" open><summary><h2>Music <span id="mun"></span><span class="eye" id="e-mu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
   <div class="row"><button class="btn" id="mup" data-a="mplay" disabled>Play</button><button class="btn sm alt" id="mus" data-a="mstop" disabled>Stop</button><button class="btn sm" id="mloop" data-a="mloop">Loop</button><input id="muvol" type="range" min="0" max="100" value="70" title="Volume on this device" style="width:110px"></div>
-  <div id="mue"><div id="mui"></div></div>
+  <div id="mue"></div>
   <div class="edit" style="margin-top:8px"><input id="mulink" placeholder="Spotify link or audio file for this background or map" style="width:100%" disabled></div></details>
   <details class="panel" id="d-bg" open><summary><h2>Backgrounds <span id="cb"></span><span id="bgn"></span><span class="eye" id="e-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="bgs"></div></details>
   <details class="panel" id="d-mp" open><summary><h2>Maps <span id="cmp"></span></h2></summary><div class="grid" id="mps"></div></details>
@@ -777,12 +778,21 @@ function dm(code){
     const qb=(a,id,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#qs').innerHTML=qs.map(q=>`<div class="qrow ${q.posted?'on':''}"><div class="qt"><b>${esc(q.title||'Untitled')}${q.done?' (done)':''}</b><p>${esc(q.text||'')}</p></div><div class="row">${qb('qcur',q.id,live.curQuest===q.id?'Current':'Set current',live.curQuest===q.id?0:1)}${qb('qpin',q.id,q.posted?'Unpin':'Pin')}${qb('qdone',q.id,q.done?'Reopen':'Done',1)}${qb('qedit',q.id,'Edit',1,1)}${qb('qdel',q.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No quests yet.</p>';
   };
-  const MU={el:null,file:'',loop:localStorage.getItem('muloop')!=='0'};
-  const SP={ctrl:null,uri:'',type:'',link:'',playing:false,pos:0,dur:0,was:false,loading:false,auto:false,api:null,script:null};
+  const MU={cur:null,file:'',loop:localStorage.getItem('muloop')!=='0',ctx:null,out:null,get el(){return this.cur?this.cur.el:null}};
+  const SP={ctrl:null,uri:'',type:'',link:'',playing:false,pos:0,dur:0,was:false,loading:false,auto:false,api:null,script:null,h:152};
+  const FADE=2;
   const mtype=u=>!u?'':/^https?:\/\//i.test(u)?(/open\.spotify\.com/i.test(u)?'spotify':'link'):'file';
   const mpath=f=>f.includes('/')?f:'audio/'+f;
   const spParse=m=>{const x=/open\.spotify\.com\/(?:intl-[a-z]+\/)?(track|playlist|album|episode|show|artist)\/([A-Za-z0-9]+)/.exec(m||'');return x?{type:x[1],id:x[2],uri:'spotify:'+x[1]+':'+x[2]}:null};
-  const spPlay=(ms)=>setTimeout(()=>{try{SP.ctrl.play()}catch(x){}},ms);
+  const spPlay=ms=>setTimeout(()=>{try{SP.ctrl.play()}catch(x){}},ms);
+  // The player sits in a fixed box that is always rendered. It is placed over the Music section when that is open and tucked away invisibly when it is closed, so it keeps working either way.
+  function placeHost(){
+    const h=$('#muhost'),slot=$('#mue'),det=$('#d-mu');if(!h||!slot||!det)return;
+    slot.style.height=SP.uri?SP.h+'px':'0';
+    const show=!!SP.uri&&det.open&&slot.getClientRects().length>0;
+    if(show){const r=slot.getBoundingClientRect();h.style.cssText=`left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${SP.h}px;opacity:1;pointer-events:auto`}
+    else h.style.cssText=`right:8px;bottom:8px;width:320px;height:${SP.h}px;opacity:0;pointer-events:none`;
+  }
   function spPlayback(e){
     const d=(e&&e.data)||{};
     if(MU.loop&&d.isPaused&&SP.was&&SP.dur&&SP.dur-SP.pos<3500){   // the track or playlist just ended: start again
@@ -794,37 +804,59 @@ function dm(code){
   }
   function spShow(m,auto){
     const p=spParse(m);if(!p)return;
-    if(SP.ctrl){if(SP.uri!==p.uri){SP.uri=p.uri;SP.type=p.type;SP.ctrl.loadUri(p.uri);if(auto)spPlay(800)}return}
-    if(SP.loading)return;SP.loading=true;SP.uri=p.uri;SP.type=p.type;SP.auto=!!auto;
-    const mk=api=>api.createController($('#mui'),{uri:p.uri,width:'100%',height:p.type==='track'?80:152},c=>{SP.ctrl=c;SP.loading=false;c.addListener('playback_update',spPlayback);if(SP.auto)spPlay(1000)});
+    SP.h=p.type==='track'?80:152;
+    if(SP.ctrl){if(SP.uri!==p.uri){SP.uri=p.uri;SP.type=p.type;SP.ctrl.loadUri(p.uri);if(auto)spPlay(800)}placeHost();return}
+    if(SP.loading)return;SP.loading=true;SP.uri=p.uri;SP.type=p.type;SP.auto=!!auto;placeHost();
+    const mk=api=>api.createController($('#mui'),{uri:p.uri,width:'100%',height:SP.h},c=>{SP.ctrl=c;SP.loading=false;c.addListener('playback_update',spPlayback);if(SP.auto)spPlay(1000)});
     if(SP.api)return mk(SP.api);
     window.onSpotifyIframeApiReady=api=>{SP.api=api;mk(api)};
     if(!SP.script){SP.script=document.createElement('script');SP.script.src='https://open.spotify.com/embed/iframe-api/v1';SP.script.async=true;
-      SP.script.onerror=()=>{SP.loading=false;$('#mue').innerHTML=`<iframe src="https://open.spotify.com/embed/${p.type}/${p.id}?utm_source=generator" width="100%" height="${p.type==='track'?80:152}" style="border:0;margin-top:10px" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`};
+      SP.script.onerror=()=>{SP.loading=false;$('#muhost').innerHTML=`<iframe src="https://open.spotify.com/embed/${p.type}/${p.id}?utm_source=generator" width="100%" height="${SP.h}" style="border:0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`};
       document.body.appendChild(SP.script)}
   }
-  function playFile(f){
-    if(!MU.el){MU.el=new Audio();MU.el.onplay=MU.el.onpause=()=>muDraw()}
-    MU.file=f;MU.el.loop=MU.loop;MU.el.src=mpath(f);MU.el.volume=(+$('#muvol').value||70)/100;
-    const p=MU.el.play();if(p&&p.catch)p.catch(()=>{});muDraw();
+  // Music files go through a gain node, so they can fade in and out (this also lets the volume slider work on a phone).
+  function muAudio(){
+    if(!MU.ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return false;MU.ctx=new C();MU.out=MU.ctx.createGain();MU.out.gain.value=(+$('#muvol').value||70)/100;MU.out.connect(MU.ctx.destination)}
+    if(MU.ctx.state==='suspended')MU.ctx.resume();
+    return true;
   }
-  function stopMusic(){if(MU.el)MU.el.pause();if(SP.ctrl&&SP.playing)SP.ctrl.pause();MU.file='';muDraw()}
+  const ramp=(o,to,secs)=>{const t=MU.ctx.currentTime;o.g.gain.cancelScheduledValues(t);o.g.gain.setValueAtTime(o.g.gain.value,t);o.g.gain.linearRampToValueAtTime(to,t+secs)};
+  function fadeOut(o,after){
+    ramp(o,0,FADE);o.fading=true;clearTimeout(o.tm);
+    o.tm=setTimeout(()=>{try{o.el.pause()}catch(e){}o.fading=false;if(after)after();muDraw()},FADE*1000+120);muDraw();
+  }
+  const dropTrack=o=>{try{o.src.disconnect();o.g.disconnect()}catch(e){}};
+  const isPlaying=()=>!!(MU.cur&&MU.file&&!MU.cur.el.paused&&!MU.cur.fading);
+  function playFile(f){
+    if(!muAudio())return;
+    const old=MU.cur;
+    if(old&&MU.file===f&&!old.el.paused&&!old.fading)return;
+    if(old){if(!old.el.paused)fadeOut(old,()=>dropTrack(old));else dropTrack(old)}
+    const el=new Audio(mpath(f));el.loop=MU.loop;el.onplay=el.onpause=()=>muDraw();
+    const src=MU.ctx.createMediaElementSource(el),g=MU.ctx.createGain();g.gain.value=0;src.connect(g);g.connect(MU.out);
+    MU.cur={el,src,g,fading:false,tm:0};MU.file=f;
+    const p=el.play();if(p&&p.catch)p.catch(()=>{});
+    ramp(MU.cur,1,FADE);muDraw();
+  }
+  function pauseMusic(){if(isPlaying())fadeOut(MU.cur)}
+  function resumeMusic(){const o=MU.cur;if(o&&o.el.paused){muAudio();clearTimeout(o.tm);const p=o.el.play();if(p&&p.catch)p.catch(()=>{});ramp(o,1,FADE)}}
+  function stopMusic(){const o=MU.cur;MU.file='';if(o&&!o.el.paused&&!o.fading)fadeOut(o);if(SP.ctrl&&SP.playing)SP.ctrl.pause();muDraw()}
   function autoMusic(id){
     const m=((imgs.find(x=>x.id===id)||{}).music||'').trim(),ty=mtype(m);
     if(ty==='file')playFile(m);else if(ty==='spotify'){SP.link=m;spShow(m,true)}
   }
   function musicToggle(){
-    const m=((imgs.find(x=>x.id===areaId())||{}).music||'').trim(),ty=mtype(m),fp=!!(MU.el&&MU.file&&!MU.el.paused);
-    if(fp){MU.el.pause();return}
+    const m=((imgs.find(x=>x.id===areaId())||{}).music||'').trim(),ty=mtype(m);
+    if(isPlaying()){pauseMusic();return}
     if(SP.playing&&SP.ctrl){SP.ctrl.pause();return}
-    if(ty==='file'){playFile(m);return}
-    if(MU.el&&MU.file){MU.el.play();return}
+    if(ty==='file'){if(MU.cur&&MU.file===m&&MU.cur.el.paused)resumeMusic();else playFile(m);return}
+    if(MU.cur&&MU.file){resumeMusic();return}
     if(SP.ctrl&&SP.uri){SP.ctrl.togglePlay();return}
     if(ty==='spotify'){SP.link=m;spShow(m,true);return}
     if(ty)window.open(m,'_blank','noopener');
   }
   function muDraw(){
-    const aid=areaId(),a=imgs.find(x=>x.id===aid),m=((a||{}).music||'').trim(),ty=mtype(m),fp=!!(MU.el&&MU.file&&!MU.el.paused),pl=fp||SP.playing,me=fp&&MU.file===m;
+    const aid=areaId(),a=imgs.find(x=>x.id===aid),m=((a||{}).music||'').trim(),ty=mtype(m),fp=isPlaying(),pl=fp||SP.playing,me=fp&&MU.file===m;
     $('#mun').textContent=a?'('+a.name+')':'';
     const li=$('#mulink');li.disabled=!aid;if(document.activeElement!==li)li.value=m;
     const b=$('#mup');b.disabled=!ty;b.textContent=ty==='file'?(me?'Playing':'Play'):(ty?'Open':'Play');b.classList.toggle('alt',!me);
@@ -832,6 +864,7 @@ function dm(code){
     const t=$('#ct-mu');if(t){t.disabled=!(m||MU.file||SP.uri);t.textContent=pl?'Pause music':'Play music';t.classList.toggle('alt',!pl)}
     if(ty==='spotify'&&m!==SP.link){SP.link=m;spShow(m,false)}
     const e=$('#e-mu');if(e)e.classList.toggle('on',pl);
+    placeHost();
   }
   function wxOf(id){return(imgs.find(x=>x.id===id)||{}).wx||'auto'}
   function areaId(){const v=curView();return v==='map'?live.mapId:v==='scene'?live.backgroundId:null}
@@ -841,7 +874,7 @@ function dm(code){
     const v=curView(),on=(id,a)=>{const e=$(id);if(e)e.classList.toggle('alt',!a)};
     on('#cv-bg',v==='scene'&&!!live.backgroundId&&!live.bgOff);on('#cv-map',v==='map');on('#cv-shop',v==='shop');on('#cv-board',v==='board');
     on('#ct-wx',!!live.wxOn);on('#ct-snd',!live.sndOff);{const sv=$('#sndvol');if(sv&&document.activeElement!==sv)sv.value=Math.round((live.sndVol??.7)*100)}on('#ct-night',todOf(live)!=='day');on('#ct-tok',!live.tokOff);
-    $('#ct-night').textContent={day:'Day',dawn:'Dawn',night:'Night'}[todOf(live)];
+    $('#ct-night').textContent={day:'Day',dusk:'Dusk',night:'Night'}[todOf(live)];
     const eye=(id,a)=>{const e=$('#e-'+id);if(e)e.classList.toggle('on',!!a)},act=t=>!live.tokOff&&imgs.some(i=>i.type===t&&(live.visibleNpcIds||[]).includes(i.id));
     eye('bg',v==='scene'&&live.backgroundId&&!live.bgOff);eye('map',v==='map');eye('sh',v==='shop');eye('q',v==='board');eye('wx',live.wxOn);eye('np',act('npc'));eye('mo',act('monster'));
   }
@@ -872,7 +905,8 @@ function dm(code){
   const updPre=patch=>saveG({presets:G.presets.map(p=>p.id===G.cur?{...p,...patch}:p)});
   $('#pn').onchange=e=>updPre({name:e.target.value.trim()||'Preset'});
   $('#mulink').onchange=async e=>{const aid=areaId();if(!aid)return;await updateDoc(doc(IM,aid),{music:e.target.value.trim()})};
-  $('#muvol').oninput=e=>{if(MU.el)MU.el.volume=e.target.value/100};
+  $('#muvol').oninput=e=>{if(MU.out)MU.out.gain.setTargetAtTime(+e.target.value/100,MU.ctx.currentTime,.05)};
+  $('#d-mu').addEventListener('toggle',placeHost);addEventListener('scroll',placeHost,true);addEventListener('resize',placeHost);unsubs.push(()=>{removeEventListener('scroll',placeHost,true);removeEventListener('resize',placeHost)});
   let sv0=0;const sendVol=v=>set({sndVol:v});$('#sndvol').oninput=e=>{const n=Date.now();if(n-sv0>250){sv0=n;sendVol(+e.target.value/100)}};$('#sndvol').onchange=e=>sendVol(+e.target.value/100);
   unsubs.push(()=>{if(MU.el)MU.el.pause()});
   $('#wxarea').onchange=async e=>{const v=curView(),aid=areaId(),val=e.target.value;if(!aid)return;await updateDoc(doc(IM,aid),{wx:val});await set(v==='map'?{mapWx:val}:{bgWx:val})};
@@ -969,7 +1003,7 @@ function dm(code){
     if(a==='wxset')set({wx:id,wxOn:true});
     if(a==='wxwind')set({wind:+id,wxOn:true});
     if(a==='wxsnow')set({cold:!live.cold});
-    if(a==='night'){const nx=todOf(live)==='day'?'dawn':todOf(live)==='dawn'?'night':'day';set({tod:nx,night:nx==='night'})}
+    if(a==='night'){const nx=todOf(live)==='day'?'dusk':todOf(live)==='dusk'?'night':'day';set({tod:nx,night:nx==='night'})}
     if(a==='pm'){const w=$('.wrap'),p=w.classList.toggle('play');localStorage.setItem('play',p?'1':'0');t.textContent=p?'Show editing':'Hide editing'}
     if(a==='wxfx'){wxFxSel=wxFxSel===id?null:id;wxLast='';wxDraw()}
     if(a==='wxinfo'){wxRulesOn=!wxRulesOn;wxLast='';wxDraw()}
