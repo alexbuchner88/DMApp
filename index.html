@@ -247,6 +247,13 @@ input[type=checkbox]{min-height:0;width:20px;height:20px;padding:0;flex:none}
 #pvf{position:absolute;left:0;top:0;width:1280px;height:800px;border:0;transform-origin:0 0;pointer-events:none;background:#000}
 .pvbox #mc{position:absolute;inset:0;width:100%;height:100%;max-height:none;aspect-ratio:auto;border:0;border-radius:0}
 #stage.pv #ver,#stage.pv .snd{display:none!important}
+
+.rbox button.day{margin-left:auto;padding:2px 12px;border:1px solid var(--gold2);border-radius:6px;background:#0005;color:var(--gold);font:700 15px Cinzel,serif;cursor:pointer}
+.pvtools{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:6px 8px;background:linear-gradient(#3a2212,#22120a);color:var(--parch)}
+.pvtools .btn{min-height:30px;padding:2px 10px;font-size:12px}
+.pvtools label{display:flex;align-items:center;gap:4px;font:13px Almendra,serif}
+.pvtools input[type=number]{width:64px;min-height:28px;padding:2px 6px;font-size:14px}
+.pvwin.big{width:min(98vw,calc((100vh - 120px)*1.6));right:1vw}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -399,7 +406,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-05 r';
+const VER='2026-11-05 s';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -675,7 +682,7 @@ const AMBS=['drip','torch','magic','dark','haunt','water','fire','moon','fly','f
 const todFor=L=>{const e=effWx(L);return(e.area==='none'||e.amb)?'day':todOf(L)};
 function wxBoxHTML(cur,w,L,role,day,sel,area,open){
   const cd=!!L.cold,season=L.season||(cd?'winter':'normal'),x=WXS.find(y=>y.id===cur)||WXS[0],ic=Array.isArray(x.i)?x.i[cd?1:0]:x.i,inf=wxInfo(cur,w,season),dm=role==='dm';
-  const head=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${esc(wname(cur,season,cd))}</b><small>Wind: ${WINDS[w]}</small></div>${day!=null?`<span class="day">Day ${day}</span>`:''}${dm&&WXJ?'<button class="info" data-a="wxinfo" title="Rules">i</button>':''}`;
+  const head=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${esc(wname(cur,season,cd))}</b><small>Wind: ${WINDS[w]}</small></div>${day!=null?(dm?`<button class="day" data-a="wxday" title="Set or reset the day number">Day ${day}</button>`:`<span class="day">Day ${day}</span>`):''}${dm&&WXJ?'<button class="info" data-a="wxinfo" title="Rules">i</button>':''}`;
   let stats='',list='',rules='';
   const an=area?`<div class="stats"><span>${area==='none'||AMBS.includes(area)?'This area: no weather shown':'This area: weather set by the area'}</span></div>`:'';
   if(inf){
@@ -797,7 +804,8 @@ function dm(code){
   const link=location.origin+location.pathname+'#display/'+code,plink=location.origin+location.pathname+'#player/'+code;
   app.innerHTML=`<div class="wrap"><div id="muhost" class="muhost"><div id="mui"></div></div>
   <button id="pvbtn" class="pvbtn alt" data-a="pvtoggle" title="Preview of the players' screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>
-  <div id="pvwin" class="pvwin"><div class="pvbar"><b>Players' screen</b><span style="flex:1"></span><button class="btn sm alt" id="pvmode" data-a="pvmode" style="display:none">Players' view</button><button class="btn sm alt" data-a="pvsize">Size</button><button class="btn sm alt" data-a="pvtoggle">Close</button></div><div id="pvbox" class="pvbox"><iframe id="pvf" title="Players' screen"></iframe><canvas id="mc"></canvas></div></div>
+  <div id="pvwin" class="pvwin"><div class="pvbar"><b>Players' screen</b><span style="flex:1"></span><button class="btn sm alt" id="pvmode" data-a="pvmode" style="display:none">Players' view</button><button class="btn sm alt" data-a="pvsize">Size</button><button class="btn sm alt" data-a="pvtoggle">Close</button></div><div id="pvbox" class="pvbox"><iframe id="pvf" title="Players' screen"></iframe><canvas id="mc"></canvas></div><div id="pvtools" class="pvtools" style="display:none"><button class="btn sm alt" data-a="mlight">Add light</button><button class="btn sm alt" data-a="mrm">Remove light</button><button class="btn sm alt" data-a="mreset">Reset explored</button><label><input id="mrev" type="checkbox"> Reveal all</label><span class="edit" style="display:contents"><label>Squares <input id="msq" type="number" min="5" value="30"></label><label>Light ft <input id="mft" type="number" min="5" value="30"></label></span></div></div></div>
+  
   <div class="row" style="justify-content:space-between"><div><h1>The Arcane Table</h1><div class="note" style="margin:0">Version ${VER}</div></div><button class="btn sm alt" id="pm" data-a="pm">Hide editing</button></div>
   <details class="panel" id="d-ctl" open><summary><h2>Controls</h2></summary><div class="row">
   <button class="btn" id="cv-bg" data-a="vbg">Background</button><button class="btn" id="cv-map" data-a="vmap">Map</button><button class="btn" id="cv-shop" data-a="vshop">Shop</button><button class="btn" id="cv-board" data-a="vboard">Quest board</button></div>
@@ -810,8 +818,8 @@ function dm(code){
   <button class="btn" data-a="up">Add image</button></div><p class="note" id="msg">Several files at once keep their file names. Rename any image later with the pencil on its tile.</p></details>
   <details class="panel" id="d-wx" open><summary><h2>Weather <span class="eye" id="e-wx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
   <div id="wxres"></div>
-  <div class="row" style="margin-top:10px"><button class="btn" id="wxds" data-a="wxd" data-id="s">Sun</button><button class="btn" id="wxdc" data-a="wxd" data-id="c">Cloud</button><button class="btn" id="wxdr" data-a="wxd" data-id="r">Rain</button></div>
-  <div class="row" style="margin-top:8px"><button class="btn sm" data-a="wxwr">Wind</button><button class="btn sm" data-a="wxquick">New day</button><button class="btn sm alt" data-a="wxundo">Undo</button><button class="btn sm alt edit" data-a="wxrefill">Refill</button><select id="wxsel"></select><select id="wxarea"></select></div>
+  <div class="row" style="margin-top:10px"><button class="btn" id="wxds" data-a="wxd" data-id="s">Sun</button><button class="btn" id="wxdc" data-a="wxd" data-id="c">Cloud</button><button class="btn" id="wxdr" data-a="wxd" data-id="r">Rain</button><button class="btn" data-a="wxwr">Wind</button></div>
+  <div class="row" style="margin-top:8px"><button class="btn sm" data-a="wxquick">New day</button><button class="btn sm alt" data-a="wxundo">Undo</button><button class="btn sm alt edit" data-a="wxrefill">Refill</button><select id="wxsel"></select><select id="wxarea"></select></div>
   <div class="edit"><div id="wxl" style="margin-top:10px"></div><div class="row" id="wxw"></div></div>
   <details class="edit" id="d-wxe" style="margin-top:14px"><summary><h2 style="font-size:17px">Edit season presets</h2></summary>
   <div class="row"><input id="pn" placeholder="Name"><label><input id="pc" type="checkbox"> Cold season</label><label><input id="ph" type="checkbox"> Hot season</label></div>
@@ -824,15 +832,7 @@ function dm(code){
   <div id="mue"></div>
   <div class="edit" style="margin-top:8px"><input id="mulink" placeholder="Spotify link or audio file for this background or map" style="width:100%" disabled><label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input id="autitle" type="checkbox" disabled> Show the name as a title card on the tablet</label></div></details>
   <details class="panel" id="d-bg" open><summary><h2>Backgrounds <span id="cb"></span><span id="bgn"></span><span class="eye" id="e-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="bgs"></div></details>
-  <details class="panel" id="d-mp" open><summary><h2>Maps <span id="cmp"></span></h2></summary><div class="grid" id="mps"></div></details>
-  <details class="panel" id="d-map" open><summary><h2>Map <span id="mpn"></span><span class="eye" id="e-map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
-  
-  <div class="row" style="margin-top:10px">
-  <button class="btn sm alt" data-a="mlight">Add light</button><button class="btn sm alt" data-a="mrm">Remove light</button><button class="btn sm alt" data-a="mreset">Reset explored</button></div>
-  <div class="row" style="margin-top:10px"><label>Grid squares across <input id="msq" type="number" min="5" value="30" style="width:90px"></label>
-  <label>Light radius (ft) <input id="mft" type="number" min="5" value="30" style="width:90px"></label>
-  <label><input id="mrev" type="checkbox"> Reveal whole map</label></div>
-  <p class="note">Drag to pan. Pinch or use the mouse wheel to zoom. Drag a purple dot to move a light. Areas the light has passed stay dimly visible.</p></details>
+  <details class="panel" id="d-mp" open><summary><h2>Maps <span id="cmp"></span><span id="mpn"></span><span class="eye" id="e-map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="mps"></div></details>
   <details class="panel" id="d-np" open><summary><h2>NPCs <span id="cn"></span><span class="eye" id="e-np"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="nps"></div></details>
   <details class="panel" id="d-mo" open><summary><h2>Monsters <span id="cm"></span><span class="eye" id="e-mo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="mos"></div></details>
   <details class="panel" id="d-q" open><summary><h2>Quests <span id="cq"></span><span class="eye" id="e-q"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
@@ -965,7 +965,7 @@ function dm(code){
   }
   let pvOn=localStorage.getItem('pvOn')==='1',pvBig=localStorage.getItem('pvBig')==='1',pvPl=false,lastV=null;
   const pvLink=link+'/preview';
-  function pvFit(){const f=$('#pvf'),b=$('#pvbox');if(f&&b&&b.clientWidth)f.style.transform='scale('+(b.clientWidth/1280)+')'}
+  function pvFit(){const f=$('#pvf'),b=$('#pvbox');if(f&&b&&b.clientWidth){b.style.height=Math.round(b.clientWidth*.625)+'px';f.style.transform='scale('+(b.clientWidth/1280)+')'}}
   function pvSave(){localStorage.setItem('pvOn',pvOn?'1':'0');localStorage.setItem('pvBig',pvBig?'1':'0')}
   // The preview shows the real player screen in a frame. In map mode it shows the map you control instead, with a switch to the players' view.
   function pvDraw(){
@@ -975,7 +975,7 @@ function dm(code){
     $('#mc').style.display=canvas?'block':'none';
     const f=$('#pvf');if(pvOn){if(!f.getAttribute('src'))f.setAttribute('src',pvLink)}else if(f.getAttribute('src'))f.removeAttribute('src');
     const pm=$('#pvmode');pm.style.display=mapV?'':'none';pm.textContent=pvPl?'DM view':"Players' view";
-    pvFit();if(canvas)drawMap();
+    $('#pvtools').style.display=canvas?'':'none';pvFit();if(canvas)drawMap();
   }
   function pvAuto(){const v=curView();if(v!=='map')pvPl=false;if(v==='map'&&lastV!==null&&lastV!=='map'&&!pvOn){pvOn=true;pvSave()}lastV=v}
   function wxOf(id){return(imgs.find(x=>x.id===id)||{}).wx||'auto'}
@@ -1101,7 +1101,7 @@ function dm(code){
   $('#msq').onchange=e=>saveM({sq:Math.max(5,+e.target.value||30)});
   $('#mft').onchange=e=>saveM({lft:Math.max(5,+e.target.value||30)});
   $('#mrev').onchange=e=>saveM({rev:e.target.checked});
-  $('#d-map').addEventListener('toggle',()=>drawMap());addEventListener('resize',drawMap);unsubs.push(()=>removeEventListener('resize',drawMap));
+  addEventListener('resize',drawMap);unsubs.push(()=>removeEventListener('resize',drawMap));
   unsubs.push(onSnapshot(L,s=>{live=s.data()||{};mw.set(live.mapId||null);if(!ptr.size&&!tmr&&live.mapView)view={...live.mapView};pvAuto();draw();drawMap()}));
   unsubs.push(onSnapshot(IM,s=>{imgs=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.created-b.created);draw()}));
   unsubs.push(onSnapshot(QC,s=>{qs=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.created-b.created);draw()}));
@@ -1120,6 +1120,7 @@ function dm(code){
     if(a==='night'){const nx=todOf(live)==='day'?'dusk':todOf(live)==='dusk'?'night':'day';set({tod:nx,night:nx==='night'})}
     if(a==='pm'){const w=$('.wrap'),p=w.classList.toggle('play');localStorage.setItem('play',p?'1':'0');t.textContent=p?'Show editing':'Hide editing'}
     if(a==='wxfx'){wxFxSel=wxFxSel===id?null:id;wxLast='';wxDraw()}
+    if(a==='wxday'){const v=prompt('Day number (0 starts again)',String(G.n||0));if(v!==null&&v.trim()!==''&&!isNaN(+v))saveG({n:Math.max(0,Math.round(+v))}).then(()=>{wxLast='';wxDraw()})}
     if(a==='wxinfo'){wxRulesOn=!wxRulesOn;wxLast='';wxDraw()}
     if(a==='wxd')drawDie(id);
     if(a==='wxwr'){const q=rollWind(1+Math.floor(Math.random()*6),live.wx||'s1');set({wind:q.w,wxOn:true})}
