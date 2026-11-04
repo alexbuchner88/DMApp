@@ -215,6 +215,8 @@ summary h2{display:flex;align-items:center;gap:.4em}
 .rbox .chip.nerf::after{content:"▼";font-size:8px;margin-left:1px}
 .rbox .chip.on{background:#fff2;box-shadow:0 0 0 1px currentColor}
 .rbox .fxtext{padding:6px 10px;border-radius:4px;background:#0006;color:var(--parch);font:15px/1.3 Almendra,serif}
+
+.snd{position:absolute;left:3vmin;bottom:3vmin;z-index:9;display:none;padding:10px 16px;border-radius:24px;border:2px solid var(--gold);background:linear-gradient(#5b3820,#37200f);color:var(--gold);font:700 16px Cinzel,serif;cursor:pointer}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -256,7 +258,7 @@ function home(){
 
 async function display(code){
   app.onclick=null;
-  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="night"></div><canvas id="mapc"></canvas><canvas id="wx"></canvas><div id="npcs"></div><div id="wxb"></div><div id="board"><div id="papers"></div></div><div id="shopc"><div id="shopt"></div><div id="shopg"></div></div><div id="shopd"></div><div id="ver">'+VER+'</div></div>';
+  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="night"></div><canvas id="mapc"></canvas><canvas id="wx"></canvas><div id="npcs"></div><div id="wxb"></div><div id="board"><div id="papers"></div></div><div id="shopc"><div id="shopt"></div><div id="shopg"></div></div><div id="shopd"></div><div id="ver">'+VER+'</div><button id="snd" class="snd">Tap to enable sound</button></div>';
   try{navigator.wakeLock&&navigator.wakeLock.request('screen')}catch(e){}
   const cache=new Map();
   const get=async id=>{if(!id)return{};if(!cache.has(id)){const s=await getDoc(doc(db,'sessions',code,'images',id));cache.set(id,s.exists()?s.data():{})}return cache.get(id)};
@@ -287,6 +289,15 @@ async function display(code){
   const WXE=makeWeather($('#wx'));unsubs.push(()=>WXE.stop());
   let wk='';const renderWx=()=>{$('#stage').classList.toggle('night',!!d.night);kick();const ew=effWx(d),on=ew.on,s=WXS.find(x=>x.id===ew.wx)||WXS[0],w=Math.min(3,ew.wind|0),cd=!!d.cold,nt=!!d.night,ss=d.season||(cd?'winter':'normal'),k=[on,s.id,w,cd,nt,ss].join();if(k===wk)return;wk=k;WXE.set(on?s:null,w,cd,nt);$('#wxb').innerHTML=on?wxBadge(s,w,cd,ss):''};
   WXJP.then(()=>{wk='';renderWx()});
+  const MX=makeMixer();unsubs.push(()=>MX.stop());
+  const applyAudio=()=>{
+    const e=effWx(d),cd=!!d.cold,w=Math.min(3,e.wind|0),A=AUJ,W=(A&&A.weather)||{};
+    const wf=A&&e.on?(W[e.wx+(cd?'c':'')]??W[e.wx]??''):'',nf=A&&e.on&&w>0?((A.wind||{})[w]||''):'';
+    MX.set({weather:wf,wind:nf},d.sndOff?0:(d.sndVol??.7));
+    const b=$('#snd');if(b)b.style.display=(A&&!MX.ready)?'block':'none';
+  };
+  $('#snd').onclick=async()=>{await MX.enable();applyAudio()};
+  AUP.then(()=>applyAudio());
   const rot=id=>{let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))%7;return h-3};
   const paint=async()=>{
     const my=++seq,board=!!d.showBoard,shopOn=!board&&!!d.showShop&&!!d.shopId,mapOn=!board&&!shopOn&&!!d.showMap&&!!d.mapId;
@@ -309,7 +320,7 @@ async function display(code){
     const pk=posted.map(q=>q.id+q.title+q.text+q.done).join('|'),pch=pk!==papKey;papKey=pk;
     if(pch)$('#papers').innerHTML=posted.map(q=>`<article class="paper ${q.done?'done':''}" style="--r:${rot(q.id)}"><i class="pin"></i><div class="in"><h3>${esc(q.title||'')}</h3><p>${esc(q.text||'')}</p></div></article>`).join('');
   };
-  unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};renderWx();paint()}));
+  unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};renderWx();applyAudio();paint()}));
   unsubs.push(onSnapshot(collection(db,'sessions',code,'quests'),s=>{qs=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>a.created-b.created);paint()}));
 }
 
@@ -346,7 +357,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-04 l';
+const VER='2026-11-04 m';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -522,7 +533,8 @@ const FXI={
  cloud:'<path d="M7 18h10a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6 1.5A3.4 3.4 0 0 0 7 18z"/>',
  focus:'<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
  thermo:'<path d="M10 14V5a2 2 0 1 1 4 0v9a4 4 0 1 1-4 0z"/><path d="M12 9v7"/>',
- drop:'<path d="M12 3c4 5 6 8 6 11a6 6 0 0 1-12 0c0-3 2-6 6-11z"/>'};
+ drop:'<path d="M12 3c4 5 6 8 6 11a6 6 0 0 1-12 0c0-3 2-6 6-11z"/>',
+ heart:'<path d="M12 21s-8-5.5-8-11a4.5 4.5 0 0 1 8-2.5A4.5 4.5 0 0 1 20 10c0 5.5-8 11-8 11z"/>'};
 const ico=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${FXI[n]||FXI.dot}</svg>`;
 const DEFCATS=[{key:'senses',name:'Senses',icon:'eye'},{key:'damage',name:'Damage',icon:'flame'},{key:'movement',name:'Movement',icon:'mountain'},{key:'combat',name:'Combat',icon:'bow'},{key:'survival',name:'Survival',icon:'thermo'}];
 const AREAWX=[['auto','Area: follow weather'],['none','Area: no weather'],['s1','Area: Clear'],['s2','Area: Sunny'],['c1','Area: Cloudy'],['c2','Area: Overcast'],['c3','Area: Fog'],['r1','Area: Drizzle'],['r2','Area: Rain'],['r3','Area: Downpour']];
@@ -587,6 +599,33 @@ function player(code){
   render();
   WXJP.then(()=>{last='';render()});
 }
+let AUJ=null;
+const AUP=typeof fetch==='function'?fetch('audio.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('missing');return r.json()}).then(j=>{AUJ=j;return j}).catch(()=>null):Promise.resolve(null);
+function makeMixer(){
+  let ctx=null,on=false;const ch={};
+  const fade=()=>(AUJ&&AUJ.fadeSeconds)||2,url=f=>((AUJ&&AUJ.folder)||'audio/')+f;
+  const level=(c,m)=>m*((AUJ&&AUJ.volume&&AUJ.volume[c])??.7);
+  const kill=o=>{o.g.gain.setTargetAtTime(0,ctx.currentTime,fade()/3);setTimeout(()=>{try{o.el.pause();o.src.disconnect();o.g.disconnect()}catch(e){}},fade()*1000+400)};
+  function start(c,f){
+    if(ch[c]){kill(ch[c]);ch[c]=null}
+    if(!f)return;
+    const el=new Audio(url(f));el.loop=true;el.preload='auto';el.onerror=()=>{};
+    const src=ctx.createMediaElementSource(el),g=ctx.createGain();g.gain.value=0;src.connect(g);g.connect(ctx.destination);
+    const p=el.play();if(p&&p.catch)p.catch(()=>{});
+    ch[c]={el,src,g,f};
+  }
+  return{
+    get ready(){return on&&!!ctx&&ctx.state==='running'},
+    async enable(){const C=window.AudioContext||window.webkitAudioContext;if(!C)return false;if(!ctx)ctx=new C();try{await ctx.resume()}catch(e){}on=true;return ctx.state==='running'},
+    set(want,master){
+      if(!on||!ctx)return;
+      for(const c of['weather','wind']){const f=want[c]||'';
+        if(!ch[c]&&!f)continue;
+        if(!ch[c]||ch[c].f!==f)start(c,f);
+        if(ch[c])ch[c].g.gain.setTargetAtTime(level(c,master),ctx.currentTime,fade()/3)}},
+    stop(){for(const c in ch){if(ch[c])try{ch[c].el.pause()}catch(e){}}}
+  };
+}
 function parseTSV(t){
   const rows=[];let row=[],cell='',q=false;
   for(let i=0;i<t.length;i++){const ch=t[i];
@@ -614,7 +653,7 @@ function dm(code){
   app.innerHTML=`<div class="wrap"><div class="row" style="justify-content:space-between"><div><h1>The Arcane Table</h1><div class="note" style="margin:0">Version ${VER}</div></div><button class="btn sm alt" id="pm" data-a="pm">Hide editing</button></div>
   <details class="panel" id="d-ctl" open><summary><h2>Controls</h2></summary><div class="row">
   <button class="btn" id="cv-bg" data-a="vbg">Background</button><button class="btn" id="cv-map" data-a="vmap">Map</button><button class="btn" id="cv-shop" data-a="vshop">Shop</button><button class="btn" id="cv-board" data-a="vboard">Quest board</button></div>
-  <div class="row" style="margin-top:8px"><button class="btn" id="ct-wx" data-a="wxon">Weather</button><button class="btn" id="ct-night" data-a="night">Day</button><button class="btn" id="ct-tok" data-a="tok">Tokens</button>
+  <div class="row" style="margin-top:8px"><button class="btn" id="ct-wx" data-a="wxon">Weather</button><button class="btn" id="ct-night" data-a="night">Day</button><button class="btn" id="ct-tok" data-a="tok">Tokens</button><button class="btn" id="ct-snd" data-a="snd">Sound</button><input id="sndvol" type="range" min="0" max="100" value="70" title="Tablet volume" style="width:110px">
   <button class="btn sm alt edit" data-a="clear">Clear tokens</button><button class="btn sm alt edit" data-a="home">Change session</button></div>
   <div class="edit"><p class="note">Player display link for the tablet:</p><input id="lnk" readonly value="${esc(link)}" style="width:100%"><p class="note">Player link for phones:</p><input id="lnk2" readonly value="${esc(plink)}" style="width:100%"></div></details>
   <details class="panel edit" id="d-up" open><summary><h2>Add to the library</h2></summary><div class="row">
@@ -632,6 +671,10 @@ function dm(code){
   <p class="note" style="margin:10px 0 4px">Cloud die on Sun 1, 2, 3 gives:</p><div class="row"><select id="tc0"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tc1"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tc2"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select></div>
   <p class="note" style="margin:10px 0 4px">Rain die on Sun 1, 2, 3 gives:</p><div class="row"><select id="tr0"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tr1"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tr2"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select></div>
   <div class="row" style="margin-top:10px"><button class="btn sm alt" data-a="pdup">Duplicate preset</button><button class="btn sm alt" data-a="pdel">Delete preset</button></div></details></details>
+  <details class="panel" id="d-mu" open><summary><h2>Music <span id="mun"></span><span class="eye" id="e-mu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
+  <div class="row"><button class="btn" id="mup" data-a="mplay" disabled>Play</button><button class="btn sm alt" id="mus" data-a="mstop" disabled>Stop</button><input id="muvol" type="range" min="0" max="100" value="70" title="Volume on this device" style="width:110px"></div>
+  <div id="mue"></div>
+  <div class="edit" style="margin-top:8px"><input id="mulink" placeholder="Spotify link or audio file for this background or map" style="width:100%" disabled></div></details>
   <details class="panel" id="d-bg" open><summary><h2>Backgrounds <span id="cb"></span><span class="eye" id="e-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="bgs"></div></details>
   <details class="panel" id="d-mp" open><summary><h2>Maps <span id="cmp"></span></h2></summary><div class="grid" id="mps"></div></details>
   <details class="panel" id="d-map" open><summary><h2>Map <span id="mpn"></span><span class="eye" id="e-map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
@@ -674,10 +717,31 @@ function dm(code){
     $('#cb').textContent='('+bg.length+')';$('#cn').textContent='('+np.length+')';$('#cq').textContent='('+qs.length+')';
     
     
-    shopDraw();wxDraw();ctlDraw();
+    shopDraw();wxDraw();ctlDraw();muDraw();
     const qb=(a,id,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#qs').innerHTML=qs.map(q=>`<div class="qrow ${q.posted?'on':''}"><div class="qt"><b>${esc(q.title||'Untitled')}${q.done?' (done)':''}</b><p>${esc(q.text||'')}</p></div><div class="row">${qb('qcur',q.id,live.curQuest===q.id?'Current':'Set current',live.curQuest===q.id?0:1)}${qb('qpin',q.id,q.posted?'Unpin':'Pin')}${qb('qdone',q.id,q.done?'Reopen':'Done',1)}${qb('qedit',q.id,'Edit',1,1)}${qb('qdel',q.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No quests yet.</p>';
   };
+  const MU={el:null,file:'',emb:''};
+  const mtype=u=>!u?'':/^https?:\/\//i.test(u)?(/open\.spotify\.com/i.test(u)?'spotify':'link'):'file';
+  const mpath=f=>f.includes('/')?f:'audio/'+f;
+  function playFile(f){
+    if(!MU.el){MU.el=new Audio();MU.el.loop=true;MU.el.onplay=MU.el.onpause=()=>muDraw()}
+    MU.file=f;MU.el.src=mpath(f);MU.el.volume=(+$('#muvol').value||70)/100;
+    const p=MU.el.play();if(p&&p.catch)p.catch(()=>{});muDraw();
+  }
+  function stopMusic(){if(MU.el)MU.el.pause();MU.file='';muDraw()}
+  function autoMusic(id){const m=((imgs.find(x=>x.id===id)||{}).music||'').trim();if(m&&mtype(m)==='file')playFile(m)}
+  function muDraw(){
+    const aid=areaId(),a=imgs.find(x=>x.id===aid),m=((a||{}).music||'').trim(),ty=mtype(m),pl=!!(MU.el&&!MU.el.paused),me=pl&&MU.file===m;
+    $('#mun').textContent=a?'('+a.name+')':'';
+    const li=$('#mulink');li.disabled=!aid;if(document.activeElement!==li)li.value=m;
+    const b=$('#mup');b.disabled=!ty;b.textContent=ty==='file'?(me?'Playing':'Play'):(ty?'Open':'Play');b.classList.toggle('alt',!me);
+    $('#mus').disabled=!pl;
+    const sp=ty==='spotify'&&$('#d-mu').open&&/open\.spotify\.com\/(?:intl-[a-z]+\/)?(track|playlist|album|episode|show|artist)\/([A-Za-z0-9]+)/.exec(m);
+    const eh=sp?`<iframe src="https://open.spotify.com/embed/${sp[1]}/${sp[2]}?utm_source=generator" width="100%" height="${sp[1]==='track'?80:152}" style="border:0;margin-top:10px" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`:'';
+    if(eh!==MU.emb){MU.emb=eh;$('#mue').innerHTML=eh}
+    const e=$('#e-mu');if(e)e.classList.toggle('on',pl);
+  }
   function wxOf(id){return(imgs.find(x=>x.id===id)||{}).wx||'auto'}
   function areaId(){const v=curView();return v==='map'?live.mapId:v==='scene'?live.backgroundId:null}
   function curView(){return live.showBoard?'board':(live.showShop&&live.shopId)?'shop':(live.showMap&&live.mapId)?'map':'scene'}
@@ -685,7 +749,7 @@ function dm(code){
     const mm=imgs.find(i=>i.id===live.mapId);$('#mpn').textContent=mm?'('+mm.name+')':'';
     const v=curView(),on=(id,a)=>{const e=$(id);if(e)e.classList.toggle('alt',!a)};
     on('#cv-bg',v==='scene'&&!!live.backgroundId);on('#cv-map',v==='map');on('#cv-shop',v==='shop');on('#cv-board',v==='board');
-    on('#ct-wx',!!live.wxOn);on('#ct-night',!!live.night);on('#ct-tok',!live.tokOff);
+    on('#ct-wx',!!live.wxOn);on('#ct-snd',!live.sndOff);{const sv=$('#sndvol');if(sv&&document.activeElement!==sv)sv.value=Math.round((live.sndVol??.7)*100)}on('#ct-night',!!live.night);on('#ct-tok',!live.tokOff);
     $('#ct-night').textContent=live.night?'Night':'Day';
     const eye=(id,a)=>{const e=$('#e-'+id);if(e)e.classList.toggle('on',!!a)},act=t=>!live.tokOff&&imgs.some(i=>i.type===t&&(live.visibleNpcIds||[]).includes(i.id));
     eye('bg',v==='scene'&&live.backgroundId);eye('map',v==='map');eye('sh',v==='shop');eye('q',v==='board');eye('wx',live.wxOn);eye('np',act('npc'));eye('mo',act('monster'));
@@ -716,6 +780,9 @@ function dm(code){
   unsubs.push(onSnapshot(GD,s=>{if(s.exists())G={...G,...s.data()};draw()}));
   const updPre=patch=>saveG({presets:G.presets.map(p=>p.id===G.cur?{...p,...patch}:p)});
   $('#pn').onchange=e=>updPre({name:e.target.value.trim()||'Preset'});
+  $('#mulink').onchange=async e=>{const aid=areaId();if(!aid)return;await updateDoc(doc(IM,aid),{music:e.target.value.trim()})};
+  $('#muvol').oninput=e=>{if(MU.el)MU.el.volume=e.target.value/100};
+  $('#d-mu').addEventListener('toggle',()=>{MU.emb='x';muDraw()});unsubs.push(()=>{if(MU.el)MU.el.pause()});
   $('#wxarea').onchange=async e=>{const v=curView(),aid=areaId(),val=e.target.value;if(!aid)return;await updateDoc(doc(IM,aid),{wx:val});await set(v==='map'?{mapWx:val}:{bgWx:val})};
   $('#wxsel').onchange=async e=>{const P=G.presets.find(p=>p.id===e.target.value);if(P){await saveG({cur:P.id,bag:{...P.d},day:0});await set({cold:!!P.cold,season:seasonP(P)});wxDraw();syncPre(true)}};
   $('#pc').onchange=e=>{updPre({cold:e.target.checked});set({cold:e.target.checked,season:seasonP(curPre())})};
@@ -801,7 +868,7 @@ function dm(code){
   const set=o=>setDoc(L,o,{merge:true});
   app.onclick=async e=>{
     const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,id=t.dataset.id;
-    if(a==='bg')set({backgroundId:live.backgroundId===id?null:id,bgWx:wxOf(id)});
+    if(a==='bg'){if(live.backgroundId!==id)autoMusic(id);set({backgroundId:live.backgroundId===id?null:id,bgWx:wxOf(id)})}
     if(a==='npc'&&MO&&live.showMap&&!(live.visibleNpcIds||[]).includes(id)){MS.tk={...(MS.tk||{}),[id]:{x:view.x,y:view.y}};dirty=true;flush()}
     if(a==='npc')set({visibleNpcIds:(live.visibleNpcIds||[]).includes(id)?arrayRemove(id):arrayUnion(id)});
     if(a==='black')set({backgroundId:null});
@@ -816,11 +883,14 @@ function dm(code){
     if(a==='wxinfo'){wxRulesOn=!wxRulesOn;wxLast='';wxDraw()}
     if(a==='wxd')drawDie(id);
     if(a==='wxwr'){const q=rollWind(1+Math.floor(Math.random()*6),live.wx||'s1');set({wind:q.w,wxOn:true})}
-    if(a==='vbg'){if(curView()==='scene'&&live.backgroundId)set({backgroundId:null});else set({showBoard:false,showShop:false,showMap:false})}
-    if(a==='vmap'){if(curView()==='map')set({showMap:false});else{const mid=live.mapId||(imgs.find(i=>i.type==='map')||{}).id;if(mid)set({mapId:mid,mapWx:wxOf(mid),...(live.mapId?{}:{mapView:{x:.5,y:.5,ft:60}}),showMap:true,showBoard:false,showShop:false})}}
+    if(a==='vbg'){if(curView()==='scene'&&live.backgroundId)set({backgroundId:null});else{set({showBoard:false,showShop:false,showMap:false});if(live.backgroundId)autoMusic(live.backgroundId)}}
+    if(a==='vmap'){if(curView()==='map')set({showMap:false});else{const mid=live.mapId||(imgs.find(i=>i.type==='map')||{}).id;if(mid)autoMusic(mid);if(mid)set({mapId:mid,mapWx:wxOf(mid),...(live.mapId?{}:{mapView:{x:.5,y:.5,ft:60}}),showMap:true,showBoard:false,showShop:false})}}
     if(a==='vshop'){if(curView()==='shop')set({showShop:false,shopItemId:null});else{const sid=selShop||live.shopId||(shops[0]||{}).id;if(sid)set({showShop:true,shopId:sid,shopRoot:(shops.find(x=>x.id===sid)||{})._r||code,shopItemId:null,showBoard:false,showMap:false})}}
     if(a==='vboard'){if(curView()==='board')set({showBoard:false});else set({showBoard:true,showMap:false,showShop:false})}
     if(a==='tok')set({tokOff:!live.tokOff});
+    if(a==='snd')set({sndOff:!live.sndOff});
+    if(a==='mplay'){const m=((imgs.find(x=>x.id===areaId())||{}).music||'').trim(),ty=mtype(m);if(ty==='file')playFile(m);else if(ty)window.open(m,'_blank','noopener')}
+    if(a==='mstop')stopMusic();
     if(a==='wxquick')quick();
     if(a==='wxroll'){const q=rollWind(+id,live.wx||'s1');wxMsg=q.txt;wxDraw();set({wind:q.w,wxOn:true})}
     if(a==='wxundo'){const h=(G.hist||[]).slice(-1)[0];if(h){await set({wx:h.pw,wind:h.pwind});await saveG({bag:h.pbag,day:h.pday,n:h.pn||0,hist:G.hist.slice(0,-1)});wxMsg='Last draw undone.';wxDraw()}}
@@ -889,7 +959,7 @@ function dm(code){
       try{await navigator.clipboard.writeText(t);msg.className='note';msg.textContent='Copied '+(t.split('\n').length-1)+' items. Paste them into your sheet.'}
       catch(e){$('#imt').value=t;msg.className='note';msg.textContent='Clipboard blocked. The table is in the box above.'}}
     if(a==='itshow'){const i=items.find(x=>x.id===id);if(i){const on=live.showShop&&live.shopId===i.shopId;set(on?{shopItemId:live.shopItemId===id?null:id}:{showShop:true,shopId:i.shopId,shopRoot:i._r,shopItemId:id,showBoard:false,showMap:false})}}
-    if(a==='map')set({mapId:id,mapWx:wxOf(id),mapView:{x:.5,y:.5,ft:60}});
+    if(a==='map'){autoMusic(id);set({mapId:id,mapWx:wxOf(id),mapView:{x:.5,y:.5,ft:60}})}
     if(a==='mshow'&&live.mapId)set({showMap:!live.showMap,...(!live.showMap?{showBoard:false,showShop:false}:{})});
     if(a==='mlight'&&MO){const L=lights().map(l=>({...l})),n={x:view.x,y:view.y};L.push(n);MS.lights=L;addEx(n);dirty=true;flush();drawMap()}
     if(a==='mrm'&&MO&&lights().length>1){MS.lights=lights().slice(0,-1);dirty=true;flush();drawMap()}

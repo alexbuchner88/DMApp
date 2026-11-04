@@ -1,0 +1,19 @@
+{
+  "folder": "audio/",
+  "fadeSeconds": 2,
+  "volume": { "weather": 0.7, "wind": 0.6 },
+  "weather": {
+    "c3":  "fog.mp3",
+    "r1":  "rain-light.mp3",
+    "r2":  "rain.mp3",
+    "r3":  "rain-heavy.mp3",
+    "r1c": "snow-light.mp3",
+    "r2c": "snow.mp3",
+    "r3c": "blizzard.mp3"
+  },
+  "wind": {
+    "1": "wind-breeze.mp3",
+    "2": "wind-gust.mp3",
+    "3": "wind-storm.mp3"
+  }
+}
