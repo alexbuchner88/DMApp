@@ -1,7 +1,16 @@
 {
+  "notes": "Files go in the folder below. loopTrim: seconds skipped at the start and end of every weather track. loopFade: crossfade in seconds when a track restarts. volume: level per channel. gain: multiplier per file name (1 = unchanged, 2 = twice as loud, 0.5 = half). Use gain to even out tracks.",
   "folder": "audio/",
   "fadeSeconds": 2,
+  "loopTrim": 1,
+  "loopFade": 1,
   "volume": { "weather": 0.7, "wind": 0.6 },
+  "gain": {
+    "rain-light.mp3": 2.0,
+    "fog.mp3": 2.0,
+    "wind-breeze.mp3": 2.5,
+    "rain.mp3": 0.5
+  },
   "weather": {
     "c3":  "fog.mp3",
     "r1":  "rain-light.mp3",

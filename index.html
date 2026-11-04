@@ -217,6 +217,8 @@ summary h2{display:flex;align-items:center;gap:.4em}
 .rbox .fxtext{padding:6px 10px;border-radius:4px;background:#0006;color:var(--parch);font:15px/1.3 Almendra,serif}
 
 .snd{position:absolute;left:3vmin;bottom:3vmin;z-index:9;display:none;padding:10px 16px;border-radius:24px;border:2px solid var(--gold);background:linear-gradient(#5b3820,#37200f);color:var(--gold);font:700 16px Cinzel,serif;cursor:pointer}
+
+.selname{color:#8a4b10;font-weight:400;font-style:italic;margin-left:.2em}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -357,7 +359,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-04 m';
+const VER='2026-11-04 n';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -603,16 +605,33 @@ let AUJ=null;
 const AUP=typeof fetch==='function'?fetch('audio.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('missing');return r.json()}).then(j=>{AUJ=j;return j}).catch(()=>null):Promise.resolve(null);
 function makeMixer(){
   let ctx=null,on=false;const ch={};
-  const fade=()=>(AUJ&&AUJ.fadeSeconds)||2,url=f=>((AUJ&&AUJ.folder)||'audio/')+f;
-  const level=(c,m)=>m*((AUJ&&AUJ.volume&&AUJ.volume[c])??.7);
-  const kill=o=>{o.g.gain.setTargetAtTime(0,ctx.currentTime,fade()/3);setTimeout(()=>{try{o.el.pause();o.src.disconnect();o.g.disconnect()}catch(e){}},fade()*1000+400)};
+  const A=()=>AUJ||{},fade=()=>A().fadeSeconds||2,trim=()=>A().loopTrim??1,xf=()=>A().loopFade??1,url=f=>(A().folder||'audio/')+f;
+  const level=(c,m,f)=>m*((A().volume&&A().volume[c])??.7)*((A().gain&&A().gain[f])??1);
+  const mkSlot=f=>{const el=new Audio(url(f));el.preload='auto';el.onerror=()=>{};const src=ctx.createMediaElementSource(el),g=ctx.createGain();g.gain.value=1;src.connect(g);return{el,src,g}};
+  const kill=o=>{clearInterval(o.t);o.out.gain.setTargetAtTime(0,ctx.currentTime,fade()/3);setTimeout(()=>{o.slots.forEach(s=>{try{s.el.pause();s.src.disconnect();s.g.disconnect()}catch(e){}});try{o.out.disconnect()}catch(e){}},fade()*1000+400)};
+  const go=el=>{const p=el.play();if(p&&p.catch)p.catch(()=>{})};
+  function tick(o){
+    const a=o.slots[o.cur],b=o.slots[1-o.cur],d=a.el.duration,T=trim(),X=xf();
+    if(!d||!isFinite(d))return;
+    if(d<=2*T+X+1){a.el.loop=true;return}
+    if(!o.xing&&a.el.currentTime>=d-T-X-.12){
+      o.xing=true;const now=ctx.currentTime;
+      try{b.el.currentTime=T}catch(x){}
+      go(b.el);
+      b.g.gain.cancelScheduledValues(now);b.g.gain.setValueAtTime(0,now);b.g.gain.linearRampToValueAtTime(1,now+X);
+      a.g.gain.cancelScheduledValues(now);a.g.gain.setValueAtTime(1,now);a.g.gain.linearRampToValueAtTime(0,now+X);
+      setTimeout(()=>{try{a.el.pause()}catch(x){}o.cur=1-o.cur;o.xing=false},X*1000+150);
+    }
+  }
   function start(c,f){
     if(ch[c]){kill(ch[c]);ch[c]=null}
     if(!f)return;
-    const el=new Audio(url(f));el.loop=true;el.preload='auto';el.onerror=()=>{};
-    const src=ctx.createMediaElementSource(el),g=ctx.createGain();g.gain.value=0;src.connect(g);g.connect(ctx.destination);
-    const p=el.play();if(p&&p.catch)p.catch(()=>{});
-    ch[c]={el,src,g,f};
+    const out=ctx.createGain();out.gain.value=0;out.connect(ctx.destination);
+    const s0=mkSlot(f),s1=mkSlot(f);s0.g.connect(out);s1.g.connect(out);s1.g.gain.value=0;
+    const o={f,out,slots:[s0,s1],cur:0,xing:false,t:0};
+    const begin=()=>{try{if(trim()>0&&s0.el.duration>2*trim()+xf()+1)s0.el.currentTime=trim()}catch(x){}go(s0.el)};
+    if(s0.el.readyState>=1)begin();else s0.el.addEventListener('loadedmetadata',begin,{once:true});
+    o.t=setInterval(()=>tick(o),100);ch[c]=o;
   }
   return{
     get ready(){return on&&!!ctx&&ctx.state==='running'},
@@ -622,8 +641,8 @@ function makeMixer(){
       for(const c of['weather','wind']){const f=want[c]||'';
         if(!ch[c]&&!f)continue;
         if(!ch[c]||ch[c].f!==f)start(c,f);
-        if(ch[c])ch[c].g.gain.setTargetAtTime(level(c,master),ctx.currentTime,fade()/3)}},
-    stop(){for(const c in ch){if(ch[c])try{ch[c].el.pause()}catch(e){}}}
+        if(ch[c])ch[c].out.gain.setTargetAtTime(level(c,master,ch[c].f),ctx.currentTime,fade()/3)}},
+    stop(){for(const c in ch){if(ch[c]){clearInterval(ch[c].t);ch[c].slots.forEach(s=>{try{s.el.pause()}catch(e){}})}}}
   };
 }
 function parseTSV(t){
@@ -653,7 +672,7 @@ function dm(code){
   app.innerHTML=`<div class="wrap"><div class="row" style="justify-content:space-between"><div><h1>The Arcane Table</h1><div class="note" style="margin:0">Version ${VER}</div></div><button class="btn sm alt" id="pm" data-a="pm">Hide editing</button></div>
   <details class="panel" id="d-ctl" open><summary><h2>Controls</h2></summary><div class="row">
   <button class="btn" id="cv-bg" data-a="vbg">Background</button><button class="btn" id="cv-map" data-a="vmap">Map</button><button class="btn" id="cv-shop" data-a="vshop">Shop</button><button class="btn" id="cv-board" data-a="vboard">Quest board</button></div>
-  <div class="row" style="margin-top:8px"><button class="btn" id="ct-wx" data-a="wxon">Weather</button><button class="btn" id="ct-night" data-a="night">Day</button><button class="btn" id="ct-tok" data-a="tok">Tokens</button><button class="btn" id="ct-snd" data-a="snd">Sound</button><input id="sndvol" type="range" min="0" max="100" value="70" title="Tablet volume" style="width:110px">
+  <div class="row" style="margin-top:8px"><button class="btn" id="ct-wx" data-a="wxon">Weather</button><button class="btn" id="ct-night" data-a="night">Day</button><button class="btn" id="ct-tok" data-a="tok">Tokens</button><button class="btn" id="ct-snd" data-a="snd">Sound</button><button class="btn alt" id="ct-mu" data-a="mtoggle" disabled>Play music</button><input id="sndvol" type="range" min="0" max="100" value="70" title="Tablet volume" style="width:110px">
   <button class="btn sm alt edit" data-a="clear">Clear tokens</button><button class="btn sm alt edit" data-a="home">Change session</button></div>
   <div class="edit"><p class="note">Player display link for the tablet:</p><input id="lnk" readonly value="${esc(link)}" style="width:100%"><p class="note">Player link for phones:</p><input id="lnk2" readonly value="${esc(plink)}" style="width:100%"></div></details>
   <details class="panel edit" id="d-up" open><summary><h2>Add to the library</h2></summary><div class="row">
@@ -672,10 +691,10 @@ function dm(code){
   <p class="note" style="margin:10px 0 4px">Rain die on Sun 1, 2, 3 gives:</p><div class="row"><select id="tr0"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tr1"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tr2"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select></div>
   <div class="row" style="margin-top:10px"><button class="btn sm alt" data-a="pdup">Duplicate preset</button><button class="btn sm alt" data-a="pdel">Delete preset</button></div></details></details>
   <details class="panel" id="d-mu" open><summary><h2>Music <span id="mun"></span><span class="eye" id="e-mu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
-  <div class="row"><button class="btn" id="mup" data-a="mplay" disabled>Play</button><button class="btn sm alt" id="mus" data-a="mstop" disabled>Stop</button><input id="muvol" type="range" min="0" max="100" value="70" title="Volume on this device" style="width:110px"></div>
-  <div id="mue"></div>
+  <div class="row"><button class="btn" id="mup" data-a="mplay" disabled>Play</button><button class="btn sm alt" id="mus" data-a="mstop" disabled>Stop</button><button class="btn sm" id="mloop" data-a="mloop">Loop</button><input id="muvol" type="range" min="0" max="100" value="70" title="Volume on this device" style="width:110px"></div>
+  <div id="mue"><div id="mui"></div></div>
   <div class="edit" style="margin-top:8px"><input id="mulink" placeholder="Spotify link or audio file for this background or map" style="width:100%" disabled></div></details>
-  <details class="panel" id="d-bg" open><summary><h2>Backgrounds <span id="cb"></span><span class="eye" id="e-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="bgs"></div></details>
+  <details class="panel" id="d-bg" open><summary><h2>Backgrounds <span id="cb"></span><span id="bgn" class="selname"></span><span class="eye" id="e-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="bgs"></div></details>
   <details class="panel" id="d-mp" open><summary><h2>Maps <span id="cmp"></span></h2></summary><div class="grid" id="mps"></div></details>
   <details class="panel" id="d-map" open><summary><h2>Map <span id="mpn"></span><span class="eye" id="e-map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
   <canvas id="mc"></canvas>
@@ -721,32 +740,67 @@ function dm(code){
     const qb=(a,id,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#qs').innerHTML=qs.map(q=>`<div class="qrow ${q.posted?'on':''}"><div class="qt"><b>${esc(q.title||'Untitled')}${q.done?' (done)':''}</b><p>${esc(q.text||'')}</p></div><div class="row">${qb('qcur',q.id,live.curQuest===q.id?'Current':'Set current',live.curQuest===q.id?0:1)}${qb('qpin',q.id,q.posted?'Unpin':'Pin')}${qb('qdone',q.id,q.done?'Reopen':'Done',1)}${qb('qedit',q.id,'Edit',1,1)}${qb('qdel',q.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No quests yet.</p>';
   };
-  const MU={el:null,file:'',emb:''};
+  const MU={el:null,file:'',loop:localStorage.getItem('muloop')!=='0'};
+  const SP={ctrl:null,uri:'',type:'',link:'',playing:false,pos:0,dur:0,was:false,loading:false,auto:false,api:null,script:null};
   const mtype=u=>!u?'':/^https?:\/\//i.test(u)?(/open\.spotify\.com/i.test(u)?'spotify':'link'):'file';
   const mpath=f=>f.includes('/')?f:'audio/'+f;
+  const spParse=m=>{const x=/open\.spotify\.com\/(?:intl-[a-z]+\/)?(track|playlist|album|episode|show|artist)\/([A-Za-z0-9]+)/.exec(m||'');return x?{type:x[1],id:x[2],uri:'spotify:'+x[1]+':'+x[2]}:null};
+  const spPlay=(ms)=>setTimeout(()=>{try{SP.ctrl.play()}catch(x){}},ms);
+  function spPlayback(e){
+    const d=(e&&e.data)||{};
+    if(MU.loop&&d.isPaused&&SP.was&&SP.dur&&SP.dur-SP.pos<3500){   // the track or playlist just ended: start again
+      SP.was=false;
+      if(SP.type==='track'||SP.type==='episode')SP.ctrl.restart();else SP.ctrl.loadUri(SP.uri);
+      spPlay(700);return;
+    }
+    SP.was=!d.isPaused;SP.playing=!d.isPaused;SP.pos=d.position||0;SP.dur=d.duration||0;muDraw();
+  }
+  function spShow(m,auto){
+    const p=spParse(m);if(!p)return;
+    if(SP.ctrl){if(SP.uri!==p.uri){SP.uri=p.uri;SP.type=p.type;SP.ctrl.loadUri(p.uri);if(auto)spPlay(800)}return}
+    if(SP.loading)return;SP.loading=true;SP.uri=p.uri;SP.type=p.type;SP.auto=!!auto;
+    const mk=api=>api.createController($('#mui'),{uri:p.uri,width:'100%',height:p.type==='track'?80:152},c=>{SP.ctrl=c;SP.loading=false;c.addListener('playback_update',spPlayback);if(SP.auto)spPlay(1000)});
+    if(SP.api)return mk(SP.api);
+    window.onSpotifyIframeApiReady=api=>{SP.api=api;mk(api)};
+    if(!SP.script){SP.script=document.createElement('script');SP.script.src='https://open.spotify.com/embed/iframe-api/v1';SP.script.async=true;
+      SP.script.onerror=()=>{SP.loading=false;$('#mue').innerHTML=`<iframe src="https://open.spotify.com/embed/${p.type}/${p.id}?utm_source=generator" width="100%" height="${p.type==='track'?80:152}" style="border:0;margin-top:10px" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`};
+      document.body.appendChild(SP.script)}
+  }
   function playFile(f){
-    if(!MU.el){MU.el=new Audio();MU.el.loop=true;MU.el.onplay=MU.el.onpause=()=>muDraw()}
-    MU.file=f;MU.el.src=mpath(f);MU.el.volume=(+$('#muvol').value||70)/100;
+    if(!MU.el){MU.el=new Audio();MU.el.onplay=MU.el.onpause=()=>muDraw()}
+    MU.file=f;MU.el.loop=MU.loop;MU.el.src=mpath(f);MU.el.volume=(+$('#muvol').value||70)/100;
     const p=MU.el.play();if(p&&p.catch)p.catch(()=>{});muDraw();
   }
-  function stopMusic(){if(MU.el)MU.el.pause();MU.file='';muDraw()}
-  function autoMusic(id){const m=((imgs.find(x=>x.id===id)||{}).music||'').trim();if(m&&mtype(m)==='file')playFile(m)}
+  function stopMusic(){if(MU.el)MU.el.pause();if(SP.ctrl&&SP.playing)SP.ctrl.pause();MU.file='';muDraw()}
+  function autoMusic(id){
+    const m=((imgs.find(x=>x.id===id)||{}).music||'').trim(),ty=mtype(m);
+    if(ty==='file')playFile(m);else if(ty==='spotify'){SP.link=m;spShow(m,true)}
+  }
+  function musicToggle(){
+    const m=((imgs.find(x=>x.id===areaId())||{}).music||'').trim(),ty=mtype(m),fp=!!(MU.el&&MU.file&&!MU.el.paused);
+    if(fp){MU.el.pause();return}
+    if(SP.playing&&SP.ctrl){SP.ctrl.pause();return}
+    if(ty==='file'){playFile(m);return}
+    if(MU.el&&MU.file){MU.el.play();return}
+    if(SP.ctrl&&SP.uri){SP.ctrl.togglePlay();return}
+    if(ty==='spotify'){SP.link=m;spShow(m,true);return}
+    if(ty)window.open(m,'_blank','noopener');
+  }
   function muDraw(){
-    const aid=areaId(),a=imgs.find(x=>x.id===aid),m=((a||{}).music||'').trim(),ty=mtype(m),pl=!!(MU.el&&!MU.el.paused),me=pl&&MU.file===m;
+    const aid=areaId(),a=imgs.find(x=>x.id===aid),m=((a||{}).music||'').trim(),ty=mtype(m),fp=!!(MU.el&&MU.file&&!MU.el.paused),pl=fp||SP.playing,me=fp&&MU.file===m;
     $('#mun').textContent=a?'('+a.name+')':'';
     const li=$('#mulink');li.disabled=!aid;if(document.activeElement!==li)li.value=m;
     const b=$('#mup');b.disabled=!ty;b.textContent=ty==='file'?(me?'Playing':'Play'):(ty?'Open':'Play');b.classList.toggle('alt',!me);
-    $('#mus').disabled=!pl;
-    const sp=ty==='spotify'&&$('#d-mu').open&&/open\.spotify\.com\/(?:intl-[a-z]+\/)?(track|playlist|album|episode|show|artist)\/([A-Za-z0-9]+)/.exec(m);
-    const eh=sp?`<iframe src="https://open.spotify.com/embed/${sp[1]}/${sp[2]}?utm_source=generator" width="100%" height="${sp[1]==='track'?80:152}" style="border:0;margin-top:10px" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`:'';
-    if(eh!==MU.emb){MU.emb=eh;$('#mue').innerHTML=eh}
+    $('#mus').disabled=!pl;$('#mloop').classList.toggle('alt',!MU.loop);
+    const t=$('#ct-mu');if(t){t.disabled=!(m||MU.file||SP.uri);t.textContent=pl?'Pause music':'Play music';t.classList.toggle('alt',!pl)}
+    if(ty==='spotify'&&m!==SP.link){SP.link=m;spShow(m,false)}
     const e=$('#e-mu');if(e)e.classList.toggle('on',pl);
   }
   function wxOf(id){return(imgs.find(x=>x.id===id)||{}).wx||'auto'}
   function areaId(){const v=curView();return v==='map'?live.mapId:v==='scene'?live.backgroundId:null}
   function curView(){return live.showBoard?'board':(live.showShop&&live.shopId)?'shop':(live.showMap&&live.mapId)?'map':'scene'}
   function ctlDraw(){
-    const mm=imgs.find(i=>i.id===live.mapId);$('#mpn').textContent=mm?'('+mm.name+')':'';
+    const mm=imgs.find(i=>i.id===live.mapId);$('#mpn').textContent=mm?'('+mm.name+')':'';{const bi=imgs.find(i=>i.id===live.backgroundId);$('#bgn').textContent=bi?bi.name:''}
     const v=curView(),on=(id,a)=>{const e=$(id);if(e)e.classList.toggle('alt',!a)};
     on('#cv-bg',v==='scene'&&!!live.backgroundId);on('#cv-map',v==='map');on('#cv-shop',v==='shop');on('#cv-board',v==='board');
     on('#ct-wx',!!live.wxOn);on('#ct-snd',!live.sndOff);{const sv=$('#sndvol');if(sv&&document.activeElement!==sv)sv.value=Math.round((live.sndVol??.7)*100)}on('#ct-night',!!live.night);on('#ct-tok',!live.tokOff);
@@ -782,7 +836,8 @@ function dm(code){
   $('#pn').onchange=e=>updPre({name:e.target.value.trim()||'Preset'});
   $('#mulink').onchange=async e=>{const aid=areaId();if(!aid)return;await updateDoc(doc(IM,aid),{music:e.target.value.trim()})};
   $('#muvol').oninput=e=>{if(MU.el)MU.el.volume=e.target.value/100};
-  $('#d-mu').addEventListener('toggle',()=>{MU.emb='x';muDraw()});unsubs.push(()=>{if(MU.el)MU.el.pause()});
+  let sv0=0;const sendVol=v=>set({sndVol:v});$('#sndvol').oninput=e=>{const n=Date.now();if(n-sv0>250){sv0=n;sendVol(+e.target.value/100)}};$('#sndvol').onchange=e=>sendVol(+e.target.value/100);
+  unsubs.push(()=>{if(MU.el)MU.el.pause()});
   $('#wxarea').onchange=async e=>{const v=curView(),aid=areaId(),val=e.target.value;if(!aid)return;await updateDoc(doc(IM,aid),{wx:val});await set(v==='map'?{mapWx:val}:{bgWx:val})};
   $('#wxsel').onchange=async e=>{const P=G.presets.find(p=>p.id===e.target.value);if(P){await saveG({cur:P.id,bag:{...P.d},day:0});await set({cold:!!P.cold,season:seasonP(P)});wxDraw();syncPre(true)}};
   $('#pc').onchange=e=>{updPre({cold:e.target.checked});set({cold:e.target.checked,season:seasonP(curPre())})};
@@ -891,6 +946,8 @@ function dm(code){
     if(a==='snd')set({sndOff:!live.sndOff});
     if(a==='mplay'){const m=((imgs.find(x=>x.id===areaId())||{}).music||'').trim(),ty=mtype(m);if(ty==='file')playFile(m);else if(ty)window.open(m,'_blank','noopener')}
     if(a==='mstop')stopMusic();
+    if(a==='mtoggle')musicToggle();
+    if(a==='mloop'){MU.loop=!MU.loop;localStorage.setItem('muloop',MU.loop?'1':'0');if(MU.el)MU.el.loop=MU.loop;muDraw()}
     if(a==='wxquick')quick();
     if(a==='wxroll'){const q=rollWind(+id,live.wx||'s1');wxMsg=q.txt;wxDraw();set({wind:q.w,wxOn:true})}
     if(a==='wxundo'){const h=(G.hist||[]).slice(-1)[0];if(h){await set({wx:h.pw,wind:h.pwind});await saveG({bag:h.pbag,day:h.pday,n:h.pn||0,hist:G.hist.slice(0,-1)});wxMsg='Last draw undone.';wxDraw()}}
