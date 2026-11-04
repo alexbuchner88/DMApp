@@ -232,6 +232,21 @@ summary h2{display:flex;align-items:center;gap:.4em}
 #tcard{position:absolute;left:0;right:0;bottom:16%;z-index:8;padding:2vmin 4vmin;text-align:center;pointer-events:none;opacity:0;font:700 clamp(30px,7vmin,76px) 'Cinzel Decorative',Cinzel,serif;color:var(--gold);text-shadow:0 0 24px #000,0 3px 0 #000,0 0 50px #000;background:linear-gradient(transparent,rgba(0,0,0,.5),transparent)}
 #tcard.show{animation:tcard 6s ease-in-out forwards}
 @keyframes tcard{0%{opacity:0;transform:translateY(12px)}18%{opacity:1;transform:none}75%{opacity:1}100%{opacity:0}}
+
+input[type=checkbox]{min-height:0;width:20px;height:20px;padding:0;flex:none}
+.pvbtn{position:fixed;right:12px;bottom:12px;z-index:41;width:50px;height:50px;border-radius:50%;border:2px solid var(--gold);background:linear-gradient(#5b3820,#37200f);color:var(--gold);display:grid;place-items:center;cursor:pointer;box-shadow:0 4px 12px #000a;padding:0}
+.pvbtn.alt{border-color:var(--gold2);color:var(--parch)}
+.pvbtn svg{width:26px;height:26px}
+.pvwin{position:fixed;right:12px;bottom:74px;z-index:40;width:min(44vw,520px);display:none;border:3px solid var(--gold2);border-radius:8px;background:#0b0704;box-shadow:0 10px 30px #000d;overflow:hidden}
+.pvwin.on{display:block}
+.pvwin.big{width:min(94vw,900px)}
+@media(max-width:760px){.pvwin{width:94vw;right:3vw}}
+.pvbar{display:flex;align-items:center;gap:6px;padding:4px 8px;background:linear-gradient(#4a2c18,#2a170d);color:var(--gold);font:700 13px Cinzel,serif}
+.pvbar .btn{min-height:30px;padding:2px 10px;font-size:12px}
+.pvbox{position:relative;aspect-ratio:16/10;background:#000;overflow:hidden}
+#pvf{position:absolute;left:0;top:0;width:1280px;height:800px;border:0;transform-origin:0 0;pointer-events:none;background:#000}
+.pvbox #mc{position:absolute;inset:0;width:100%;height:100%;max-height:none;aspect-ratio:auto;border:0;border-radius:0}
+#stage.pv #ver,#stage.pv .snd{display:none!important}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -250,11 +265,11 @@ const db=getFirestore(initializeApp(CFG));
 
 function route(){
   unsubs.forEach(u=>u());unsubs=[];
-  const [v,c]=location.hash.slice(1).split('/');
+  const [v,c,pm]=location.hash.slice(1).split('/');
   const code=(c||localStorage.getItem('code')||'').toLowerCase();
   if(c)localStorage.setItem('code',code);
   if(!code||!['dm','display','player'].includes(v))return home();
-  v==='dm'?dm(code):v==='player'?player(code):display(code);
+  v==='dm'?dm(code):v==='player'?player(code):display(code,pm==='preview');
 }
 
 
@@ -271,10 +286,10 @@ function home(){
     localStorage.setItem('code',code);location.hash=g+'/'+code};
 }
 
-async function display(code){
+async function display(code,pv){
   app.onclick=null;
   app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div id="bg2"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="night"></div><div id="dusk"></div><div id="glow"></div><canvas id="mapc"></canvas><canvas id="wx"></canvas><div id="npcs"></div><div id="wxb"></div><div id="tcard"></div><div id="board"><div id="papers"></div></div><div id="shopc"><div id="shopt"></div><div id="shopg"></div></div><div id="shopd"></div><div id="ver">'+VER+'</div><button id="snd" class="snd">Tap to enable sound</button></div>';
-  try{navigator.wakeLock&&navigator.wakeLock.request('screen')}catch(e){}
+  if(pv)$('#stage').classList.add('pv');else try{navigator.wakeLock&&navigator.wakeLock.request('screen')}catch(e){}
   const cache=new Map();
   const get=async id=>{if(!id)return{};if(!cache.has(id)){const s=await getDoc(doc(db,'sessions',code,'images',id));cache.set(id,s.exists()?s.data():{})}return cache.get(id)};
   let d={},qs=[],seq=0;
@@ -306,6 +321,7 @@ async function display(code){
   WXJP.then(()=>{wk='';renderWx()});
   const MX=makeMixer();unsubs.push(()=>MX.stop());
   const applyAudio=()=>{
+    if(pv)return;
     const e=effWx(d),cd=!!d.cold,w=Math.min(3,e.wind|0),A=AUJ,W=(A&&A.weather)||{};
     const wf=A&&e.on?(W[e.wx+(cd?'c':'')]??W[e.wx]??''):'',nf=A&&e.on&&w>0?((A.wind||{})[w]||''):'';
     MX.set({weather:wf,wind:nf},d.sndOff?0:(d.sndVol??.7));
@@ -383,7 +399,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-04 q';
+const VER='2026-11-05 r';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -779,7 +795,10 @@ function dm(code){
   const L=doc(db,'sessions',code,'live','state'),IM=collection(db,'sessions',code,'images'),QC=collection(db,'sessions',code,'quests');
   let live={},imgs=[],qs=[],shops=[],items=[],selShop=localStorage.getItem('selShop'),editIt=null,edit=null,MO=null,MS={},view={x:.5,y:.5,ft:60},mode=null,tmr=0,dirty=false;
   const link=location.origin+location.pathname+'#display/'+code,plink=location.origin+location.pathname+'#player/'+code;
-  app.innerHTML=`<div class="wrap"><div id="muhost" class="muhost"><div id="mui"></div></div><div class="row" style="justify-content:space-between"><div><h1>The Arcane Table</h1><div class="note" style="margin:0">Version ${VER}</div></div><button class="btn sm alt" id="pm" data-a="pm">Hide editing</button></div>
+  app.innerHTML=`<div class="wrap"><div id="muhost" class="muhost"><div id="mui"></div></div>
+  <button id="pvbtn" class="pvbtn alt" data-a="pvtoggle" title="Preview of the players' screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>
+  <div id="pvwin" class="pvwin"><div class="pvbar"><b>Players' screen</b><span style="flex:1"></span><button class="btn sm alt" id="pvmode" data-a="pvmode" style="display:none">Players' view</button><button class="btn sm alt" data-a="pvsize">Size</button><button class="btn sm alt" data-a="pvtoggle">Close</button></div><div id="pvbox" class="pvbox"><iframe id="pvf" title="Players' screen"></iframe><canvas id="mc"></canvas></div></div>
+  <div class="row" style="justify-content:space-between"><div><h1>The Arcane Table</h1><div class="note" style="margin:0">Version ${VER}</div></div><button class="btn sm alt" id="pm" data-a="pm">Hide editing</button></div>
   <details class="panel" id="d-ctl" open><summary><h2>Controls</h2></summary><div class="row">
   <button class="btn" id="cv-bg" data-a="vbg">Background</button><button class="btn" id="cv-map" data-a="vmap">Map</button><button class="btn" id="cv-shop" data-a="vshop">Shop</button><button class="btn" id="cv-board" data-a="vboard">Quest board</button></div>
   <div class="row" style="margin-top:8px"><button class="btn" id="ct-wx" data-a="wxon">Weather</button><button class="btn" id="ct-night" data-a="night">Day</button><button class="btn" id="ct-tok" data-a="tok">Tokens</button><button class="btn" id="ct-snd" data-a="snd">Sound</button><button class="btn alt" id="ct-mu" data-a="mtoggle" disabled>Play music</button><input id="sndvol" type="range" min="0" max="100" value="70" title="Tablet volume" style="width:110px">
@@ -803,11 +822,11 @@ function dm(code){
   <details class="panel" id="d-mu" open><summary><h2>Music <span id="mun"></span><span class="eye" id="e-mu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
   <div class="row"><button class="btn" id="mup" data-a="mplay" disabled>Play</button><button class="btn sm alt" id="mus" data-a="mstop" disabled>Stop</button><button class="btn sm" id="mloop" data-a="mloop">Loop</button><input id="muvol" type="range" min="0" max="100" value="70" title="Volume on this device" style="width:110px"></div>
   <div id="mue"></div>
-  <div class="edit" style="margin-top:8px"><input id="mulink" placeholder="Spotify link or audio file for this background or map" style="width:100%" disabled><input id="autitle" placeholder="Title card on the tablet when chosen (optional)" style="width:100%;margin-top:6px" disabled></div></details>
+  <div class="edit" style="margin-top:8px"><input id="mulink" placeholder="Spotify link or audio file for this background or map" style="width:100%" disabled><label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input id="autitle" type="checkbox" disabled> Show the name as a title card on the tablet</label></div></details>
   <details class="panel" id="d-bg" open><summary><h2>Backgrounds <span id="cb"></span><span id="bgn"></span><span class="eye" id="e-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="bgs"></div></details>
   <details class="panel" id="d-mp" open><summary><h2>Maps <span id="cmp"></span></h2></summary><div class="grid" id="mps"></div></details>
   <details class="panel" id="d-map" open><summary><h2>Map <span id="mpn"></span><span class="eye" id="e-map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
-  <canvas id="mc"></canvas>
+  
   <div class="row" style="margin-top:10px">
   <button class="btn sm alt" data-a="mlight">Add light</button><button class="btn sm alt" data-a="mrm">Remove light</button><button class="btn sm alt" data-a="mreset">Reset explored</button></div>
   <div class="row" style="margin-top:10px"><label>Grid squares across <input id="msq" type="number" min="5" value="30" style="width:90px"></label>
@@ -846,7 +865,7 @@ function dm(code){
     $('#cb').textContent='('+bg.length+')';$('#cn').textContent='('+np.length+')';$('#cq').textContent='('+qs.length+')';
     
     
-    shopDraw();wxDraw();ctlDraw();muDraw();
+    shopDraw();wxDraw();ctlDraw();muDraw();pvDraw();
     const qb=(a,id,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#qs').innerHTML=qs.map(q=>`<div class="qrow ${q.posted?'on':''}"><div class="qt"><b>${esc(q.title||'Untitled')}${q.done?' (done)':''}</b><p>${esc(q.text||'')}</p></div><div class="row">${qb('qcur',q.id,live.curQuest===q.id?'Current':'Set current',live.curQuest===q.id?0:1)}${qb('qpin',q.id,q.posted?'Unpin':'Pin')}${qb('qdone',q.id,q.done?'Reopen':'Done',1)}${qb('qedit',q.id,'Edit',1,1)}${qb('qdel',q.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No quests yet.</p>';
   };
@@ -917,7 +936,7 @@ function dm(code){
   function pauseMusic(){if(isPlaying())fadeOut(MU.cur)}
   function resumeMusic(){const o=MU.cur;if(o&&o.el.paused){muAudio();clearTimeout(o.tm);const p=o.el.play();if(p&&p.catch)p.catch(()=>{});ramp(o,1,FADE_IN)}}
   function stopMusic(){const o=MU.cur;MU.seq++;MU.file='';if(o&&!o.el.paused&&!o.fading)fadeOut(o);if(SP.ctrl&&SP.playing)SP.ctrl.pause();muDraw()}
-  function autoCard(id){const t=((imgs.find(x=>x.id===id)||{}).title||'').trim();if(t)set({card:{t,at:Date.now()}})}
+  function autoCard(id){const a=imgs.find(x=>x.id===id)||{};if(a.titleCard||(a.title||'').trim())set({card:{t:a.name,at:Date.now()}})}
   function autoMusic(id){
     const m=((imgs.find(x=>x.id===id)||{}).music||'').trim(),ty=mtype(m);
     if(ty==='file')playFile(m);else if(ty==='spotify'){SP.link=m;spShow(m,true)}
@@ -936,7 +955,7 @@ function dm(code){
     const aid=areaId(),a=imgs.find(x=>x.id===aid),m=((a||{}).music||'').trim(),ty=mtype(m),fp=isPlaying(),pl=fp||SP.playing,me=fp&&MU.file===m;
     $('#mun').textContent=a?'('+a.name+')':'';
     const li=$('#mulink');li.disabled=!aid;if(document.activeElement!==li)li.value=m;
-    const ti=$('#autitle');ti.disabled=!aid;if(document.activeElement!==ti)ti.value=(a||{}).title||'';
+    const ti=$('#autitle');ti.disabled=!aid;if(document.activeElement!==ti)ti.checked=!!(a&&(a.titleCard||(a.title||'').trim()));
     const b=$('#mup');b.disabled=!ty;b.textContent=ty==='file'?(me?'Playing':'Play'):(ty?'Open':'Play');b.classList.toggle('alt',!me);
     $('#mus').disabled=!pl;$('#mloop').classList.toggle('alt',!MU.loop);
     const t=$('#ct-mu');if(t){t.disabled=!(m||MU.file||SP.uri);t.textContent=pl?'Pause music':'Play music';t.classList.toggle('alt',!pl)}
@@ -944,6 +963,21 @@ function dm(code){
     const e=$('#e-mu');if(e)e.classList.toggle('on',pl);
     placeHost();
   }
+  let pvOn=localStorage.getItem('pvOn')==='1',pvBig=localStorage.getItem('pvBig')==='1',pvPl=false,lastV=null;
+  const pvLink=link+'/preview';
+  function pvFit(){const f=$('#pvf'),b=$('#pvbox');if(f&&b&&b.clientWidth)f.style.transform='scale('+(b.clientWidth/1280)+')'}
+  function pvSave(){localStorage.setItem('pvOn',pvOn?'1':'0');localStorage.setItem('pvBig',pvBig?'1':'0')}
+  // The preview shows the real player screen in a frame. In map mode it shows the map you control instead, with a switch to the players' view.
+  function pvDraw(){
+    const win=$('#pvwin');if(!win)return;
+    const mapV=curView()==='map',canvas=pvOn&&mapV&&!pvPl;
+    win.classList.toggle('on',pvOn);win.classList.toggle('big',pvBig);$('#pvbtn').classList.toggle('alt',!pvOn);
+    $('#mc').style.display=canvas?'block':'none';
+    const f=$('#pvf');if(pvOn){if(!f.getAttribute('src'))f.setAttribute('src',pvLink)}else if(f.getAttribute('src'))f.removeAttribute('src');
+    const pm=$('#pvmode');pm.style.display=mapV?'':'none';pm.textContent=pvPl?'DM view':"Players' view";
+    pvFit();if(canvas)drawMap();
+  }
+  function pvAuto(){const v=curView();if(v!=='map')pvPl=false;if(v==='map'&&lastV!==null&&lastV!=='map'&&!pvOn){pvOn=true;pvSave()}lastV=v}
   function wxOf(id){return(imgs.find(x=>x.id===id)||{}).wx||'auto'}
   function areaId(){const v=curView();return v==='map'?live.mapId:v==='scene'?live.backgroundId:null}
   function curView(){return live.showBoard?'board':(live.showShop&&live.shopId)?'shop':(live.showMap&&live.mapId)?'map':'scene'}
@@ -982,9 +1016,10 @@ function dm(code){
   unsubs.push(onSnapshot(GD,s=>{if(s.exists())G={...G,...s.data()};draw()}));
   const updPre=patch=>saveG({presets:G.presets.map(p=>p.id===G.cur?{...p,...patch}:p)});
   $('#pn').onchange=e=>updPre({name:e.target.value.trim()||'Preset'});
-  $('#autitle').onchange=async e=>{const aid=areaId();if(!aid)return;await updateDoc(doc(IM,aid),{title:e.target.value.trim()})};
+  $('#autitle').onchange=async e=>{const aid=areaId();if(!aid)return;await updateDoc(doc(IM,aid),{titleCard:e.target.checked,title:''})};
   $('#mulink').onchange=async e=>{const aid=areaId();if(!aid)return;await updateDoc(doc(IM,aid),{music:e.target.value.trim()})};
   $('#muvol').oninput=e=>{if(MU.out)MU.out.gain.setTargetAtTime(+e.target.value/100,MU.ctx.currentTime,.05)};
+  addEventListener('resize',pvFit);unsubs.push(()=>removeEventListener('resize',pvFit));
   $('#d-mu').addEventListener('toggle',placeHost);addEventListener('scroll',placeHost,true);addEventListener('resize',placeHost);unsubs.push(()=>{removeEventListener('scroll',placeHost,true);removeEventListener('resize',placeHost)});
   let sv0=0;const sendVol=v=>set({sndVol:v});$('#sndvol').oninput=e=>{const n=Date.now();if(n-sv0>250){sv0=n;sendVol(+e.target.value/100)}};$('#sndvol').onchange=e=>sendVol(+e.target.value/100);
   unsubs.push(()=>{if(MU.el)MU.el.pause()});
@@ -1067,13 +1102,13 @@ function dm(code){
   $('#mft').onchange=e=>saveM({lft:Math.max(5,+e.target.value||30)});
   $('#mrev').onchange=e=>saveM({rev:e.target.checked});
   $('#d-map').addEventListener('toggle',()=>drawMap());addEventListener('resize',drawMap);unsubs.push(()=>removeEventListener('resize',drawMap));
-  unsubs.push(onSnapshot(L,s=>{live=s.data()||{};mw.set(live.mapId||null);if(!ptr.size&&!tmr&&live.mapView)view={...live.mapView};draw();drawMap()}));
+  unsubs.push(onSnapshot(L,s=>{live=s.data()||{};mw.set(live.mapId||null);if(!ptr.size&&!tmr&&live.mapView)view={...live.mapView};pvAuto();draw();drawMap()}));
   unsubs.push(onSnapshot(IM,s=>{imgs=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.created-b.created);draw()}));
   unsubs.push(onSnapshot(QC,s=>{qs=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.created-b.created);draw()}));
   const set=o=>setDoc(L,o,{merge:true});
   app.onclick=async e=>{
     const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,id=t.dataset.id;
-    if(a==='bg'){if(live.backgroundId!==id){autoMusic(id);autoCard(id)}set({backgroundId:live.backgroundId===id?null:id,bgWx:wxOf(id),bgOff:false})}
+    if(a==='bg'){if(live.backgroundId!==id&&curView()==='scene'){autoMusic(id);autoCard(id)}set({backgroundId:live.backgroundId===id?null:id,bgWx:wxOf(id),bgOff:false})}
     if(a==='npc'&&MO&&live.showMap&&!(live.visibleNpcIds||[]).includes(id)){MS.tk={...(MS.tk||{}),[id]:{x:view.x,y:view.y}};dirty=true;flush()}
     if(a==='npc')set({visibleNpcIds:(live.visibleNpcIds||[]).includes(id)?arrayRemove(id):arrayUnion(id)});
     if(a==='black')set({backgroundId:null});
@@ -1088,8 +1123,8 @@ function dm(code){
     if(a==='wxinfo'){wxRulesOn=!wxRulesOn;wxLast='';wxDraw()}
     if(a==='wxd')drawDie(id);
     if(a==='wxwr'){const q=rollWind(1+Math.floor(Math.random()*6),live.wx||'s1');set({wind:q.w,wxOn:true})}
-    if(a==='vbg'){if(curView()==='scene'&&live.backgroundId&&!live.bgOff)set({bgOff:true});else{set({showBoard:false,showShop:false,showMap:false,bgOff:false});if(live.backgroundId)autoMusic(live.backgroundId)}}
-    if(a==='vmap'){if(curView()==='map')set({showMap:false});else{const mid=live.mapId||(imgs.find(i=>i.type==='map')||{}).id;if(mid)autoMusic(mid);if(mid)set({mapId:mid,mapWx:wxOf(mid),...(live.mapId?{}:{mapView:{x:.5,y:.5,ft:60}}),showMap:true,showBoard:false,showShop:false})}}
+    if(a==='vbg'){if(curView()==='scene'&&live.backgroundId&&!live.bgOff)set({bgOff:true});else{const fromOther=curView()!=='scene';set({showBoard:false,showShop:false,showMap:false,bgOff:false});if(live.backgroundId){autoMusic(live.backgroundId);if(fromOther)autoCard(live.backgroundId)}}}
+    if(a==='vmap'){if(curView()==='map')set({showMap:false});else{const mid=live.mapId||(imgs.find(i=>i.type==='map')||{}).id;if(mid){autoMusic(mid);autoCard(mid)}if(mid)set({mapId:mid,mapWx:wxOf(mid),...(live.mapId?{}:{mapView:{x:.5,y:.5,ft:60}}),showMap:true,showBoard:false,showShop:false})}}
     if(a==='vshop'){if(curView()==='shop')set({showShop:false,shopItemId:null});else{const sid=selShop||live.shopId||(shops[0]||{}).id;if(sid)set({showShop:true,shopId:sid,shopRoot:(shops.find(x=>x.id===sid)||{})._r||code,shopItemId:null,showBoard:false,showMap:false})}}
     if(a==='vboard'){if(curView()==='board')set({showBoard:false});else set({showBoard:true,showMap:false,showShop:false})}
     if(a==='tok')set({tokOff:!live.tokOff});
@@ -1097,6 +1132,9 @@ function dm(code){
     if(a==='mplay'){const m=((imgs.find(x=>x.id===areaId())||{}).music||'').trim(),ty=mtype(m);if(ty==='file')playFile(m);else if(ty)window.open(m,'_blank','noopener')}
     if(a==='mstop')stopMusic();
     if(a==='mtoggle')musicToggle();
+    if(a==='pvtoggle'){pvOn=!pvOn;pvSave();pvDraw()}
+    if(a==='pvmode'){pvPl=!pvPl;pvDraw()}
+    if(a==='pvsize'){pvBig=!pvBig;pvSave();pvDraw()}
     if(a==='mloop'){MU.loop=!MU.loop;localStorage.setItem('muloop',MU.loop?'1':'0');if(MU.el)MU.el.loop=MU.loop;muDraw()}
     if(a==='wxquick')quick();
     if(a==='wxroll'){const q=rollWind(+id,live.wx||'s1');wxMsg=q.txt;wxDraw();set({wind:q.w,wxOn:true})}
@@ -1166,7 +1204,7 @@ function dm(code){
       try{await navigator.clipboard.writeText(t);msg.className='note';msg.textContent='Copied '+(t.split('\n').length-1)+' items. Paste them into your sheet.'}
       catch(e){$('#imt').value=t;msg.className='note';msg.textContent='Clipboard blocked. The table is in the box above.'}}
     if(a==='itshow'){const i=items.find(x=>x.id===id);if(i){const on=live.showShop&&live.shopId===i.shopId;set(on?{shopItemId:live.shopItemId===id?null:id}:{showShop:true,shopId:i.shopId,shopRoot:i._r,shopItemId:id,showBoard:false,showMap:false})}}
-    if(a==='map'){autoMusic(id);autoCard(id);set({mapId:id,mapWx:wxOf(id),mapView:{x:.5,y:.5,ft:60}})}
+    if(a==='map'){if(curView()==='map'){autoMusic(id);autoCard(id)}set({mapId:id,mapWx:wxOf(id),mapView:{x:.5,y:.5,ft:60}})}
     if(a==='mshow'&&live.mapId)set({showMap:!live.showMap,...(!live.showMap?{showBoard:false,showShop:false}:{})});
     if(a==='mlight'&&MO){const L=lights().map(l=>({...l})),n={x:view.x,y:view.y};L.push(n);MS.lights=L;addEx(n);dirty=true;flush();drawMap()}
     if(a==='mrm'&&MO&&lights().length>1){MS.lights=lights().slice(0,-1);dirty=true;flush();drawMap()}
