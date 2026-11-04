@@ -226,6 +226,12 @@ summary h2{display:flex;align-items:center;gap:.4em}
 
 .muhost{position:fixed;right:8px;bottom:8px;width:320px;height:152px;opacity:0;pointer-events:none;z-index:30;overflow:hidden;border-radius:12px}
 .muhost iframe{width:100%;height:100%;border:0}
+
+#bg2{position:absolute;inset:0;background:center/100% 100% no-repeat;transition:opacity 1.2s;opacity:0}
+#bg{opacity:0;transition:opacity 1.2s}
+#tcard{position:absolute;left:0;right:0;bottom:16%;z-index:8;padding:2vmin 4vmin;text-align:center;pointer-events:none;opacity:0;font:700 clamp(30px,7vmin,76px) 'Cinzel Decorative',Cinzel,serif;color:var(--gold);text-shadow:0 0 24px #000,0 3px 0 #000,0 0 50px #000;background:linear-gradient(transparent,rgba(0,0,0,.5),transparent)}
+#tcard.show{animation:tcard 6s ease-in-out forwards}
+@keyframes tcard{0%{opacity:0;transform:translateY(12px)}18%{opacity:1;transform:none}75%{opacity:1}100%{opacity:0}}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -267,13 +273,13 @@ function home(){
 
 async function display(code){
   app.onclick=null;
-  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="night"></div><div id="dusk"></div><div id="glow"></div><canvas id="mapc"></canvas><canvas id="wx"></canvas><div id="npcs"></div><div id="wxb"></div><div id="board"><div id="papers"></div></div><div id="shopc"><div id="shopt"></div><div id="shopg"></div></div><div id="shopd"></div><div id="ver">'+VER+'</div><button id="snd" class="snd">Tap to enable sound</button></div>';
+  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div id="bg2"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="night"></div><div id="dusk"></div><div id="glow"></div><canvas id="mapc"></canvas><canvas id="wx"></canvas><div id="npcs"></div><div id="wxb"></div><div id="tcard"></div><div id="board"><div id="papers"></div></div><div id="shopc"><div id="shopt"></div><div id="shopg"></div></div><div id="shopd"></div><div id="ver">'+VER+'</div><button id="snd" class="snd">Tap to enable sound</button></div>';
   try{navigator.wakeLock&&navigator.wakeLock.request('screen')}catch(e){}
   const cache=new Map();
   const get=async id=>{if(!id)return{};if(!cache.has(id)){const s=await getDoc(doc(db,'sessions',code,'images',id));cache.set(id,s.exists()?s.data():{})}return cache.get(id)};
   let d={},qs=[],seq=0;
-  const cv=$('#mapc'),RM=makeRenderer(cv);let MO=null,MS={},tg=null,cur=null,raf=0,curId=null,TL=[],npcKey='',papKey='';
-  const stepM=()=>{raf=0;if(!MO||!tg)return;const T=clampV(tg,MO,MS,cv.width,cv.height);if(!cur)cur={...T};const k=.25;cur.x+=(T.x-cur.x)*k;cur.y+=(T.y-cur.y)*k;cur.ft+=(T.ft-cur.ft)*k;RM(MO,MS,cur,1,mkToks(TL,MS),todOf(d));
+  const cv=$('#mapc'),RM=makeRenderer(cv);let MO=null,MS={},tg=null,cur=null,raf=0,curId=null,TL=[],npcKey='',papKey='',bgCur='',bgFlip=false,bgT=0;
+  const stepM=()=>{raf=0;if(!MO||!tg)return;const T=clampV(tg,MO,MS,cv.width,cv.height);if(!cur)cur={...T};const k=.25;cur.x+=(T.x-cur.x)*k;cur.y+=(T.y-cur.y)*k;cur.ft+=(T.ft-cur.ft)*k;RM(MO,MS,cur,1,mkToks(TL,MS),todFor(d));
     if(Math.abs(T.x-cur.x)>2e-4||Math.abs(T.y-cur.y)>2e-4||Math.abs(T.ft-cur.ft)>.02)raf=requestAnimationFrame(stepM)};
   const kick=()=>{if(!raf)raf=requestAnimationFrame(stepM)};
   const mw=watchMap(code,(o,s)=>{MO=o;MS=s;kick()});unsubs.push(()=>mw.stop());
@@ -296,7 +302,7 @@ async function display(code){
   $('#shopg').onclick=e=>{const c=e.target.closest('[data-i]');if(c){lo=c.dataset.i;renderShop()}};
   $('#shopd').onclick=()=>{if(lo)lo=null;else dis=d.shopItemId;renderShop()};
   const WXE=makeWeather($('#wx'));unsubs.push(()=>WXE.stop());
-  let wk='';const renderWx=()=>{{const td=todOf(d);$('#stage').classList.toggle('night',td==='night');$('#stage').classList.toggle('dusk',td==='dusk')}kick();const ew=effWx(d),on=ew.on,s=WXS.find(x=>x.id===ew.wx)||WXS[0],w=Math.min(3,ew.wind|0),cd=!!d.cold,td0=todOf(d),nt=td0==='night',ss=d.season||(cd?'winter':'normal'),gl=(on&&!cd?(ew.wx==='s3'?(ss==='summer'?1:.45):(ew.wx==='s2'&&ss==='summer'?.35:0)):0)*(td0==='night'?0:td0==='dusk'?.6:1),am=ew.amb||'',k=[on,s.id,w,cd,nt,ss,gl,am].join();if(k===wk)return;wk=k;WXE.set(on?s:null,w,cd,nt,gl,am);$('#wxb').innerHTML=on?wxBadge(s,w,cd,ss):''};
+  let wk='';const renderWx=()=>{{const td=todFor(d);$('#stage').classList.toggle('night',td==='night');$('#stage').classList.toggle('dusk',td==='dusk')}kick();const ew=effWx(d),on=ew.on,s=WXS.find(x=>x.id===ew.wx)||WXS[0],w=Math.min(3,ew.wind|0),cd=!!d.cold,td0=todFor(d),nt=td0==='night',ss=d.season||(cd?'winter':'normal'),gl=(on&&!cd?(ew.wx==='s3'?(ss==='summer'?1:.45):(ew.wx==='s2'&&ss==='summer'?.35:0)):0)*(td0==='night'?0:td0==='dusk'?.6:1),am=ew.amb||'',k=[on,s.id,w,cd,nt,ss,gl,am].join();if(k===wk)return;wk=k;WXE.set(on?s:null,w,cd,nt,gl,am);$('#wxb').innerHTML=on?wxBadge(s,w,cd,ss):''};
   WXJP.then(()=>{wk='';renderWx()});
   const MX=makeMixer();unsubs.push(()=>MX.stop());
   const applyAudio=()=>{
@@ -307,6 +313,17 @@ async function display(code){
   };
   $('#snd').onclick=async()=>{await MX.enable();applyAudio()};
   AUP.then(()=>applyAudio());
+  // A new background fades in over the old one, so scenes never cut.
+  const swapBg=want=>{
+    const A=$('#bg'),B=$('#bg2'),nb=bgFlip?B:A,ob=bgFlip?A:B;bgFlip=!bgFlip;clearTimeout(bgT);
+    if(!want){ob.style.opacity=0;nb.style.opacity=0;return}
+    nb.style.transition='none';nb.style.opacity=0;nb.style.backgroundImage=`url(${want})`;nb.style.zIndex=-1;ob.style.zIndex=-2;void nb.offsetHeight;
+    nb.style.transition='';nb.style.opacity=1;
+    bgT=setTimeout(()=>{ob.style.transition='none';ob.style.opacity=0;void ob.offsetHeight;ob.style.transition=''},1500);
+  };
+  let lastCard=0;
+  const cardCheck=()=>{const c=d.card;if(!c||!c.t||c.at===lastCard)return;const stale=lastCard===0&&Date.now()-c.at>15000;lastCard=c.at;if(stale)return;
+    const el=$('#tcard');el.textContent=c.t;el.classList.remove('show');void el.offsetWidth;el.classList.add('show')};
   const rot=id=>{let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))%7;return h-3};
   const paint=async()=>{
     const my=++seq,board=!!d.showBoard,shopOn=!board&&!!d.showShop&&!!d.shopId,mapOn=!board&&!shopOn&&!!d.showMap&&!!d.mapId;
@@ -319,7 +336,7 @@ async function display(code){
     st.classList.toggle('solo',!b.data);
     st.classList.toggle('empty',!board&&!mapOn&&!shopOn&&!b.data&&!n.length);st.classList.toggle('map',mapOn);st.classList.toggle('shop',shopOn);watchShop(shopOn?d.shopId:null,d.shopRoot||code);if(d.shopItemId!==prevS){prevS=d.shopItemId;dis=null}renderShop();mw.set(mapOn?d.mapId:null);
     if(mapOn&&d.mapView){if(curId!==d.mapId)cur=null;curId=d.mapId;tg={...d.mapView};kick()}if(!mapOn){curId=null;cur=null}
-    $('#bg').style.backgroundImage=b.data?`url(${b.data})`:'';
+    if((b.data||'')!==bgCur){bgCur=b.data||'';swapBg(bgCur)}
     $('#idle').style.opacity=!board&&!mapOn&&!shopOn&&!b.data?1:0;
     $('#npcs').style.setProperty('--n',Math.max(1,n.reduce((a,x)=>a+(x.type==='monster'?1.3:1),0)));
     const nk=n.map(x=>x.type+x.name+(x.data||'').length).join('|'),nch=nk!==npcKey;npcKey=nk;
@@ -329,7 +346,7 @@ async function display(code){
     const pk=posted.map(q=>q.id+q.title+q.text+q.done).join('|'),pch=pk!==papKey;papKey=pk;
     if(pch)$('#papers').innerHTML=posted.map(q=>`<article class="paper ${q.done?'done':''}" style="--r:${rot(q.id)}"><i class="pin"></i><div class="in"><h3>${esc(q.title||'')}</h3><p>${esc(q.text||'')}</p></div></article>`).join('');
   };
-  unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};renderWx();applyAudio();paint()}));
+  unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};renderWx();applyAudio();cardCheck();paint()}));
   unsubs.push(onSnapshot(collection(db,'sessions',code,'quests'),s=>{qs=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>a.created-b.created);paint()}));
 }
 
@@ -366,7 +383,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-04 p';
+const VER='2026-11-04 q';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -378,8 +395,9 @@ const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M
 const wxBadge=(s,w,cd,ss)=>{const ic=Array.isArray(s.i)?s.i[cd?1:0]:s.i;
   return`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${esc(wname(s.id,ss,cd))}</b><small>${WINDS[w]}</small></div>`};
 function makeWeather(cv){
-  const c=cv.getContext('2d'),R=Math.random,cu={cl:0,fog:0,cr:0,cg:0,cb:0,ca:0,fr:0,ws:0,wf:1,rain:0,snow:0,str:0,cs:.13,nd:0,gl:0,dr:0,tc:0,mg:0};
-  let tg=null,tw=0,tsn=false,tn=false,gl0=0,am0='',raf=0,last=0,flash=0,nextF=0,PR=[],PS=[],CS=[],FG=[],S=[],DR=[],MT=[];
+  const c=cv.getContext('2d'),R=Math.random,cu={cl:0,fog:0,cr:0,cg:0,cb:0,ca:0,fr:0,ws:0,wf:1,rain:0,snow:0,str:0,cs:.13,nd:0,gl:0,dr:0,tc:0,mg:0,wt:0,fi:0,uk:0,hn:0,fe:0,ff:0,mo:0};
+  const AMK={drip:'dr',torch:'tc',magic:'mg',water:'wt',fire:'fi',dark:'uk',haunt:'hn',fey:'fe',fly:'ff',moon:'mo'},AK=Object.values(AMK);
+  let tg=null,tw=0,tsn=false,tn=false,gl0=0,am0='',raf=0,last=0,flash=0,nextF=0,PR=[],PS=[],CS=[],FG=[],S=[],DR=[],MT=[],BB=[],EM=[],SPO=[],PT=[],FF=[],ST=[];
   const size=()=>{if(cv.width!==cv.clientWidth||cv.height!==cv.clientHeight){cv.width=cv.clientWidth;cv.height=cv.clientHeight}};
   const build=()=>{size();const W=cv.width||1280,H=cv.height||800,k=W*H/1e6;
     PR=Array.from({length:Math.round(700*k)},()=>({x:R()*W,y:R()*H,l:10+R()*14,v:11+R()*8}));
@@ -387,14 +405,21 @@ function makeWeather(cv){
     CS=Array.from({length:7},()=>({x:R()*W,y:R()*H,v:.15+R()*.25,k:.8+R()*.4,ph:R()*6.3,sub:Array.from({length:4},()=>({dx:(R()-.5)*1.1,dy:(R()-.5)*.8,r:.5+R()*.5}))}));
     FG=Array.from({length:9},()=>({x:R()*W,y:R()*H,r:W*(.2+R()*.2),v:.2+R()*.3,ph:R()*6.3}));
     S=Array.from({length:26},()=>({x:R()*W,y:R()*H,l:80+R()*140,v:18+R()*14}));
-    MT=Array.from({length:30},()=>({x:R()*W,y:R()*H,r:1+R()*2,v:.15+R()*.35,ph:R()*6.3,h:R()<.5?'190,170,255':'150,205,255'}))};
+    MT=Array.from({length:30},()=>({x:R()*W,y:R()*H,r:1+R()*2,v:.15+R()*.35,ph:R()*6.3,h:R()<.5?'190,170,255':'150,205,255'}));
+    const P=(n,f)=>Array.from({length:n},f);
+    BB=P(26,()=>({x:R()*W,y:R()*H,r:2+R()*5,v:.5+R()*1.1,ph:R()*6.3}));
+    EM=P(46,()=>({x:R()*W,y:H*(.5+R()*.5),r:1+R()*2.2,v:.35+R()*1.1,ph:R()*6.3}));
+    SPO=P(26,()=>({x:R()*W,y:R()*H,r:2+R()*3,vx:(R()-.5)*.25,vy:(R()-.5)*.2,ph:R()*6.3,h:R()<.5?'80,230,200':'170,120,255'}));
+    PT=P(42,()=>({x:R()*W,y:R()*H,r:1.5+R()*2.8,vx:.3+R()*.5,vy:.15+R()*.4,ph:R()*6.3,h:['255,190,220','255,240,170','190,255,210'][Math.floor(R()*3)]}));
+    FF=P(20,()=>({x:R()*W,y:R()*H,ph:R()*6.3,s:.3+R()*.5,a:R()*6.3}));
+    ST=P(46,()=>({x:R()*W,y:R()*H*.45,r:.6+R()*1.4,ph:R()*6.3}))};
   const blob=(x,y,r,col,a)=>{const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${col},${a})`);g.addColorStop(1,`rgba(${col},0)`);c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2)};
   const target=()=>{const s=tg||{},t=(s.tint||'0,0,0,0').split(',').map(Number),L=[0,140,320,650][s.p||0];
-    return{cl:s.cl||0,fog:s.fog||0,cr:t[0],cg:t[1],cb:t[2],ca:t[3],fr:s.fr||0,ws:[0,.1,.35,.7][tw],wf:[1,1.1,1.5,2][tw],rain:tsn?0:L/700,snow:tsn?L/650:0,str:tw>=3?1:tw>=2?.55:0,cs:(s.cl||0)<.5?.13:.4,nd:tn?1:0,gl:gl0,dr:am0==='drip'?1:0,tc:am0==='torch'?1:0,mg:am0==='magic'?1:0}};
+    return{cl:s.cl||0,fog:s.fog||0,cr:t[0],cg:t[1],cb:t[2],ca:t[3],fr:s.fr||0,ws:[0,.1,.35,.7][tw],wf:[1,1.1,1.5,2][tw],rain:tsn?0:L/700,snow:tsn?L/650:0,str:tw>=3?1:tw>=2?.55:0,cs:(s.cl||0)<.5?.13:.4,nd:tn?1:0,gl:gl0,dr:am0==='drip'?1:0,tc:am0==='torch'?1:0,mg:am0==='magic'?1:0,...Object.fromEntries(Object.entries(AMK).map(([n,k])=>[k,am0===n?1:0]))}};
   const frame=ts=>{
     raf=requestAnimationFrame(frame);size();const W=cv.width,H=cv.height,dt=Math.min(100,ts-(last||ts));last=ts;
     const T=target(),k=1-Math.exp(-dt/900);for(const q in T)cu[q]+=(T[q]-cu[q])*k;
-    if(Math.max(T.cl,T.fog,T.ca,T.fr,T.rain,T.snow,T.str,T.gl,T.dr,T.tc,T.mg)===0&&Math.max(cu.cl,cu.fog,cu.ca,cu.fr,cu.rain,cu.snow,cu.str,cu.gl,cu.dr,cu.tc,cu.mg)<.004){c.clearRect(0,0,W,H);cancelAnimationFrame(raf);raf=0;return}
+    if(Math.max(T.cl,T.fog,T.ca,T.fr,T.rain,T.snow,T.str,T.gl,T.dr,T.tc,T.mg)===0&&AK.every(k=>T[k]===0)&&AK.every(k=>cu[k]<.004)&&Math.max(cu.cl,cu.fog,cu.ca,cu.fr,cu.rain,cu.snow,cu.str,cu.gl,cu.dr,cu.tc,cu.mg)<.004){c.clearRect(0,0,W,H);cancelAnimationFrame(raf);raf=0;return}
     c.clearRect(0,0,W,H);
     const nf=1-.55*cu.nd;
     if(cu.ca>.003){c.fillStyle=`rgba(${cu.cr|0},${cu.cg|0},${cu.cb|0},${cu.ca})`;c.fillRect(0,0,W,H)}
@@ -438,7 +463,7 @@ function makeWeather(cv){
     if(cu.tc>.01){
       const fl=.5+.2*Math.sin(ts*.0016)+.12*Math.sin(ts*.0037+1.3)+.06*Math.sin(ts*.0089+.7),cx=W*.5+Math.sin(ts*.0005)*W*.015,cy=H*.62+Math.cos(ts*.0007)*H*.01,m=Math.min(W,H),k=cu.tc;
       const vg=c.createRadialGradient(cx,cy,m*(.18+.03*fl),cx,cy,Math.hypot(W,H)*.62);
-      vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(.5,`rgba(8,4,0,${.22*k})`);vg.addColorStop(1,`rgba(4,2,0,${.68*k})`);
+      vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(.5,`rgba(8,4,0,${.28*k})`);vg.addColorStop(1,`rgba(4,2,0,${.78*k})`);
       c.fillStyle=vg;c.fillRect(0,0,W,H);
       c.fillStyle=`rgba(255,140,40,${(.06+.05*fl)*k})`;c.fillRect(0,0,W,H);
       c.save();c.globalCompositeOperation='lighter';const tg2=c.createRadialGradient(cx,cy,0,cx,cy,m*.62);
@@ -449,6 +474,51 @@ function makeWeather(cv){
       c.save();c.globalCompositeOperation='lighter';
       for(const[gx,gy,col]of[[0,H,'140,100,255'],[W,0,'90,150,255']]){const g3=c.createRadialGradient(gx,gy,0,gx,gy,Math.hypot(W,H)*.6);g3.addColorStop(0,`rgba(${col},${(.28+.12*pu)*k})`);g3.addColorStop(1,`rgba(${col},0)`);c.fillStyle=g3;c.fillRect(0,0,W,H)}
       MT.forEach(p=>{p.y-=p.v;p.x+=Math.sin(ts*.0006+p.ph)*.25;if(p.y<-10){p.y=H+10;p.x=R()*W}const al=(.25+.65*(.5+.5*Math.sin(ts*.002+p.ph)))*k;c.fillStyle=`rgba(${p.h},${al})`;c.beginPath();c.arc(p.x,p.y,p.r,0,7);c.fill()});
+      c.restore()}
+    if(cu.wt>.01){const k=cu.wt;
+      c.fillStyle=`rgba(25,105,150,${.3*k})`;c.fillRect(0,0,W,H);
+      c.save();c.globalCompositeOperation='lighter';
+      for(let i=0;i<7;i++){const x=W*(i+.5)/7+Math.sin(ts*.0004+i*1.7)*W*.06,y=H*(.12+.2*((i*37)%7)/7)+Math.cos(ts*.0005+i)*H*.04,r=W*.14,g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(150,230,255,${.13*k})`);g.addColorStop(1,'rgba(150,230,255,0)');c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2)}
+      c.restore();
+      c.strokeStyle=`rgba(210,240,255,${.5*k})`;c.lineWidth=1.3;
+      BB.forEach(b=>{b.y-=b.v;b.x+=Math.sin(ts*.002+b.ph)*.35;if(b.y<-10){b.y=H+10;b.x=R()*W}c.beginPath();c.arc(b.x,b.y,b.r,0,7);c.stroke()});
+      const vg=c.createLinearGradient(0,0,0,H);vg.addColorStop(0,'rgba(0,30,60,0)');vg.addColorStop(1,`rgba(0,25,50,${.35*k})`);c.fillStyle=vg;c.fillRect(0,0,W,H)}
+    if(cu.fi>.01){const k=cu.fi,pu=.5+.5*Math.sin(ts*.0012)+.2*Math.sin(ts*.0031);
+      c.fillStyle=`rgba(170,40,10,${.16*k})`;c.fillRect(0,0,W,H);
+      const fg=c.createLinearGradient(0,H,0,H*.35);fg.addColorStop(0,`rgba(255,100,20,${(.34+.1*pu)*k})`);fg.addColorStop(1,'rgba(255,80,10,0)');c.fillStyle=fg;c.fillRect(0,0,W,H);
+      c.save();c.globalCompositeOperation='lighter';
+      EM.forEach(e=>{e.y-=e.v;e.x+=Math.sin(ts*.0015+e.ph)*.4;if(e.y<-10){e.y=H+10;e.x=R()*W}const al=Math.max(0,Math.min(1,e.y/H))*(.5+.5*Math.sin(ts*.006+e.ph))*k;c.fillStyle=`rgba(255,${140+((e.ph*20)|0)%80},40,${al})`;c.beginPath();c.arc(e.x,e.y,e.r,0,7);c.fill()});
+      c.restore()}
+    if(cu.uk>.01){const k=cu.uk,m=Math.min(W,H),g=c.createRadialGradient(W/2,H/2,m*.2,W/2,H/2,Math.hypot(W,H)*.6);
+      g.addColorStop(0,'rgba(0,0,10,0)');g.addColorStop(.6,`rgba(0,0,12,${.4*k})`);g.addColorStop(1,`rgba(0,0,8,${.85*k})`);c.fillStyle=g;c.fillRect(0,0,W,H);
+      c.fillStyle=`rgba(20,20,70,${.12*k})`;c.fillRect(0,0,W,H);
+      c.save();c.globalCompositeOperation='lighter';
+      SPO.forEach(p=>{p.x+=p.vx+Math.sin(ts*.0004+p.ph)*.12;p.y+=p.vy;if(p.x<-20)p.x=W+20;if(p.x>W+20)p.x=-20;if(p.y<-20)p.y=H+20;if(p.y>H+20)p.y=-20;
+        const a=(.35+.65*(.5+.5*Math.sin(ts*.0014+p.ph)))*k,rr=p.r*5,gg=c.createRadialGradient(p.x,p.y,0,p.x,p.y,rr);gg.addColorStop(0,`rgba(${p.h},${.8*a})`);gg.addColorStop(1,`rgba(${p.h},0)`);c.fillStyle=gg;c.fillRect(p.x-rr,p.y-rr,rr*2,rr*2)});
+      c.restore()}
+    if(cu.hn>.01){const k=cu.hn;
+      c.fillStyle=`rgba(80,105,120,${.26*k})`;c.fillRect(0,0,W,H);
+      FG.forEach(b=>{const px=b.x+Math.sin(ts*.00011+b.ph)*W*.06,py=b.y+Math.cos(ts*.00008+b.ph*1.7)*H*.05,br=.6+.4*Math.sin(ts*.0003+b.ph*2);blob(px,py,b.r*1.2,'190,205,215',.32*k*br)});
+      const g=c.createRadialGradient(W/2,H/2,Math.min(W,H)*.25,W/2,H/2,Math.hypot(W,H)*.6);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,`rgba(5,10,15,${.6*k})`);c.fillStyle=g;c.fillRect(0,0,W,H);
+      const dip=Math.pow(Math.max(0,Math.sin(ts*.0009)),24)*(.5+.5*Math.sin(ts*.0023));c.fillStyle=`rgba(0,0,0,${dip*.35*k})`;c.fillRect(0,0,W,H)}
+    if(cu.fe>.01){const k=cu.fe;
+      c.fillStyle=`rgba(200,255,170,${.07*k})`;c.fillRect(0,0,W,H);
+      c.save();c.globalCompositeOperation='lighter';
+      const g=c.createRadialGradient(W*.5,-H*.1,0,W*.5,-H*.1,H*1.1);g.addColorStop(0,`rgba(255,240,170,${.22*k})`);g.addColorStop(1,'rgba(255,240,170,0)');c.fillStyle=g;c.fillRect(0,0,W,H);
+      PT.forEach(p=>{p.x+=p.vx+Math.sin(ts*.0009+p.ph)*.3;p.y+=p.vy+Math.sin(ts*.0007+p.ph)*.15;if(p.x>W+20){p.x=-20;p.y=R()*H}if(p.y>H+20){p.y=-20;p.x=R()*W}
+        const a=(.4+.6*(.5+.5*Math.sin(ts*.003+p.ph)))*k,rr=p.r*4,gg=c.createRadialGradient(p.x,p.y,0,p.x,p.y,rr);gg.addColorStop(0,`rgba(${p.h},${.9*a})`);gg.addColorStop(1,`rgba(${p.h},0)`);c.fillStyle=gg;c.fillRect(p.x-rr,p.y-rr,rr*2,rr*2)});
+      c.restore()}
+    if(cu.ff>.01){const k=cu.ff;
+      c.fillStyle=`rgba(6,16,32,${.3*k})`;c.fillRect(0,0,W,H);
+      c.save();c.globalCompositeOperation='lighter';
+      FF.forEach(f=>{f.a+=Math.sin(ts*.0003+f.ph)*.04;f.x+=Math.cos(f.a)*f.s;f.y+=Math.sin(f.a)*f.s*.7;if(f.x<-10)f.x=W+10;if(f.x>W+10)f.x=-10;if(f.y<H*.15)f.y+=.6;if(f.y>H+10)f.y=H*.2;
+        const a=Math.pow(.5+.5*Math.sin(ts*.0018+f.ph*3),3)*k,rr=14,gg=c.createRadialGradient(f.x,f.y,0,f.x,f.y,rr);gg.addColorStop(0,`rgba(230,255,120,${.95*a})`);gg.addColorStop(.3,`rgba(190,255,90,${.4*a})`);gg.addColorStop(1,'rgba(190,255,90,0)');c.fillStyle=gg;c.fillRect(f.x-rr,f.y-rr,rr*2,rr*2)});
+      c.restore()}
+    if(cu.mo>.01){const k=cu.mo;
+      c.fillStyle=`rgba(90,120,190,${.24*k})`;c.fillRect(0,0,W,H);
+      c.save();c.globalCompositeOperation='lighter';
+      const g=c.createRadialGradient(W*.12,-H*.06,0,W*.12,-H*.06,Math.hypot(W,H)*.7);g.addColorStop(0,`rgba(220,235,255,${.42*k})`);g.addColorStop(.4,`rgba(170,200,255,${.16*k})`);g.addColorStop(1,'rgba(150,180,255,0)');c.fillStyle=g;c.fillRect(0,0,W,H);
+      ST.forEach(st=>{const a=(.35+.65*(.5+.5*Math.sin(ts*.0016+st.ph)))*k;c.fillStyle=`rgba(235,242,255,${a})`;c.beginPath();c.arc(st.x,st.y,st.r,0,7);c.fill()});
       c.restore()}
     if(tg&&tg.bolt&&ts>nextF){flash=1;nextF=ts+4000+R()*7000;if(R()<.4)setTimeout(()=>{flash=.8},180)}
     if(flash>0){c.fillStyle=`rgba(235,240,255,${flash*.5})`;c.fillRect(0,0,W,H);flash-=.07}
@@ -575,21 +645,23 @@ const FXI={
  heart:'<path d="M12 21s-8-5.5-8-11a4.5 4.5 0 0 1 8-2.5A4.5 4.5 0 0 1 20 10c0 5.5-8 11-8 11z"/>'};
 const ico=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${FXI[n]||FXI.dot}</svg>`;
 const DEFCATS=[{key:'senses',name:'Senses',icon:'eye'},{key:'damage',name:'Damage',icon:'flame'},{key:'movement',name:'Movement',icon:'mountain'},{key:'combat',name:'Combat',icon:'bow'},{key:'survival',name:'Survival',icon:'thermo'}];
-const AREAWX=[['auto','Area: follow weather'],['none','Area: no weather'],['drip','Area: Drippy / wet'],['torch','Area: Torchlit'],['magic','Area: Magical'],['s1','Area: Clear'],['s2','Area: Sunny'],['c1','Area: Cloudy'],['c2','Area: Overcast'],['c3','Area: Fog'],['r1','Area: Drizzle'],['r2','Area: Rain'],['r3','Area: Downpour']];
+const AREAWX=[['auto','Area: follow weather'],['none','Area: no weather'],['drip','Area: Drippy / wet'],['torch','Area: Torchlit'],['magic','Area: Magical'],['dark','Area: Underdark'],['haunt','Area: Haunted'],['water','Area: Underwater'],['fire','Area: Lava / fiery'],['moon','Area: Moonlit'],['fly','Area: Fireflies'],['fey','Area: Feywild'],['s1','Area: Clear'],['s2','Area: Sunny'],['c1','Area: Cloudy'],['c2','Area: Overcast'],['c3','Area: Fog'],['r1','Area: Drizzle'],['r2','Area: Rain'],['r3','Area: Downpour']];
 // The weather that applies here: the background or map can switch it off or force a state.
 const todOf=L=>{const t=L.tod==='dawn'?'dusk':L.tod;return t||(L.night?'night':'day')};
 function effWx(L){
   const v=L.showBoard?'board':(L.showShop&&L.shopId)?'shop':(L.showMap&&L.mapId)?'map':'scene',ov=v==='map'?L.mapWx:(v==='scene'&&L.backgroundId&&!L.bgOff)?L.bgWx:null;
   if(ov==='none')return{on:false,wx:L.wx||'s1',wind:0,area:'none'};
-  if(ov==='drip'||ov==='torch'||ov==='magic')return{on:false,wx:L.wx||'s1',wind:0,area:ov,amb:ov};
+  if(AMBS.includes(ov))return{on:false,wx:L.wx||'s1',wind:0,area:ov,amb:ov};
   if(ov&&ov!=='auto')return{on:true,wx:ov,wind:0,area:ov};
   return{on:!!L.wxOn,wx:L.wx||'s1',wind:L.wind|0,area:null};
 }
+const AMBS=['drip','torch','magic','dark','haunt','water','fire','moon','fly','fey'];
+const todFor=L=>{const e=effWx(L);return(e.area==='none'||e.amb)?'day':todOf(L)};
 function wxBoxHTML(cur,w,L,role,day,sel,area,open){
   const cd=!!L.cold,season=L.season||(cd?'winter':'normal'),x=WXS.find(y=>y.id===cur)||WXS[0],ic=Array.isArray(x.i)?x.i[cd?1:0]:x.i,inf=wxInfo(cur,w,season),dm=role==='dm';
   const head=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${esc(wname(cur,season,cd))}</b><small>Wind: ${WINDS[w]}</small></div>${day!=null?`<span class="day">Day ${day}</span>`:''}${dm&&WXJ?'<button class="info" data-a="wxinfo" title="Rules">i</button>':''}`;
   let stats='',list='',rules='';
-  const an=area?`<div class="stats"><span>${area==='none'||area==='drip'||area==='torch'||area==='magic'?'This area: no weather shown':'This area: weather set by the area'}</span></div>`:'';
+  const an=area?`<div class="stats"><span>${area==='none'||AMBS.includes(area)?'This area: no weather shown':'This area: weather set by the area'}</span></div>`:'';
   if(inf){
     stats=`<div class="stats"><span>Travel ${inf.travel}</span>${dm?`<span>Survival DC ${inf.rest}</span>${inf.exposure?`<span>Exposure DC ${inf.exposure.dc} (${esc(inf.exposure.type)})</span>`:''}`:''}</div>`;
     const cats=WXJ.categories||DEFCATS,known=cats.map(c=>c.key);
@@ -731,7 +803,7 @@ function dm(code){
   <details class="panel" id="d-mu" open><summary><h2>Music <span id="mun"></span><span class="eye" id="e-mu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
   <div class="row"><button class="btn" id="mup" data-a="mplay" disabled>Play</button><button class="btn sm alt" id="mus" data-a="mstop" disabled>Stop</button><button class="btn sm" id="mloop" data-a="mloop">Loop</button><input id="muvol" type="range" min="0" max="100" value="70" title="Volume on this device" style="width:110px"></div>
   <div id="mue"></div>
-  <div class="edit" style="margin-top:8px"><input id="mulink" placeholder="Spotify link or audio file for this background or map" style="width:100%" disabled></div></details>
+  <div class="edit" style="margin-top:8px"><input id="mulink" placeholder="Spotify link or audio file for this background or map" style="width:100%" disabled><input id="autitle" placeholder="Title card on the tablet when chosen (optional)" style="width:100%;margin-top:6px" disabled></div></details>
   <details class="panel" id="d-bg" open><summary><h2>Backgrounds <span id="cb"></span><span id="bgn"></span><span class="eye" id="e-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="bgs"></div></details>
   <details class="panel" id="d-mp" open><summary><h2>Maps <span id="cmp"></span></h2></summary><div class="grid" id="mps"></div></details>
   <details class="panel" id="d-map" open><summary><h2>Map <span id="mpn"></span><span class="eye" id="e-map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
@@ -778,9 +850,9 @@ function dm(code){
     const qb=(a,id,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#qs').innerHTML=qs.map(q=>`<div class="qrow ${q.posted?'on':''}"><div class="qt"><b>${esc(q.title||'Untitled')}${q.done?' (done)':''}</b><p>${esc(q.text||'')}</p></div><div class="row">${qb('qcur',q.id,live.curQuest===q.id?'Current':'Set current',live.curQuest===q.id?0:1)}${qb('qpin',q.id,q.posted?'Unpin':'Pin')}${qb('qdone',q.id,q.done?'Reopen':'Done',1)}${qb('qedit',q.id,'Edit',1,1)}${qb('qdel',q.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No quests yet.</p>';
   };
-  const MU={cur:null,file:'',loop:localStorage.getItem('muloop')!=='0',ctx:null,out:null,get el(){return this.cur?this.cur.el:null}};
+  const MU={cur:null,file:'',loop:localStorage.getItem('muloop')!=='0',ctx:null,out:null,seq:0,get el(){return this.cur?this.cur.el:null}};
   const SP={ctrl:null,uri:'',type:'',link:'',playing:false,pos:0,dur:0,was:false,loading:false,auto:false,api:null,script:null,h:152};
-  const FADE=2;
+  const FADE_OUT=1.5,FADE_IN=2;
   const mtype=u=>!u?'':/^https?:\/\//i.test(u)?(/open\.spotify\.com/i.test(u)?'spotify':'link'):'file';
   const mpath=f=>f.includes('/')?f:'audio/'+f;
   const spParse=m=>{const x=/open\.spotify\.com\/(?:intl-[a-z]+\/)?(track|playlist|album|episode|show|artist)\/([A-Za-z0-9]+)/.exec(m||'');return x?{type:x[1],id:x[2],uri:'spotify:'+x[1]+':'+x[2]}:null};
@@ -822,25 +894,30 @@ function dm(code){
   }
   const ramp=(o,to,secs)=>{const t=MU.ctx.currentTime;o.g.gain.cancelScheduledValues(t);o.g.gain.setValueAtTime(o.g.gain.value,t);o.g.gain.linearRampToValueAtTime(to,t+secs)};
   function fadeOut(o,after){
-    ramp(o,0,FADE);o.fading=true;clearTimeout(o.tm);
-    o.tm=setTimeout(()=>{try{o.el.pause()}catch(e){}o.fading=false;if(after)after();muDraw()},FADE*1000+120);muDraw();
+    ramp(o,0,FADE_OUT);o.fading=true;clearTimeout(o.tm);
+    o.tm=setTimeout(()=>{try{o.el.pause()}catch(e){}o.fading=false;if(after)after();muDraw()},FADE_OUT*1000+120);muDraw();
   }
   const dropTrack=o=>{try{o.src.disconnect();o.g.disconnect()}catch(e){}};
   const isPlaying=()=>!!(MU.cur&&MU.file&&!MU.cur.el.paused&&!MU.cur.fading);
-  function playFile(f){
-    if(!muAudio())return;
-    const old=MU.cur;
-    if(old&&MU.file===f&&!old.el.paused&&!old.fading)return;
-    if(old){if(!old.el.paused)fadeOut(old,()=>dropTrack(old));else dropTrack(old)}
+  function startTrack(f){
     const el=new Audio(mpath(f));el.loop=MU.loop;el.onplay=el.onpause=()=>muDraw();
     const src=MU.ctx.createMediaElementSource(el),g=MU.ctx.createGain();g.gain.value=0;src.connect(g);g.connect(MU.out);
     MU.cur={el,src,g,fading:false,tm:0};MU.file=f;
     const p=el.play();if(p&&p.catch)p.catch(()=>{});
-    ramp(MU.cur,1,FADE);muDraw();
+    ramp(MU.cur,1,FADE_IN);muDraw();
+  }
+  // Switching tracks: the old one dips to silence, then the new one comes up.
+  function playFile(f){
+    if(!muAudio())return;
+    const old=MU.cur,seq=++MU.seq;
+    if(old&&MU.file===f&&!old.el.paused&&!old.fading)return;
+    const go=()=>{if(seq!==MU.seq)return;if(old)dropTrack(old);startTrack(f)};
+    if(old&&!old.el.paused){MU.file=f;fadeOut(old,go)}else go();
   }
   function pauseMusic(){if(isPlaying())fadeOut(MU.cur)}
-  function resumeMusic(){const o=MU.cur;if(o&&o.el.paused){muAudio();clearTimeout(o.tm);const p=o.el.play();if(p&&p.catch)p.catch(()=>{});ramp(o,1,FADE)}}
-  function stopMusic(){const o=MU.cur;MU.file='';if(o&&!o.el.paused&&!o.fading)fadeOut(o);if(SP.ctrl&&SP.playing)SP.ctrl.pause();muDraw()}
+  function resumeMusic(){const o=MU.cur;if(o&&o.el.paused){muAudio();clearTimeout(o.tm);const p=o.el.play();if(p&&p.catch)p.catch(()=>{});ramp(o,1,FADE_IN)}}
+  function stopMusic(){const o=MU.cur;MU.seq++;MU.file='';if(o&&!o.el.paused&&!o.fading)fadeOut(o);if(SP.ctrl&&SP.playing)SP.ctrl.pause();muDraw()}
+  function autoCard(id){const t=((imgs.find(x=>x.id===id)||{}).title||'').trim();if(t)set({card:{t,at:Date.now()}})}
   function autoMusic(id){
     const m=((imgs.find(x=>x.id===id)||{}).music||'').trim(),ty=mtype(m);
     if(ty==='file')playFile(m);else if(ty==='spotify'){SP.link=m;spShow(m,true)}
@@ -859,6 +936,7 @@ function dm(code){
     const aid=areaId(),a=imgs.find(x=>x.id===aid),m=((a||{}).music||'').trim(),ty=mtype(m),fp=isPlaying(),pl=fp||SP.playing,me=fp&&MU.file===m;
     $('#mun').textContent=a?'('+a.name+')':'';
     const li=$('#mulink');li.disabled=!aid;if(document.activeElement!==li)li.value=m;
+    const ti=$('#autitle');ti.disabled=!aid;if(document.activeElement!==ti)ti.value=(a||{}).title||'';
     const b=$('#mup');b.disabled=!ty;b.textContent=ty==='file'?(me?'Playing':'Play'):(ty?'Open':'Play');b.classList.toggle('alt',!me);
     $('#mus').disabled=!pl;$('#mloop').classList.toggle('alt',!MU.loop);
     const t=$('#ct-mu');if(t){t.disabled=!(m||MU.file||SP.uri);t.textContent=pl?'Pause music':'Play music';t.classList.toggle('alt',!pl)}
@@ -904,6 +982,7 @@ function dm(code){
   unsubs.push(onSnapshot(GD,s=>{if(s.exists())G={...G,...s.data()};draw()}));
   const updPre=patch=>saveG({presets:G.presets.map(p=>p.id===G.cur?{...p,...patch}:p)});
   $('#pn').onchange=e=>updPre({name:e.target.value.trim()||'Preset'});
+  $('#autitle').onchange=async e=>{const aid=areaId();if(!aid)return;await updateDoc(doc(IM,aid),{title:e.target.value.trim()})};
   $('#mulink').onchange=async e=>{const aid=areaId();if(!aid)return;await updateDoc(doc(IM,aid),{music:e.target.value.trim()})};
   $('#muvol').oninput=e=>{if(MU.out)MU.out.gain.setTargetAtTime(+e.target.value/100,MU.ctx.currentTime,.05)};
   $('#d-mu').addEventListener('toggle',placeHost);addEventListener('scroll',placeHost,true);addEventListener('resize',placeHost);unsubs.push(()=>{removeEventListener('scroll',placeHost,true);removeEventListener('resize',placeHost)});
@@ -960,7 +1039,7 @@ function dm(code){
     if(MO)view=clampV(view,MO,MS,mc.width,mc.height);
     const x=mc.getContext('2d');
     if(!MO){x.fillStyle='#000';x.fillRect(0,0,w,h);x.fillStyle='#d4a84b';x.font=(16*d)+'px Cinzel,serif';x.textAlign='center';x.fillText('Tap a map in the Maps list',w/2,h/2);return}
-    R2(MO,MS,view,.62,mkToks(dmToks(),MS),todOf(live));const c=cam();
+    R2(MO,MS,view,.62,mkToks(dmToks(),MS),todFor(live));const c=cam();
     lights().forEach(l=>{x.beginPath();x.arc(c.ox+l.x*c.m.w*c.sc,c.oy+l.y*c.m.h*c.sc,12*d,0,7);x.fillStyle='#f0a93a';x.fill();x.lineWidth=3*d;x.strokeStyle='#fff';x.stroke()});
   }
   const saveM=o=>mw.id&&setDoc(doc(db,'sessions',code,'maps',mw.id),o,{merge:true});
@@ -994,7 +1073,7 @@ function dm(code){
   const set=o=>setDoc(L,o,{merge:true});
   app.onclick=async e=>{
     const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,id=t.dataset.id;
-    if(a==='bg'){if(live.backgroundId!==id)autoMusic(id);set({backgroundId:live.backgroundId===id?null:id,bgWx:wxOf(id),bgOff:false})}
+    if(a==='bg'){if(live.backgroundId!==id){autoMusic(id);autoCard(id)}set({backgroundId:live.backgroundId===id?null:id,bgWx:wxOf(id),bgOff:false})}
     if(a==='npc'&&MO&&live.showMap&&!(live.visibleNpcIds||[]).includes(id)){MS.tk={...(MS.tk||{}),[id]:{x:view.x,y:view.y}};dirty=true;flush()}
     if(a==='npc')set({visibleNpcIds:(live.visibleNpcIds||[]).includes(id)?arrayRemove(id):arrayUnion(id)});
     if(a==='black')set({backgroundId:null});
@@ -1087,7 +1166,7 @@ function dm(code){
       try{await navigator.clipboard.writeText(t);msg.className='note';msg.textContent='Copied '+(t.split('\n').length-1)+' items. Paste them into your sheet.'}
       catch(e){$('#imt').value=t;msg.className='note';msg.textContent='Clipboard blocked. The table is in the box above.'}}
     if(a==='itshow'){const i=items.find(x=>x.id===id);if(i){const on=live.showShop&&live.shopId===i.shopId;set(on?{shopItemId:live.shopItemId===id?null:id}:{showShop:true,shopId:i.shopId,shopRoot:i._r,shopItemId:id,showBoard:false,showMap:false})}}
-    if(a==='map'){autoMusic(id);set({mapId:id,mapWx:wxOf(id),mapView:{x:.5,y:.5,ft:60}})}
+    if(a==='map'){autoMusic(id);autoCard(id);set({mapId:id,mapWx:wxOf(id),mapView:{x:.5,y:.5,ft:60}})}
     if(a==='mshow'&&live.mapId)set({showMap:!live.showMap,...(!live.showMap?{showBoard:false,showShop:false}:{})});
     if(a==='mlight'&&MO){const L=lights().map(l=>({...l})),n={x:view.x,y:view.y};L.push(n);MS.lights=L;addEx(n);dirty=true;flush();drawMap()}
     if(a==='mrm'&&MO&&lights().length>1){MS.lights=lights().slice(0,-1);dirty=true;flush();drawMap()}
