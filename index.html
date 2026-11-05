@@ -264,7 +264,7 @@ body.intro #stage>:not(#intro){visibility:hidden}
 #vmenu{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.74);display:flex;align-items:center;justify-content:center}
 #vmenu .vm{background:#2a170d;border:2px solid var(--gold2);border-radius:12px;padding:18px 22px;display:flex;flex-direction:column;gap:10px;min-width:260px;max-width:90vw}
 #vmenu h2{margin:0 0 2px;color:var(--gold);border:0;padding:0}
-.isl{position:absolute;inset:0;background:#000;opacity:0;transition:opacity 1.6s;overflow:hidden;backface-visibility:hidden;transform:translateZ(0)}
+.isl{position:absolute;inset:0;background:#000;opacity:0;transition:opacity 1.6s;overflow:hidden}
 .isl.in{opacity:1}
 .isl.nofade{transition:none}
 .ibg{position:absolute;left:-6%;top:-6%;width:112%;height:112%;object-fit:cover;animation-duration:var(--d);animation-timing-function:linear;animation-fill-mode:forwards;will-change:transform}
@@ -289,33 +289,32 @@ body.intro #stage>:not(#intro){visibility:hidden}
 .ipimg.kb-zi{animation-name:pzi}.ipimg.kb-zo{animation-name:pzo}
 @keyframes pzi{from{transform:scale(1)}to{transform:scale(1.07)}}
 @keyframes pzo{from{transform:scale(1.07)}to{transform:scale(1)}}
-.inm{flex:1;display:flex;align-items:center;padding:0 9vmin;font:700 clamp(30px,8.5vmin,104px)/1.1 'Cinzel Decorative',Cinzel,serif;color:var(--gold);text-shadow:0 0 28px #000,0 4px 0 #000}
-.inm span{display:block;overflow-wrap:break-word;max-width:100%;padding-bottom:1.4vmin;border-bottom:.6vmin solid var(--gold2)}
-.ipt.l .inm{justify-content:flex-start;text-align:left;animation:inml 1.6s .6s both}
-.ipt.r .inm{justify-content:flex-end;text-align:right;animation:inmr 1.6s .6s both}
 @keyframes inml{from{opacity:0;transform:translateX(6vmin)}to{opacity:1;transform:none}}
 @keyframes inmr{from{opacity:0;transform:translateX(-6vmin)}to{opacity:1;transform:none}}
-.icap{position:absolute;left:9vmin;right:9vmin;bottom:12%;text-align:center;overflow-wrap:break-word;font:700 clamp(22px,5vmin,52px) 'Cinzel Decorative',Cinzel,serif;color:var(--gold);text-shadow:0 0 22px #000,0 3px 0 #000}
 #idle{display:none!important}
-.itd,.itn{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity 1.8s}
-.itd{background:linear-gradient(to top,rgba(255,110,40,.42),rgba(150,60,70,.28) 45%,rgba(40,30,80,.3))}
-.itn{background:linear-gradient(rgba(10,20,60,.55),rgba(4,8,30,.68))}
-#intro.tod-dusk .itd,#intro.tod-night .itn{opacity:1}
 .ibgl{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,#f1f4f8,#b9c2cd 78%)}
-.isl.lt .inm{color:#3a2508;text-shadow:0 0 18px rgba(255,255,255,.75),0 2px 0 rgba(255,255,255,.5)}
-.isl.lt .inm span{border-bottom-color:#7a5a1a}
 #iwx{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
-.ifog{position:absolute;inset:-25%;z-index:3;pointer-events:none;opacity:.42;transition:opacity 2s;background:radial-gradient(40% 30% at 20% 30%,rgba(222,228,235,.34),transparent 70%),radial-gradient(45% 35% at 78% 62%,rgba(222,228,235,.28),transparent 70%),radial-gradient(35% 30% at 50% 88%,rgba(222,228,235,.26),transparent 70%);animation:ifg 26s ease-in-out infinite alternate;will-change:transform}
-#intro.hzx .ifog{opacity:.2}
-@keyframes ifg{from{transform:translate(-5%,1%) scale(1)}to{transform:translate(6%,-3%) scale(1.18)}}
-.ivig{position:absolute;inset:0;z-index:6;pointer-events:none;background:radial-gradient(ellipse at center,transparent 34%,rgba(0,0,0,.5) 64%,rgba(0,0,0,.95) 100%);transition:opacity 2.4s}
-.ifrm2{position:absolute;inset:0;z-index:8;pointer-events:none;border:2.8vmin solid #000;transition:opacity 2.4s}
+.ifrm2{position:absolute;inset:0;z-index:6;pointer-events:none;border:2.8vmin solid #000;background:radial-gradient(ellipse at center,transparent 34%,rgba(0,0,0,.5) 64%,rgba(0,0,0,.95) 100%);transition:opacity 2.4s}
 .ifrm2::before{content:"";position:absolute;inset:0;border:.32vmin solid #b08d3c;box-shadow:inset 0 0 0 .7vmin #000,inset 0 0 0 1vmin rgba(176,141,60,.55),inset 0 0 5vmin 1vmin rgba(0,0,0,.85)}
 .ifrm2 i{position:absolute;width:2.4vmin;height:2.4vmin;background:#0d0a06;border:.34vmin solid #d4af37;transform:rotate(45deg)}
 .ifrm2 i:nth-child(1){left:-1.2vmin;top:-1.2vmin}.ifrm2 i:nth-child(2){right:-1.2vmin;top:-1.2vmin}.ifrm2 i:nth-child(3){left:-1.2vmin;bottom:-1.2vmin}.ifrm2 i:nth-child(4){right:-1.2vmin;bottom:-1.2vmin}
-#intro.opening .ivig,#intro.opening .ifrm2{opacity:0}
+#intro.opening .ifrm2{opacity:0}
 .iwhite{position:absolute;inset:0;z-index:9;background:#f4f6f9;pointer-events:none}
-#intro.out .ifog,#intro.out #iwx{opacity:0!important;animation:none!important;transition:opacity 1.4s}
+#intro.out #iwx{opacity:0!important;transition:opacity 1.4s}
+#itx{position:absolute;inset:0;z-index:7;pointer-events:none}
+.tsl{position:absolute;inset:0;opacity:0;transition:opacity 1.6s}
+.tsl.in{opacity:1}
+.tsl.nofade{transition:none}
+.tnm{position:absolute;top:0;bottom:0;width:42%;box-sizing:border-box;display:flex;align-items:center;padding:0 11vmin;font:700 clamp(30px,8.5vmin,104px)/1.1 'Cinzel Decorative',Cinzel,serif;color:var(--gold);text-shadow:0 0 28px #000,0 4px 0 #000}
+.tnm.l{right:0;justify-content:flex-start;text-align:left;animation:inml 1.6s .6s both}
+.tnm.r{left:0;justify-content:flex-end;text-align:right;animation:inmr 1.6s .6s both}
+.tnm span{display:block;max-width:100%;padding-bottom:1.4vmin;border-bottom:.6vmin solid var(--gold2)}
+.tcap{position:absolute;left:11vmin;right:11vmin;bottom:13%;text-align:center;font:700 clamp(28px,7vmin,76px)/1.15 'Cinzel Decorative',Cinzel,serif;color:var(--gold);text-shadow:0 0 24px #000,0 3px 0 #000}
+.tsl.lt .tnm{color:#3a2508;text-shadow:0 0 18px rgba(255,255,255,.75),0 2px 0 rgba(255,255,255,.5)}
+.tsl.lt .tnm span{border-bottom-color:#7a5a1a}
+.isl.td::after,.isl.tn::after{content:"";position:absolute;inset:0;pointer-events:none}
+.isl.td::after{background:linear-gradient(to top,rgba(255,110,40,.42),rgba(150,60,70,.28) 45%,rgba(40,30,80,.3))}
+.isl.tn::after{background:linear-gradient(rgba(10,20,60,.55),rgba(4,8,30,.68))}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -418,12 +417,11 @@ async function display(code,pv){
   ['drip','torch','magic','dark','haunt','water','fire','moon','fly','fey'].forEach(a=>INTROFX[a]={am:a});
   const introFx=(k,tod)=>{if(!IW)return;const f=INTROFX[k],nt=tod==='night';
     if(!f)IW.set(null,0,false,nt,0,'');else if(f.am)IW.set(null,0,false,nt,0,f.am);else IW.set(WXS.find(x=>x.id===f.s)||WXS[0],f.w,!!f.c,nt,f.g||0,'')};
-  const setTod=(e,t)=>{e.classList.toggle('tod-dusk',t==='dusk');e.classList.toggle('tod-night',t==='night')};
-  // shrink the text until it fits its box and stays clear of the golden frame
+  // shrink the text until it fits its box and stays clear of the golden frame (long words must fit too)
   function fitText(el){
-    const fit=(node,avH)=>{if(!node)return;let fs=parseFloat(getComputedStyle(node).fontSize)||48;let n=0;
-      while((node.scrollWidth>node.clientWidth+1||node.offsetHeight>avH)&&fs>16&&n++<40){fs*=.93;node.style.fontSize=fs+'px'}};
-    const H=el.clientHeight||600;fit(el.querySelector('.inm span'),H*.68);fit(el.querySelector('.icap'),H*.26);
+    const fit=(node,avH)=>{if(!node)return;let fs=parseFloat(getComputedStyle(node).fontSize)||48,n=0;
+      while((node.scrollWidth>node.clientWidth+1||node.offsetHeight>avH)&&fs>16&&n++<60){fs*=.94;node.style.fontSize=fs+'px'}};
+    const H=($('#intro').clientHeight)||600;fit(el.querySelector('.tnm span'),H*.62);fit(el.querySelector('.tcap'),H*.3);
   }
   const loadIm=src=>new Promise(res=>{const m=new Image();m.onload=()=>res(m);m.onerror=()=>res(null);m.src=src});
   const mkCv=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
@@ -455,36 +453,43 @@ async function display(code,pv){
     if(!trans){fade(true,.13,.13);fade(false,.09,.24)}else if(botSolid){fade(false,0.001,.16)}
     x.globalCompositeOperation='source-over';return c;
   }
-  async function prepSlide(it,i,secs,last){
+  async function prepSlide(it,i,secs){
     const s0=it.s,im=it.im,logo=i===0,por=s0.k==='p'&&!logo,hz=!!s0.h&&!logo,kb=['zi','pl','zo','pr'][i%4],side=i%2?'r':'l';
-    const el=document.createElement('div');el.className='isl'+(hz?' hz':'')+(por?' por':'')+(last?' last':'')+(logo?' logo':'');
+    const el=document.createElement('div');el.className='isl'+(hz?' hz':'')+(por?' por':'')+(logo?' logo':'')+(s0.d==='dusk'?' td':s0.d==='night'?' tn':'');
     el.style.setProperty('--d',(secs+3)+'s');el.style.setProperty('--s',(secs+1.5)+'s');
-    const t0=(s0.t||'').trim(),txt=t0==='-'?'':t0||(!logo&&por?(hz?'???':(im.name||'')):'');   // text: custom, or the name for characters, or nothing
-    const cap=()=>{if(!txt)return;const c=document.createElement('div');c.className='icap';c.textContent=txt;el.appendChild(c)};
+    const t0=(s0.t||'').trim(),txt=t0==='-'?'':t0||(!logo&&por?(hz?'???':(im.name||'')):''),light=por&&s0.b==='light'&&!hz;
+    // the text gets its own layer above all effects
+    let tx=null;
+    if(txt){tx=document.createElement('div');tx.className='tsl'+(light?' lt':'');tx.innerHTML=por?`<div class="tnm ${side}"><span></span></div>`:'<div class="tcap"></div>';(tx.querySelector('span')||tx.querySelector('.tcap')).textContent=txt}
     const img=im.data?await loadIm(im.data):null;
-    if(!img){cap();return el}
+    if(!img)return{el,tx};
     const w=img.naturalWidth||1,h=img.naturalHeight||1;
     if(logo){
       const bg=softCv(img,w,h,48,.35,.4);bg.className='ibg st';el.appendChild(bg);
-      const lg=cutCv(img,w,h,1100);lg.className='ilogo';el.appendChild(lg);cap();
+      const lg=cutCv(img,w,h,1100);lg.className='ilogo';el.appendChild(lg);
     }else if(por){
-      const light=s0.b==='light'&&!hz;   // light or dark backdrop behind a character
       if(light){el.classList.add('lt');const bl=document.createElement('div');bl.className='ibgl';el.appendChild(bl)}else{const bg=softCv(img,w,h,48,hz?.25:.4,.4);bg.className='ibg st';el.appendChild(bg)}
       const cut=cutCv(img,w,h,860);cut.className='ipimg kb-'+(i%2?'zo':'zi');
       const pt=document.createElement('div');pt.className='ipt '+side+(txt?'':' solo');
-      pt.innerHTML='<div class="ipic"></div>'+(txt?`<div class="inm"><span>${esc(txt)}</span></div>`:'');pt.firstChild.appendChild(cut);el.appendChild(pt);
+      pt.innerHTML='<div class="ipic"></div>';pt.firstChild.appendChild(cut);el.appendChild(pt);
     }else if(hz){
-      const cl=document.createElement('div');cl.className='icl';img.className='ibg kb-'+kb;cl.appendChild(img);el.appendChild(cl);cap();
+      const cl=document.createElement('div');cl.className='icl';img.className='ibg kb-'+kb;cl.appendChild(img);el.appendChild(cl);
     }else{
-      img.className='ibg kb-'+kb;el.appendChild(img);cap();
+      img.className='ibg kb-'+kb;el.appendChild(img);
     }
     if(hz){const lt=document.createElement('div');lt.className='ilt';el.appendChild(lt)}
-    return el;
+    return{el,tx};
   }
-  function showSlide(el,s0,root,last){
-    root.appendChild(el);fitText(el);void el.offsetWidth;el.classList.add('in');
-    const e=$('#intro');e.classList.toggle('hzx',!!s0.h);setTod(e,s0.d);introFx(s0.w||'',s0.d);
+  function addText(tx){
+    const r=$('#itx');if(!tx||!r)return;r.appendChild(tx);fitText(tx);
+    if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>fitText(tx));   // measure again once the real font is in
+  }
+  function showSlide(p,s0,root){
+    const el=p.el,tx=p.tx,r=$('#itx');
+    root.appendChild(el);addText(tx);void el.offsetWidth;el.classList.add('in');if(tx)tx.classList.add('in');
+    introFx(s0.w||'',s0.d);
     const prev=el.previousElementSibling;if(prev)setTimeout(()=>prev.remove(),1900);   // the old slide stays until the new one is fully in: no dark dip in between
+    [...r.children].forEach(c=>{if(c!==tx){c.classList.remove('nofade','in');setTimeout(()=>c.remove(),1900)}});
   }
   // fog opening: the screen is white, then a clear hole grows from the centre outwards
   function clearFog(ms){
@@ -494,37 +499,40 @@ async function display(code,pv){
       if(p<1)introRaf=requestAnimationFrame(step);else wh.remove()};
     introRaf=requestAnimationFrame(step);
   }
-  function showLogo(el,s0,pl,root){
-    const e=$('#intro');root.appendChild(el);fitText(el);setTod(e,s0.d);introFx(s0.w||'',s0.d);
+  function showLogo(p,s0,pl,root){
+    const e=$('#intro'),el=p.el,tx=p.tx;root.appendChild(el);addText(tx);introFx(s0.w||'',s0.d);
     if(pl.fog){
-      el.classList.add('nofade','in');
+      el.classList.add('nofade','in');if(tx)tx.classList.add('nofade','in');
       introT.push(setTimeout(()=>clearFog(pl.logoRev),pl.logoHold));
       introT.push(setTimeout(()=>e.classList.remove('opening'),pl.logoHold+pl.logoRev*.35));
     }else{
-      introT.push(setTimeout(()=>{el.style.transitionDuration=pl.logoRev+'ms';void el.offsetWidth;el.classList.add('in');e.classList.remove('opening')},pl.logoHold));
+      introT.push(setTimeout(()=>{el.style.transitionDuration=pl.logoRev+'ms';if(tx)tx.style.transitionDuration=pl.logoRev+'ms';void el.offsetWidth;el.classList.add('in');if(tx)tx.classList.add('in');e.classList.remove('opening')},pl.logoHold));
     }
   }
   function introStop(){
-    introT.forEach(clearTimeout);introT=[];cancelAnimationFrame(introRaf);if(IW){try{IW.set(null,0,false,false,0,'')}catch(e){}IW=null}
-    const was=introRun;introRun=false;document.body.classList.remove('intro');const e=$('#intro');e.classList.remove('on','hzx','menace','opening','out','tod-dusk','tod-night');
+    introT.forEach(clearTimeout);introT=[];cancelAnimationFrame(introRaf);
+    if(IW){const w0=IW;IW=null;try{w0.set(null,0,false,false,0,'')}catch(e){}setTimeout(()=>{try{w0.stop()}catch(e){}},3000)}   // let the weather fade, then end its loop
+    const was=introRun;introRun=false;document.body.classList.remove('intro');const e=$('#intro');e.classList.remove('on','opening','out');
     setTimeout(()=>{if(!introRun)e.innerHTML=''},1600);if(was){wk='';renderWx()}
   }
   async function introPlay(cfg){
     introStop();introRun=true;wk='';renderWx();
     const pl=introPlan(cfg),e=$('#intro');
-    e.innerHTML='<div class="ifog"></div><div id="iroot"></div><canvas id="iwx"></canvas><div class="itd"></div><div class="itn"></div><div class="ivig"></div><div class="ifrm2"><i></i><i></i><i></i><i></i></div>'+(pl.fog?'<div class="iwhite"></div>':'');
-    e.classList.add('opening','on');   // the screen goes white or black at once; frame and vignette wait for the logo
+    e.innerHTML='<div id="iroot"></div><canvas id="iwx"></canvas><div class="ifrm2"><i></i><i></i><i></i><i></i></div><div id="itx"></div>'+(pl.fog?'<div class="iwhite"></div>':'');
+    e.classList.add('opening','on');   // the screen goes white or black at once; the frame waits for the logo
     const items=await Promise.all((cfg.slides||[]).map(async s0=>({s:s0,im:await get(s0.id)})));
+    try{await Promise.race([document.fonts&&document.fonts.load("700 48px 'Cinzel Decorative'"),new Promise(r=>setTimeout(r,1500))])}catch(err){}   // the font must be in before text is measured
     if(!introRun||!items.length){introStop();return}
     const root=$('#iroot'),n=items.length,P=[],secs=pl.secs;
-    const prep=k=>P[k]||(P[k]=prepSlide(items[k],k,secs,k===n-1));
+    const prep=k=>P[k]||(P[k]=prepSlide(items[k],k,secs));
     try{IW=makeWeather($('#iwx'))}catch(err){IW=null}
     introT.push(setTimeout(()=>document.body.classList.add('intro'),1600));   // once the overlay is solid, stop painting the normal screen underneath
     prep(0);
     items.forEach((it,k)=>{const t=pl.t[k];
       if(k)introT.push(setTimeout(()=>prep(k),Math.max(0,t-3500)));   // decode the next picture ahead of time
-      introT.push(setTimeout(()=>prep(k).then(el=>{if(!introRun)return;if(k)showSlide(el,it.s,root,k===n-1);else showLogo(el,it.s,pl,root)}),t))});
-    introT.push(setTimeout(()=>{e.classList.add('out');const l=$('#iroot .isl:last-child');if(l){l.classList.remove('nofade');l.style.transitionDuration='1600ms';l.classList.remove('in')}introFx('','')},pl.fadeEnd));   // last image fades to black
+      introT.push(setTimeout(()=>prep(k).then(p=>{P[k]=null;if(!introRun)return;if(k)showSlide(p,it.s,root);else showLogo(p,it.s,pl,root)}),t))});   // P[k]=null lets the memory of shown slides go
+    introT.push(setTimeout(()=>{e.classList.add('out');const l=$('#iroot .isl:last-child');if(l){l.classList.remove('nofade');l.style.transitionDuration='1600ms';l.classList.remove('in')}
+      document.querySelectorAll('#itx .tsl').forEach(t=>{t.classList.remove('nofade');t.style.transitionDuration='1600ms';t.classList.remove('in')});introFx('','')},pl.fadeEnd));   // last image and its text fade to black
     introT.push(setTimeout(introStop,pl.total));   // after a moment of black the screen comes back
   }
   const introCheck=()=>{const c=d.intro;
@@ -593,7 +601,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-05 aa';
+const VER='2026-11-05 ab';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
