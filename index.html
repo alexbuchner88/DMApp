@@ -226,6 +226,7 @@ summary h2{display:flex;align-items:center;gap:.4em}
 
 .muhost{position:fixed;right:8px;bottom:8px;width:320px;height:152px;opacity:0;pointer-events:none;z-index:30;overflow:hidden;border-radius:12px}
 .muhost iframe{width:100%;height:100%;border:0}
+.muhint{position:fixed;left:8px;bottom:170px;z-index:42;display:none;padding:7px 12px;border-radius:8px;background:#2a170d;color:var(--gold);border:1px solid var(--gold);font:700 13px Cinzel,serif;max-width:340px}
 
 #bg2{position:absolute;inset:0;background:center/100% 100% no-repeat;transition:opacity 1.2s;opacity:0}
 #bg{opacity:0;transition:opacity 1.2s}
@@ -269,12 +270,30 @@ input[type=checkbox]{min-height:0;width:20px;height:20px;padding:0;flex:none}
 .por .ibg{filter:blur(22px) brightness(.45)}
 .hz .ibg{filter:blur(10px) saturate(.45) brightness(.72)}
 .hz.por .ibg{filter:blur(26px) saturate(.4) brightness(.38)}
-.ipt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vmin}
-.ifrm{width:46vmin;height:46vmin;border-radius:50%;overflow:hidden;border:.9vmin solid var(--gold);box-shadow:0 0 6vmin #000c}
-.ifrm img{width:100%;height:100%;object-fit:cover;object-position:50% 0;animation-duration:var(--d);animation-timing-function:linear;animation-fill-mode:forwards}
-.hz .ifrm{filter:blur(6px) grayscale(.7) brightness(.62)}
-.inm,.icap{font:700 clamp(26px,6vmin,64px) 'Cinzel Decorative',Cinzel,serif;color:var(--gold);text-shadow:0 0 22px #000,0 3px 0 #000}
-.icap{position:absolute;left:0;right:0;bottom:10%;text-align:center;font-size:clamp(22px,5vmin,52px)}
+.ipt{position:absolute;inset:0;display:flex;align-items:stretch}
+.ipt.r{flex-direction:row-reverse}
+.ipic{flex:0 0 56%;position:relative;overflow:hidden}
+.ipt.l .ipic{-webkit-mask-image:linear-gradient(to right,#000 66%,transparent);mask-image:linear-gradient(to right,#000 66%,transparent)}
+.ipt.r .ipic{-webkit-mask-image:linear-gradient(to left,#000 66%,transparent);mask-image:linear-gradient(to left,#000 66%,transparent)}
+.ipic img{position:absolute;left:0;top:-3%;width:100%;height:106%;object-fit:cover;object-position:50% 10%;animation-duration:var(--d);animation-timing-function:linear;animation-fill-mode:forwards}
+.hz .ipic{filter:blur(6px) grayscale(.7) brightness(.62)}
+.inm{flex:1;display:flex;align-items:center;padding:0 5vmin;font:700 clamp(34px,10vmin,120px)/1.08 'Cinzel Decorative',Cinzel,serif;color:var(--gold);text-shadow:0 0 28px #000,0 4px 0 #000}
+.inm span{display:block;padding-bottom:1.4vmin;border-bottom:.6vmin solid var(--gold2)}
+.ipt.l .inm{justify-content:flex-start;text-align:left;animation:inml 1.6s .6s both}
+.ipt.r .inm{justify-content:flex-end;text-align:right;animation:inmr 1.6s .6s both}
+@keyframes inml{from{opacity:0;transform:translateX(6vmin)}to{opacity:1;transform:none}}
+@keyframes inmr{from{opacity:0;transform:translateX(-6vmin)}to{opacity:1;transform:none}}
+.icap{position:absolute;left:0;right:0;bottom:10%;text-align:center;font:700 clamp(22px,5vmin,52px) 'Cinzel Decorative',Cinzel,serif;color:var(--gold);text-shadow:0 0 22px #000,0 3px 0 #000}
+#iwx{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
+.isl.last .ibg{filter:contrast(1.2) saturate(.75) brightness(.85)}
+.isl.por.last .ibg{filter:blur(22px) brightness(.4) saturate(.7)}
+.isl.hz.last .ibg{filter:blur(10px) saturate(.45) brightness(.7) contrast(1.15)}
+.last .ibg,.last .ipic img{animation-duration:calc(var(--d)*.7)}
+.ired{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 28%,rgba(140,0,0,.6) 100%)}
+#intro.menace .ired{animation:ipulse 2.6s ease-in-out infinite}
+@keyframes ipulse{0%,100%{opacity:.5}50%{opacity:1}}
+.iclear{position:absolute;inset:-10%;z-index:5;pointer-events:none;background:radial-gradient(ellipse at 50% 55%,rgba(232,236,242,.98),rgba(196,204,214,.98) 70%);animation:iclr 3.8s ease-out .2s forwards}
+@keyframes iclr{0%{opacity:1;transform:scale(1)}55%{opacity:.6}100%{opacity:0;transform:scale(1.3)}}
 .ifog{position:absolute;inset:-25%;z-index:3;pointer-events:none;opacity:.5;mix-blend-mode:screen;transition:opacity 2s;background:radial-gradient(40% 30% at 20% 30%,rgba(222,228,235,.38),transparent 70%),radial-gradient(45% 35% at 78% 62%,rgba(222,228,235,.32),transparent 70%),radial-gradient(35% 30% at 50% 88%,rgba(222,228,235,.3),transparent 70%);animation:ifg 26s ease-in-out infinite alternate}
 .ifog::after{content:"";position:absolute;inset:0;background:radial-gradient(38% 30% at 70% 25%,rgba(222,228,235,.3),transparent 70%),radial-gradient(40% 32% at 25% 70%,rgba(222,228,235,.28),transparent 70%);animation:ifg 19s ease-in-out infinite alternate-reverse}
 #intro.hzx .ifog{opacity:.95}
@@ -350,7 +369,7 @@ async function display(code,pv){
   $('#shopg').onclick=e=>{const c=e.target.closest('[data-i]');if(c){lo=c.dataset.i;renderShop()}};
   $('#shopd').onclick=()=>{if(lo)lo=null;else dis=d.shopItemId;renderShop()};
   const WXE=makeWeather($('#wx'));unsubs.push(()=>WXE.stop());
-  let wk='';const renderWx=()=>{{const td=todFor(d);$('#stage').classList.toggle('night',td==='night');$('#stage').classList.toggle('dusk',td==='dusk')}kick();const ew=effWx(d),on=ew.on,s=WXS.find(x=>x.id===ew.wx)||WXS[0],w=Math.min(3,ew.wind|0),cd=!!d.cold,td0=todFor(d),nt=td0==='night',ss=d.season||(cd?'winter':'normal'),gl=(on&&!cd?(ew.wx==='s3'?(ss==='summer'?1:.45):(ew.wx==='s2'&&ss==='summer'?.35:0)):0)*(td0==='night'?0:td0==='dusk'?.6:1),am=ew.amb||'',k=[on,s.id,w,cd,nt,ss,gl,am].join();if(k===wk)return;wk=k;WXE.set(on?s:null,w,cd,nt,gl,am);$('#wxb').innerHTML=on?wxBadge(s,w,cd,ss):''};
+  let wk='';const renderWx=()=>{{const td=todFor(d);$('#stage').classList.toggle('night',td==='night');$('#stage').classList.toggle('dusk',td==='dusk')}kick();const ew=effWx(d),on=ew.on&&!introRun,s=WXS.find(x=>x.id===ew.wx)||WXS[0],w=Math.min(3,ew.wind|0),cd=!!d.cold,td0=todFor(d),nt=td0==='night',ss=d.season||(cd?'winter':'normal'),gl=(on&&!cd?(ew.wx==='s3'?(ss==='summer'?1:.45):(ew.wx==='s2'&&ss==='summer'?.35:0)):0)*(td0==='night'?0:td0==='dusk'?.6:1),am=introRun?'':(ew.amb||''),k=[on,s.id,w,cd,nt,ss,gl,am].join();if(k===wk)return;wk=k;WXE.set(on?s:null,w,cd,nt,gl,am);$('#wxb').innerHTML=on?wxBadge(s,w,cd,ss):''};
   WXJP.then(()=>{wk='';renderWx()});
   const MX=makeMixer();unsubs.push(()=>MX.stop());
   const applyAudio=()=>{
@@ -370,31 +389,40 @@ async function display(code,pv){
     nb.style.transition='';nb.style.opacity=1;
     bgT=setTimeout(()=>{ob.style.transition='none';ob.style.opacity=0;void ob.offsetHeight;ob.style.transition=''},1500);
   };
-  // Session intro: images fade in out of the fog with slow zooms and pans. Characters appear as framed portraits, hazy slides are the preview of what is to come.
-  let introT=[],introRun=false,lastIntro=0;
-  function introStop(){introT.forEach(clearTimeout);introT=[];introRun=false;const e=$('#intro');e.classList.remove('on','hzx');setTimeout(()=>{if(!introRun)e.innerHTML=''},1600)}
-  function showSlide(it,i,root,secs){
-    const s0=it.s,im=it.im,por=s0.k==='p',hz=!!s0.h,kb=['zi','pl','zo','pr'][i%4],url=im.data?`url(${im.data})`:'none';
-    const el=document.createElement('div');el.className='isl'+(hz?' hz':'')+(por?' por':'');el.style.setProperty('--d',(secs+3)+'s');
-    el.innerHTML=por?`<div class="ibg kb-${kb}" style="background-image:${url}"></div><div class="ipt"><div class="ifrm"><img src="${im.data||''}" alt="" class="kb-${i%2?'zo':'zi'}"></div><div class="inm">${hz?'???':esc(im.name||'')}</div></div>`:`<div class="ibg kb-${kb}" style="background-image:${url}"></div>${hz?'':`<div class="icap">${esc(im.name||'')}</div>`}`;
-    root.appendChild(el);void el.offsetWidth;el.classList.add('in');$('#intro').classList.toggle('hzx',hz);
+  // Session intro: starts in dense fog that clears, images fade in with slow zooms and pans, characters get a big side portrait with the name opposite,
+  // hazy slides are the preview of what is to come, every slide can have its own weather, the last slide gets a menacing red pulse.
+  let introT=[],introRun=false,lastIntro=0,firstSnap=true,IW=null;
+  const INTROFX={fog:{s:'c3',w:0},rain:{s:'r2',w:1},storm:{s:'r3',w:3},snow:{s:'r2',w:1,c:1},blizzard:{s:'r3',w:3,c:1},haunt:{am:'haunt'},fire:{am:'fire'},dark:{am:'dark'},magic:{am:'magic'},moon:{am:'moon'}};
+  const introFx=k=>{if(!IW)return;const f=INTROFX[k];if(!f)IW.set(null,0,false,false,0,'');else if(f.am)IW.set(null,0,false,false,0,f.am);else IW.set(WXS.find(x=>x.id===f.s)||WXS[0],f.w,!!f.c,false,0,'')};
+  function introStop(){
+    introT.forEach(clearTimeout);introT=[];if(IW){try{IW.set(null,0,false,false,0,'')}catch(e){}IW=null}
+    const was=introRun;introRun=false;const e=$('#intro');e.classList.remove('on','hzx','menace');
+    setTimeout(()=>{if(!introRun)e.innerHTML=''},1600);if(was){wk='';renderWx()}
+  }
+  function showSlide(it,i,root,secs,last){
+    const s0=it.s,im=it.im,por=s0.k==='p',hz=!!s0.h,kb=['zi','pl','zo','pr'][i%4],url=im.data?`url(${im.data})`:'none',side=i%2?'r':'l';
+    const el=document.createElement('div');el.className='isl'+(hz?' hz':'')+(por?' por':'')+(last?' last':'');el.style.setProperty('--d',(secs+3)+'s');
+    el.innerHTML=por?`<div class="ibg kb-${kb}" style="background-image:${url}"></div><div class="ipt ${side}"><div class="ipic"><img src="${im.data||''}" alt="" class="kb-${i%2?'zo':'zi'}"></div><div class="inm"><span>${hz?'???':esc(im.name||'')}</span></div></div>`:`<div class="ibg kb-${kb}" style="background-image:${url}"></div>${hz?'':`<div class="icap">${esc(im.name||'')}</div>`}`;
+    root.appendChild(el);void el.offsetWidth;el.classList.add('in');
+    const e=$('#intro');e.classList.toggle('hzx',hz);e.classList.toggle('menace',!!last);introFx(s0.w||'');
     const prev=el.previousElementSibling;if(prev)setTimeout(()=>{prev.classList.remove('in');setTimeout(()=>prev.remove(),1600)},900);
   }
   async function introPlay(cfg){
-    introStop();introRun=true;const e=$('#intro');e.innerHTML='<div class="ifog"></div><div id="iroot"></div><div class="ivig"></div>';
+    introStop();introRun=true;wk='';renderWx();
+    const e=$('#intro');e.innerHTML='<div class="ifog"></div><div id="iroot"></div><canvas id="iwx"></canvas><div class="ired"></div><div class="ivig"></div><div class="iclear"></div>';
     const items=await Promise.all((cfg.slides||[]).map(async s0=>({s:s0,im:await get(s0.id)})));
-    if(!introRun||!items.length)return;
+    if(!introRun||!items.length){introStop();return}
     const secs=Math.max(3,cfg.secs||6),root=$('#iroot');e.classList.add('on');
-    items.forEach((it,i)=>introT.push(setTimeout(()=>showSlide(it,i,root,secs),(i?i*secs*1000:700))));
+    try{IW=makeWeather($('#iwx'))}catch(err){IW=null}
+    items.forEach((it,i)=>introT.push(setTimeout(()=>showSlide(it,i,root,secs,i===items.length-1),(i?i*secs*1000:700))));
     introT.push(setTimeout(introStop,items.length*secs*1000+700));
   }
   const introCheck=()=>{const c=d.intro;
     if(!c){if(introRun)introStop();lastIntro=0;return}
     if(c.at===lastIntro)return;
-    const stale=lastIntro===0&&Date.now()-c.at>((c.slides||[]).length*(c.secs||6)+5)*1000;lastIntro=c.at;if(stale)return;
-    introPlay(c)};
+    lastIntro=c.at;introPlay(c)};
   let lastCard=0;
-  const cardCheck=()=>{const c=d.card;if(!c||!c.t||c.at===lastCard)return;const stale=lastCard===0&&Date.now()-c.at>15000;lastCard=c.at;if(stale)return;
+  const cardCheck=()=>{const c=d.card;if(!c||!c.t||c.at===lastCard)return;lastCard=c.at;
     const el=$('#tcard');el.textContent=c.t;el.classList.remove('show');void el.offsetWidth;el.classList.add('show')};
   const rot=id=>{let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))%7;return h-3};
   const paint=async()=>{
@@ -418,7 +446,7 @@ async function display(code,pv){
     const pk=posted.map(q=>q.id+q.title+q.text+q.done).join('|'),pch=pk!==papKey;papKey=pk;
     if(pch)$('#papers').innerHTML=posted.map(q=>`<article class="paper ${q.done?'done':''}" style="--r:${rot(q.id)}"><i class="pin"></i><div class="in"><h3>${esc(q.title||'')}</h3><p>${esc(q.text||'')}</p></div></article>`).join('');
   };
-  unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};renderWx();applyAudio();cardCheck();introCheck();paint()}));
+  unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};if(firstSnap){firstSnap=false;lastCard=d.card?d.card.at:0;lastIntro=d.intro?d.intro.at:0}renderWx();applyAudio();cardCheck();introCheck();paint()}));
   unsubs.push(onSnapshot(collection(db,'sessions',code,'quests'),s=>{qs=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>a.created-b.created);paint()}));
 }
 
@@ -455,7 +483,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-05 w';
+const VER='2026-11-05 x';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -736,6 +764,7 @@ function effWx(L){
   if(ov&&ov!=='auto')return{on:true,wx:ov,wind:0,area:ov};
   return{on:!!L.wxOn,wx:L.wx||'s1',wind:L.wind|0,area:null};
 }
+const INFX=[['','No atmosphere'],['fog','Fog'],['rain','Rain'],['storm','Thunderstorm'],['snow','Snow'],['blizzard','Blizzard'],['haunt','Haunted'],['fire','Lava / fiery'],['dark','Underdark'],['magic','Magical'],['moon','Moonlit']];
 const AMBS=['drip','torch','magic','dark','haunt','water','fire','moon','fly','fey'];
 const todFor=L=>{const e=effWx(L);return(e.area==='none'||e.amb)?'day':todOf(L)};
 function wxBoxHTML(cur,w,L,role,day,sel,area,open){
@@ -860,7 +889,7 @@ function dm(code){
   const L=doc(db,'sessions',code,'live','state'),IM=collection(db,'sessions',code,'images'),QC=collection(db,'sessions',code,'quests');
   let live={},imgs=[],qs=[],shops=[],items=[],selShop=localStorage.getItem('selShop'),editIt=null,edit=null,MO=null,MS={},view={x:.5,y:.5,ft:60},mode=null,tmr=0,dirty=false;
   const link=location.origin+location.pathname+'#display/'+code,plink=location.origin+location.pathname+'#player/'+code;
-  app.innerHTML=`<div class="wrap"><div id="muhost" class="muhost"><div id="mui"></div></div>
+  app.innerHTML=`<div class="wrap"><div id="muhost" class="muhost"><div id="mui"></div></div><div id="muhint" class="muhint">Spotify needs one tap. Press play here to start the intro music.</div>
   <button id="pvbtn" class="pvbtn alt" data-a="pvtoggle" title="Preview of the players' screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>
   <div id="pvwin" class="pvwin"><div class="pvbar"><b>Players' screen</b><span style="flex:1"></span><button class="btn sm alt" id="pvmode" data-a="pvmode" style="display:none">Players' view</button><button class="btn sm alt" data-a="pvsize">Size</button><button class="btn sm alt" data-a="pvtoggle">Close</button></div><div id="pvbox" class="pvbox"><iframe id="pvf" title="Players' screen"></iframe><canvas id="mc"></canvas></div><div id="pvtools" class="pvtools" style="display:none"><button class="btn sm alt" data-a="mlight">Add light</button><button class="btn sm alt" data-a="mrm">Remove light</button><button class="btn sm alt" data-a="mreset">Reset explored</button><label><input id="mrev" type="checkbox"> Reveal all</label><span class="edit" style="display:contents"><label>Squares <input id="msq" type="number" min="5" value="30"></label><label>Light ft <input id="mft" type="number" min="5" value="30"></label></span></div></div>
   
@@ -894,7 +923,7 @@ function dm(code){
   <div id="inl" style="margin-top:8px"></div>
   <div class="edit"><div class="row" style="margin-top:8px"><select id="inpick"></select><button class="btn sm" data-a="inadd">Add</button><button class="btn sm alt" data-a="inalln">Add all NPCs</button></div>
   <div class="row" style="margin-top:8px"><label>Seconds per image <input id="insecs" type="number" min="3" max="20" value="6" style="width:70px"></label></div>
-  <input id="inmus" placeholder="Intro music: audio file or Spotify link" style="width:100%;margin-top:8px"></div></details>
+  <input id="inmus" placeholder="Intro music: audio file or Spotify link" style="width:100%;margin-top:8px"><p class="note" id="inmst" style="margin:4px 0 0"></p></div></details>
   <details class="panel" id="d-bg" open><summary><h2>Backgrounds <span id="cb"></span><span id="bgn"></span><span class="eye" id="e-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="bgs"></div></details>
   <details class="panel" id="d-mp" open><summary><h2>Maps <span id="cmp"></span><span id="mpn"></span><span class="eye" id="e-map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="mps"></div></details>
   <details class="panel" id="d-np" open><summary><h2>NPCs <span id="cn"></span><span class="eye" id="e-np"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="nps"></div></details>
@@ -944,6 +973,9 @@ function dm(code){
   function placeHost(){
     const h=$('#muhost'),slot=$('#mue'),det=$('#d-mu');if(!h||!slot||!det)return;
     slot.style.height=SP.uri?SP.h+'px':'0';
+    const hint=$('#muhint');
+    if(SP.pop&&SP.uri){h.style.cssText=`left:8px;bottom:8px;width:340px;height:${SP.h}px;opacity:1;pointer-events:auto`;if(hint){hint.style.display='block';hint.style.bottom=(SP.h+18)+'px'}return}
+    if(hint)hint.style.display='none';
     const show=!!SP.uri&&det.open&&slot.getClientRects().length>0;
     if(show){const r=slot.getBoundingClientRect();h.style.cssText=`left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${SP.h}px;opacity:1;pointer-events:auto`}
     else h.style.cssText=`right:8px;bottom:8px;width:320px;height:${SP.h}px;opacity:0;pointer-events:none`;
@@ -1024,7 +1056,7 @@ function dm(code){
     $('#mus').disabled=!pl;$('#mloop').classList.toggle('alt',!MU.loop);
     const t=$('#ct-mu');if(t){t.disabled=!(m||MU.file||SP.uri);t.textContent=pl?'Pause music':'Play music';t.classList.toggle('alt',!pl)}
     if(ty==='spotify'&&m!==SP.link){SP.link=m;spShow(m,false)}
-    const e=$('#e-mu');if(e)e.classList.toggle('on',pl);
+    const e=$('#e-mu');if(e)e.classList.toggle('on',pl);if(pl&&SP.pop){SP.pop=false}
     placeHost();
   }
   let pvOn=localStorage.getItem('pvOn')==='1',pvBig=localStorage.getItem('pvBig')==='1',pvPl=false,lastV=null;
@@ -1050,17 +1082,21 @@ function dm(code){
   const introIsOn=()=>!!(live.intro&&Date.now()-live.intro.at<introLen(live.intro));
   function introPlayDM(){
     if(!IC.slides.length)return;
-    const secs=Math.max(3,+IC.secs||6),cfg={at:Date.now(),secs,slides:IC.slides.map(x=>({id:x.id,h:!!x.h,k:kindOf(x.id)}))};
+    const secs=Math.max(3,+IC.secs||6),cfg={at:Date.now(),secs,slides:IC.slides.map(x=>({id:x.id,h:!!x.h,w:x.w||'',k:kindOf(x.id)}))};
     set({intro:cfg});
     const m=(IC.music||'').trim(),ty=mtype(m);
-    if(ty==='file')playFile(m);else if(ty==='spotify'){SP.link=m;spShow(m,true)}else if(ty)window.open(m,'_blank','noopener');
+    if(ty==='file')playFile(m);else if(ty==='spotify'){SP.link=m;SP.pop=false;spShow(m,true);setTimeout(()=>{if(!SP.playing&&introIsOn()){SP.pop=true;placeHost()}},3000)}else if(ty)window.open(m,'_blank','noopener');
     clearTimeout(INT);INT=setTimeout(()=>{set({intro:null});stopMusic()},introLen(cfg)-1000);
   }
-  function introStopDM(){clearTimeout(INT);set({intro:null});if(mtype((IC.music||'').trim()))stopMusic()}
+  function introStopDM(){clearTimeout(INT);SP.pop=false;placeHost();set({intro:null});if(mtype((IC.music||'').trim()))stopMusic()}
+  function inMusicNote(){
+    const n=$('#inmst');if(!n)return;const m=(IC.music||'').trim(),ty=mtype(m),p=ty==='spotify'?spParse(m):null;
+    n.textContent=!m?'':ty==='file'?'Audio file: '+m:ty==='spotify'?(p?(SP.ctrl&&SP.uri===p.uri?'Spotify player ready. If the music does not start with the intro, press play in the small player that pops up.':'Loading the Spotify player...'):'This Spotify link was not recognised.'):'This link opens in a new tab when the intro starts.';
+  }
   function inDraw(){
     const L=$('#inl');if(!L)return;
     const nm=id=>imgs.find(x=>x.id===id),btn=(a,i,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${i}">${t}</button>`;
-    L.innerHTML=IC.slides.map((x,i)=>{const im=nm(x.id)||{name:'(missing)',type:''};return`<div class="qrow ${x.h?'':'on'}"><div class="row" style="flex:1 1 200px;flex-wrap:nowrap">${im.data?`<img src="${im.data}" alt="" style="width:52px;height:40px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(im.name)}</b> <small>${im.type==='npc'?'character':im.type==='monster'?'monster':'place'}${x.h?', hazy':''}</small></div></div><div class="row">${btn('inhz',i,'Hazy',!x.h,1)}${btn('inup',i,'Up',1,1)}${btn('indn',i,'Down',1,1)}${btn('indel',i,'Remove',1,1)}</div></div>`}).join('')||'<p class="note">No images yet.</p>';
+    L.innerHTML=IC.slides.map((x,i)=>{const im=nm(x.id)||{name:'(missing)',type:''};return`<div class="qrow ${x.h?'':'on'}"><div class="row" style="flex:1 1 200px;flex-wrap:nowrap">${im.data?`<img src="${im.data}" alt="" style="width:52px;height:40px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(im.name)}</b> <small>${im.type==='npc'?'character':im.type==='monster'?'monster':'place'}${x.h?', hazy':''}${x.w?', '+((INFX.find(f=>f[0]===x.w)||[0,x.w])[1]).toLowerCase():''}</small></div></div><div class="row"><select class="edit" data-a="inwx" data-id="${i}" style="min-height:34px;padding:2px 6px;font-size:14px">${INFX.map(f=>`<option value="${f[0]}"${f[0]===(x.w||'')?' selected':''}>${f[1]}</option>`).join('')}</select>${btn('inhz',i,'Hazy',!x.h,1)}${btn('inup',i,'Up',1,1)}${btn('indn',i,'Down',1,1)}${btn('indel',i,'Remove',1,1)}</div></div>`}).join('')||'<p class="note">No images yet.</p>';
     const pk=$('#inpick'),cur=pk.value,og=(t,l)=>{const a=imgs.filter(i=>i.type===t);return a.length?`<optgroup label="${l}">${a.map(i=>`<option value="${i.id}">${esc(i.name)}</option>`).join('')}</optgroup>`:''};
     const h=og('npc','Characters')+og('monster','Monsters')+og('background','Places');
     if(pk.dataset.h!==h){pk.dataset.h=h;pk.innerHTML=h;if(cur)pk.value=cur}
@@ -1069,7 +1105,7 @@ function dm(code){
     const on=introIsOn(),ok=IC.slides.length>0;
     for(const id of['inplay','ct-in']){const b=$('#'+id);if(b){b.disabled=!ok&&!on;b.classList.toggle('alt',!on);b.textContent=id==='ct-in'?(on?'Stop intro':'Intro'):(on?'Playing':'Play intro')}}
     $('#inn').textContent=ok?'('+IC.slides.length+')':'';
-    const e=$('#e-in');if(e)e.classList.toggle('on',on);
+    const e=$('#e-in');if(e)e.classList.toggle('on',on);inMusicNote();
   }
   function wxOf(id){return(imgs.find(x=>x.id===id)||{}).wx||'auto'}
   function areaId(){const v=curView();return v==='map'?live.mapId:v==='scene'?live.backgroundId:null}
@@ -1111,7 +1147,8 @@ function dm(code){
   $('#pn').onchange=e=>updPre({name:e.target.value.trim()||'Preset'});
   unsubs.push(onSnapshot(ID,s=>{IC={slides:[],secs:6,music:'',...(s.exists()?s.data():{})};inDraw()}));
   $('#insecs').onchange=e=>saveI({secs:Math.min(20,Math.max(3,+e.target.value||6))});
-  $('#inmus').onchange=e=>saveI({music:e.target.value.trim()});
+  $('#inmus').onchange=e=>{const v=e.target.value.trim();saveI({music:v});if(mtype(v)==='spotify'){SP.link=v;spShow(v,false)}inMusicNote()};
+  $('#inl').onchange=e=>{const t=e.target;if(t.dataset&&t.dataset.a==='inwx')saveI({slides:IC.slides.map((x,i)=>i===+t.dataset.id?{...x,w:t.value}:x)})};
   $('#autitle').onchange=async e=>{const aid=areaId();if(!aid)return;await updateDoc(doc(IM,aid),{titleCard:e.target.checked,title:''})};
   $('#mulink').onchange=async e=>{const aid=areaId();if(!aid)return;await updateDoc(doc(IM,aid),{music:e.target.value.trim()})};
   $('#muvol').oninput=e=>{if(MU.out)MU.out.gain.setTargetAtTime(+e.target.value/100,MU.ctx.currentTime,.05)};
