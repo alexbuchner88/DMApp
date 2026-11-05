@@ -289,23 +289,25 @@ body.intro #stage>:not(#intro){visibility:hidden}
 .ipimg.kb-zi{animation-name:pzi}.ipimg.kb-zo{animation-name:pzo}
 @keyframes pzi{from{transform:scale(1)}to{transform:scale(1.07)}}
 @keyframes pzo{from{transform:scale(1.07)}to{transform:scale(1)}}
-.inm{flex:1;display:flex;align-items:center;padding:0 7vmin;font:700 clamp(34px,10vmin,120px)/1.08 'Cinzel Decorative',Cinzel,serif;color:var(--gold);text-shadow:0 0 28px #000,0 4px 0 #000}
-.inm span{display:block;padding-bottom:1.4vmin;border-bottom:.6vmin solid var(--gold2)}
+.inm{flex:1;display:flex;align-items:center;padding:0 9vmin;font:700 clamp(30px,8.5vmin,104px)/1.1 'Cinzel Decorative',Cinzel,serif;color:var(--gold);text-shadow:0 0 28px #000,0 4px 0 #000}
+.inm span{display:block;overflow-wrap:break-word;max-width:100%;padding-bottom:1.4vmin;border-bottom:.6vmin solid var(--gold2)}
 .ipt.l .inm{justify-content:flex-start;text-align:left;animation:inml 1.6s .6s both}
 .ipt.r .inm{justify-content:flex-end;text-align:right;animation:inmr 1.6s .6s both}
 @keyframes inml{from{opacity:0;transform:translateX(6vmin)}to{opacity:1;transform:none}}
 @keyframes inmr{from{opacity:0;transform:translateX(-6vmin)}to{opacity:1;transform:none}}
-.isl.last .inm{color:#d9503e;text-shadow:0 0 30px #000,0 0 22px rgba(190,30,20,.55),0 4px 0 #000}
-.isl.last .inm span{border-bottom-color:#8c1d14}
-.icap{position:absolute;left:0;right:0;bottom:11%;text-align:center;font:700 clamp(22px,5vmin,52px) 'Cinzel Decorative',Cinzel,serif;color:var(--gold);text-shadow:0 0 22px #000,0 3px 0 #000}
+.icap{position:absolute;left:9vmin;right:9vmin;bottom:12%;text-align:center;overflow-wrap:break-word;font:700 clamp(22px,5vmin,52px) 'Cinzel Decorative',Cinzel,serif;color:var(--gold);text-shadow:0 0 22px #000,0 3px 0 #000}
+#idle{display:none!important}
+.itd,.itn{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity 1.8s}
+.itd{background:linear-gradient(to top,rgba(255,110,40,.42),rgba(150,60,70,.28) 45%,rgba(40,30,80,.3))}
+.itn{background:linear-gradient(rgba(10,20,60,.55),rgba(4,8,30,.68))}
+#intro.tod-dusk .itd,#intro.tod-night .itn{opacity:1}
+.ibgl{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,#f1f4f8,#b9c2cd 78%)}
+.isl.lt .inm{color:#3a2508;text-shadow:0 0 18px rgba(255,255,255,.75),0 2px 0 rgba(255,255,255,.5)}
+.isl.lt .inm span{border-bottom-color:#7a5a1a}
 #iwx{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
-.last .ibg{animation-duration:calc(var(--d)*.7)}
 .ifog{position:absolute;inset:-25%;z-index:3;pointer-events:none;opacity:.42;transition:opacity 2s;background:radial-gradient(40% 30% at 20% 30%,rgba(222,228,235,.34),transparent 70%),radial-gradient(45% 35% at 78% 62%,rgba(222,228,235,.28),transparent 70%),radial-gradient(35% 30% at 50% 88%,rgba(222,228,235,.26),transparent 70%);animation:ifg 26s ease-in-out infinite alternate;will-change:transform}
 #intro.hzx .ifog{opacity:.2}
 @keyframes ifg{from{transform:translate(-5%,1%) scale(1)}to{transform:translate(6%,-3%) scale(1.18)}}
-.ired{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 26%,rgba(150,0,0,.62) 100%)}
-#intro.menace .ired{animation:ipulse 2.6s ease-in-out infinite}
-@keyframes ipulse{0%,100%{opacity:.5}50%{opacity:1}}
 .ivig{position:absolute;inset:0;z-index:6;pointer-events:none;background:radial-gradient(ellipse at center,transparent 34%,rgba(0,0,0,.5) 64%,rgba(0,0,0,.95) 100%);transition:opacity 2.4s}
 .ifrm2{position:absolute;inset:0;z-index:8;pointer-events:none;border:2.8vmin solid #000;transition:opacity 2.4s}
 .ifrm2::before{content:"";position:absolute;inset:0;border:.32vmin solid #b08d3c;box-shadow:inset 0 0 0 .7vmin #000,inset 0 0 0 1vmin rgba(176,141,60,.55),inset 0 0 5vmin 1vmin rgba(0,0,0,.85)}
@@ -313,7 +315,7 @@ body.intro #stage>:not(#intro){visibility:hidden}
 .ifrm2 i:nth-child(1){left:-1.2vmin;top:-1.2vmin}.ifrm2 i:nth-child(2){right:-1.2vmin;top:-1.2vmin}.ifrm2 i:nth-child(3){left:-1.2vmin;bottom:-1.2vmin}.ifrm2 i:nth-child(4){right:-1.2vmin;bottom:-1.2vmin}
 #intro.opening .ivig,#intro.opening .ifrm2{opacity:0}
 .iwhite{position:absolute;inset:0;z-index:9;background:#f4f6f9;pointer-events:none}
-#intro.out .ifog,#intro.out #iwx,#intro.out .ired{opacity:0!important;animation:none!important;transition:opacity 1.4s}
+#intro.out .ifog,#intro.out #iwx{opacity:0!important;animation:none!important;transition:opacity 1.4s}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -332,10 +334,13 @@ const db=getFirestore(initializeApp(CFG));
 
 function route(){
   unsubs.forEach(u=>u());unsubs=[];
-  const [v,c,pm]=location.hash.slice(1).split('/');
+  let [v,c,pm]=location.hash.slice(1).split('/');
+  if(v==='last')v=localStorage.getItem('view')||'display';   // the installed app opens on the view this device used last
   const code=(c||localStorage.getItem('code')||'').toLowerCase();
   if(c)localStorage.setItem('code',code);
   if(!code||!['dm','display','player'].includes(v))return home();
+  if(pm!=='preview')localStorage.setItem('view',v);
+  if(location.hash.startsWith('#last'))history.replaceState(null,'','#'+v+'/'+code);
   v==='dm'?dm(code):v==='player'?player(code):display(code,pm==='preview');
 }
 
@@ -409,8 +414,17 @@ async function display(code,pv){
   // hidden places and creatures stay almost dark and flash to full colour like lightning, every slide can have its own weather, the last slide gets a menacing red pulse.
   // Built to be light on a tablet: no CSS filters or blend modes, blur and feathering are baked once into small canvases, slides are decoded before they show.
   let introT=[],introRun=false,lastIntro=0,firstSnap=true,IW=null,introRaf=0;
-  const INTROFX={fog:{s:'c3',w:0},rain:{s:'r2',w:1},storm:{s:'r3',w:3},snow:{s:'r2',w:1,c:1},blizzard:{s:'r3',w:3,c:1},haunt:{am:'haunt'},fire:{am:'fire'},dark:{am:'dark'},magic:{am:'magic'},moon:{am:'moon'}};
-  const introFx=k=>{if(!IW)return;const f=INTROFX[k];if(!f)IW.set(null,0,false,false,0,'');else if(f.am)IW.set(null,0,false,false,0,f.am);else IW.set(WXS.find(x=>x.id===f.s)||WXS[0],f.w,!!f.c,false,0,'')};
+  const INTROFX={clear:{s:'s1',w:0},sunny:{s:'s2',w:1},hot:{s:'s3',w:0,g:1},frost:{s:'s3',w:0,c:1},cloudy:{s:'c1',w:1},overcast:{s:'c2',w:1},fog:{s:'c3',w:0},drizzle:{s:'r1',w:1},rain:{s:'r2',w:1},downpour:{s:'r3',w:2},storm:{s:'r3',w:3},lsnow:{s:'r1',w:1,c:1},snow:{s:'r2',w:1,c:1},blizzard:{s:'r3',w:3,c:1}};
+  ['drip','torch','magic','dark','haunt','water','fire','moon','fly','fey'].forEach(a=>INTROFX[a]={am:a});
+  const introFx=(k,tod)=>{if(!IW)return;const f=INTROFX[k],nt=tod==='night';
+    if(!f)IW.set(null,0,false,nt,0,'');else if(f.am)IW.set(null,0,false,nt,0,f.am);else IW.set(WXS.find(x=>x.id===f.s)||WXS[0],f.w,!!f.c,nt,f.g||0,'')};
+  const setTod=(e,t)=>{e.classList.toggle('tod-dusk',t==='dusk');e.classList.toggle('tod-night',t==='night')};
+  // shrink the text until it fits its box and stays clear of the golden frame
+  function fitText(el){
+    const fit=(node,avH)=>{if(!node)return;let fs=parseFloat(getComputedStyle(node).fontSize)||48;let n=0;
+      while((node.scrollWidth>node.clientWidth+1||node.offsetHeight>avH)&&fs>16&&n++<40){fs*=.93;node.style.fontSize=fs+'px'}};
+    const H=el.clientHeight||600;fit(el.querySelector('.inm span'),H*.68);fit(el.querySelector('.icap'),H*.26);
+  }
   const loadIm=src=>new Promise(res=>{const m=new Image();m.onload=()=>res(m);m.onerror=()=>res(null);m.src=src});
   const mkCv=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
   // small, darkened, desaturated copy: the browser scales it up smoothly, which looks like a blur and costs almost nothing
@@ -454,7 +468,8 @@ async function display(code,pv){
       const bg=softCv(img,w,h,48,.35,.4);bg.className='ibg st';el.appendChild(bg);
       const lg=cutCv(img,w,h,1100);lg.className='ilogo';el.appendChild(lg);cap();
     }else if(por){
-      const bg=softCv(img,w,h,48,hz?.25:.4,.4);bg.className='ibg st';el.appendChild(bg);
+      const light=s0.b==='light'&&!hz;   // light or dark backdrop behind a character
+      if(light){el.classList.add('lt');const bl=document.createElement('div');bl.className='ibgl';el.appendChild(bl)}else{const bg=softCv(img,w,h,48,hz?.25:.4,.4);bg.className='ibg st';el.appendChild(bg)}
       const cut=cutCv(img,w,h,860);cut.className='ipimg kb-'+(i%2?'zo':'zi');
       const pt=document.createElement('div');pt.className='ipt '+side+(txt?'':' solo');
       pt.innerHTML='<div class="ipic"></div>'+(txt?`<div class="inm"><span>${esc(txt)}</span></div>`:'');pt.firstChild.appendChild(cut);el.appendChild(pt);
@@ -467,8 +482,8 @@ async function display(code,pv){
     return el;
   }
   function showSlide(el,s0,root,last){
-    root.appendChild(el);void el.offsetWidth;el.classList.add('in');
-    const e=$('#intro');e.classList.toggle('hzx',!!s0.h);e.classList.toggle('menace',!!last);introFx(s0.w||'');
+    root.appendChild(el);fitText(el);void el.offsetWidth;el.classList.add('in');
+    const e=$('#intro');e.classList.toggle('hzx',!!s0.h);setTod(e,s0.d);introFx(s0.w||'',s0.d);
     const prev=el.previousElementSibling;if(prev)setTimeout(()=>prev.remove(),1900);   // the old slide stays until the new one is fully in: no dark dip in between
   }
   // fog opening: the screen is white, then a clear hole grows from the centre outwards
@@ -480,7 +495,7 @@ async function display(code,pv){
     introRaf=requestAnimationFrame(step);
   }
   function showLogo(el,s0,pl,root){
-    const e=$('#intro');root.appendChild(el);introFx(s0.w||'');
+    const e=$('#intro');root.appendChild(el);fitText(el);setTod(e,s0.d);introFx(s0.w||'',s0.d);
     if(pl.fog){
       el.classList.add('nofade','in');
       introT.push(setTimeout(()=>clearFog(pl.logoRev),pl.logoHold));
@@ -491,13 +506,13 @@ async function display(code,pv){
   }
   function introStop(){
     introT.forEach(clearTimeout);introT=[];cancelAnimationFrame(introRaf);if(IW){try{IW.set(null,0,false,false,0,'')}catch(e){}IW=null}
-    const was=introRun;introRun=false;document.body.classList.remove('intro');const e=$('#intro');e.classList.remove('on','hzx','menace','opening','out');
+    const was=introRun;introRun=false;document.body.classList.remove('intro');const e=$('#intro');e.classList.remove('on','hzx','menace','opening','out','tod-dusk','tod-night');
     setTimeout(()=>{if(!introRun)e.innerHTML=''},1600);if(was){wk='';renderWx()}
   }
   async function introPlay(cfg){
     introStop();introRun=true;wk='';renderWx();
     const pl=introPlan(cfg),e=$('#intro');
-    e.innerHTML='<div class="ifog"></div><div id="iroot"></div><canvas id="iwx"></canvas><div class="ired"></div><div class="ivig"></div><div class="ifrm2"><i></i><i></i><i></i><i></i></div>'+(pl.fog?'<div class="iwhite"></div>':'');
+    e.innerHTML='<div class="ifog"></div><div id="iroot"></div><canvas id="iwx"></canvas><div class="itd"></div><div class="itn"></div><div class="ivig"></div><div class="ifrm2"><i></i><i></i><i></i><i></i></div>'+(pl.fog?'<div class="iwhite"></div>':'');
     e.classList.add('opening','on');   // the screen goes white or black at once; frame and vignette wait for the logo
     const items=await Promise.all((cfg.slides||[]).map(async s0=>({s:s0,im:await get(s0.id)})));
     if(!introRun||!items.length){introStop();return}
@@ -509,7 +524,7 @@ async function display(code,pv){
     items.forEach((it,k)=>{const t=pl.t[k];
       if(k)introT.push(setTimeout(()=>prep(k),Math.max(0,t-3500)));   // decode the next picture ahead of time
       introT.push(setTimeout(()=>prep(k).then(el=>{if(!introRun)return;if(k)showSlide(el,it.s,root,k===n-1);else showLogo(el,it.s,pl,root)}),t))});
-    introT.push(setTimeout(()=>{e.classList.add('out');const l=$('#iroot .isl:last-child');if(l){l.classList.remove('nofade');l.style.transitionDuration='1600ms';l.classList.remove('in')}introFx('')},pl.fadeEnd));   // last image fades to black
+    introT.push(setTimeout(()=>{e.classList.add('out');const l=$('#iroot .isl:last-child');if(l){l.classList.remove('nofade');l.style.transitionDuration='1600ms';l.classList.remove('in')}introFx('','')},pl.fadeEnd));   // last image fades to black
     introT.push(setTimeout(introStop,pl.total));   // after a moment of black the screen comes back
   }
   const introCheck=()=>{const c=d.intro;
@@ -578,7 +593,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-05 z';
+const VER='2026-11-05 aa';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -874,7 +889,8 @@ function viewMenu(){
   m.onclick=e=>{const v=e.target.dataset.v;if(e.target===m||v==='x'){m.remove();return}if(!v)return;m.remove();if(v==='home')location.hash='';else location.hash=v+'/'+code};
   document.body.appendChild(m);
 }
-const INFX=[['','No atmosphere'],['fog','Fog'],['rain','Rain'],['storm','Thunderstorm'],['snow','Snow'],['blizzard','Blizzard'],['haunt','Haunted'],['fire','Lava / fiery'],['dark','Underdark'],['magic','Magical'],['moon','Moonlit']];
+const INFX=[['','No weather',''],['clear','Clear sky','w'],['sunny','Sunny','w'],['hot','Hot (glare)','w'],['frost','Frosty','w'],['cloudy','Cloudy','w'],['overcast','Overcast','w'],['fog','Fog','w'],['drizzle','Drizzle','w'],['rain','Rain','w'],['downpour','Downpour','w'],['storm','Thunderstorm','w'],['lsnow','Light snow','w'],['snow','Snowfall','w'],['blizzard','Blizzard','w'],['drip','Drippy / wet','a'],['torch','Torchlit','a'],['magic','Magical','a'],['dark','Underdark','a'],['haunt','Haunted','a'],['water','Underwater','a'],['fire','Lava / fiery','a'],['moon','Moonlit','a'],['fly','Fireflies','a'],['fey','Feywild','a']];
+const INTOD=[['','Day'],['dusk','Dusk'],['night','Night']];
 const AMBS=['drip','torch','magic','dark','haunt','water','fire','moon','fly','fey'];
 const todFor=L=>{const e=effWx(L);return(e.area==='none'||e.amb)?'day':todOf(L)};
 function wxBoxHTML(cur,w,L,role,day,sel,area,open){
@@ -1187,7 +1203,7 @@ function dm(code){
     $('#pvtools').style.display=canvas?'':'none';pvFit();if(canvas)drawMap();
   }
   function pvAuto(){const v=curView();if(v!=='map')pvPl=false;if(v==='map'&&lastV!==null&&lastV!=='map'&&!pvOn){pvOn=true;pvSave()}lastV=v}
-  let IC={slides:[],secs:6,music:'',open:'fog'},INT=0,INT2=0;
+  let IC={slides:[],secs:6,music:'',open:'fog'},INT=0,INT2=0,INT3=0;
   const ID=doc(db,'sessions',code,'intro','cfg');
   const saveI=o=>{Object.assign(IC,o);return setDoc(ID,o,{merge:true})};
   const kindOf=id=>{const t=(imgs.find(x=>x.id===id)||{}).type;return t==='npc'||t==='monster'?'p':'s'};
@@ -1195,7 +1211,7 @@ function dm(code){
   const introIsOn=()=>!!(live.intro&&Date.now()-live.intro.at<introLen(live.intro));
   function introPlayDM(){
     if(!IC.slides.length)return;
-    const secs=Math.max(3,+IC.secs||6),cfg={at:Date.now(),secs,open:IC.open||'fog',slides:IC.slides.map(x=>({id:x.id,h:!!x.h,w:x.w||'',t:x.t||'',k:kindOf(x.id)}))},pl=introPlan(cfg);
+    const secs=Math.max(3,+IC.secs||6),cfg={at:Date.now(),secs,open:IC.open||'fog',slides:IC.slides.map(x=>({id:x.id,h:!!x.h,w:x.w||'',t:x.t||'',d:x.d||'',b:x.b||'dark',k:kindOf(x.id)}))},pl=introPlan(cfg);
     set({intro:cfg});
     const m=(IC.music||'').trim(),ty=mtype(m);
     MI=ty==='file'||ty==='spotify';
@@ -1203,10 +1219,18 @@ function dm(code){
     else if(ty==='spotify'){if(isPlaying())pauseMusic();SP.link=m;SP.pop=false;spShow(m,true);setTimeout(()=>{if(!SP.playing&&introIsOn()){SP.pop=true;placeHost()}},3000)}
     else if(ty)window.open(m,'_blank','noopener');
     clearTimeout(INT);clearTimeout(INT2);
-    INT=setTimeout(()=>{if(MI){stopMusic();MI=false;muDraw()}},pl.fadeEnd);   // the music fades out as the last image fades to black
+    const fsec=Math.max(2,(pl.total-(pl.fadeEnd-1500))/1000);   // the music eases out from just before the last image fades until the screen returns
+    INT=setTimeout(()=>{if(MI&&ty==='file')introFadeOut(fsec)},pl.fadeEnd-1500);
+    INT3=setTimeout(()=>{if(MI){stopMusic();MI=false;muDraw()}},pl.total+200);   // a Spotify track cannot fade, it stops here
     INT2=setTimeout(()=>set({intro:null}),pl.total+4000);
   }
-  function introStopDM(){clearTimeout(INT);clearTimeout(INT2);SP.pop=false;placeHost();set({intro:null});if(MI){stopMusic();MI=false;muDraw()}}
+  function introFadeOut(secs){
+    const o=MU.cur;if(!(o&&MU.file&&MU.ctx&&!o.el.paused&&!o.fading))return;
+    o.fading=true;clearTimeout(o.tm);const g=o.g.gain,t=MU.ctx.currentTime,g0=g.value||1;
+    if(g.setValueCurveAtTime){g.cancelScheduledValues(t);const n=96,c=new Float32Array(n);for(let i=0;i<n;i++)c[i]=g0*(.5+.5*Math.cos(Math.PI*i/(n-1)));g.setValueCurveAtTime(c,t,secs)}else ramp(o,0,secs);   // a smooth S-curve to silence
+    o.tm=setTimeout(()=>{try{o.el.pause()}catch(e){}o.fading=false;muDraw()},secs*1000+200);muDraw();
+  }
+  function introStopDM(){clearTimeout(INT);clearTimeout(INT2);clearTimeout(INT3);SP.pop=false;placeHost();set({intro:null});if(MI){stopMusic();MI=false;muDraw()}}
   function inMusicNote(){
     const n=$('#inmst');if(!n)return;const m=(IC.music||'').trim(),ty=mtype(m),p=ty==='spotify'?spParse(m):null;
     n.textContent=!m?'':ty==='file'?'Audio file: '+m:ty==='spotify'?(p?(SP.ctrl&&SP.uri===p.uri?'Spotify player ready. If the music does not start with the intro, press play in the small player that pops up.':'Loading the Spotify player...'):'This Spotify link was not recognised.'):'This link opens in a new tab when the intro starts.';
@@ -1214,9 +1238,10 @@ function dm(code){
   function inDraw(){
     const L=$('#inl');if(!L)return;
     const nm=id=>imgs.find(x=>x.id===id),btn=(a,i,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${i}">${t}</button>`;
+    const wo=(g,v)=>INFX.filter(f=>f[2]===g).map(f=>`<option value="${f[0]}"${f[0]===v?' selected':''}>${f[1]}</option>`).join(''),wxOpts=v=>`<option value="">No weather</option><optgroup label="Weather">${wo('w',v)}</optgroup><optgroup label="Ambience">${wo('a',v)}</optgroup>`;
     L.innerHTML=IC.slides.map((x,i)=>{const im=nm(x.id)||{name:'(missing)',type:''},logo=i===0,hid=!!x.h&&!logo,chr=im.type==='npc'||im.type==='monster',
       kind=logo?'logo':im.type==='npc'?'character':im.type==='monster'?'monster':'place',def=logo?'none':chr?(hid?'???':im.name):'none';
-      return`<div class="qrow ${hid?'':'on'}"><div class="row" style="flex:1 1 200px;flex-wrap:nowrap">${im.data?`<img src="${im.data}" alt="" style="width:52px;height:40px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(im.name)}</b> <small>${kind}${hid?', hidden':''}${x.w?', '+((INFX.find(f=>f[0]===x.w)||[0,x.w])[1]).toLowerCase():''}${x.t?', text: '+esc(x.t):''}</small></div></div><div class="row"><select class="edit" data-a="inwx" data-id="${i}" style="min-height:34px;padding:2px 6px;font-size:14px">${INFX.map(f=>`<option value="${f[0]}"${f[0]===(x.w||'')?' selected':''}>${f[1]}</option>`).join('')}</select>${logo?'':btn('inhz',i,'Hidden',!x.h,1)}${btn('inup',i,'Up',1,1)}${btn('indn',i,'Down',1,1)}${btn('indel',i,'Remove',1,1)}</div><input class="edit" data-a="intx" data-id="${i}" value="${esc(x.t||'')}" placeholder="Text shown: ${esc(def)} (type - for none)" style="flex:1 1 100%;margin-top:4px"></div>`}).join('')||'<p class="note">No images yet. The first image is shown as the logo.</p>';
+      return`<div class="qrow ${hid?'':'on'}"><div class="row" style="flex:1 1 200px;flex-wrap:nowrap">${im.data?`<img src="${im.data}" alt="" style="width:52px;height:40px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(im.name)}</b> <small>${kind}${hid?', hidden':''}${x.w?', '+((INFX.find(f=>f[0]===x.w)||[0,x.w])[1]).toLowerCase():''}${x.d?', '+x.d:''}${x.b==='light'&&chr?', light backdrop':''}${x.t?', text: '+esc(x.t):''}</small></div></div><div class="row"><select class="edit" data-a="inwx" data-id="${i}" style="min-height:34px;padding:2px 6px;font-size:14px">${wxOpts(x.w||'')}</select><select class="edit" data-a="intod" data-id="${i}" style="min-height:34px;padding:2px 6px;font-size:14px">${INTOD.map(f=>`<option value="${f[0]}"${f[0]===(x.d||'')?' selected':''}>${f[1]}</option>`).join('')}</select>${chr&&!hid&&!logo?`<select class="edit" data-a="inbg" data-id="${i}" style="min-height:34px;padding:2px 6px;font-size:14px"><option value="dark"${x.b==='light'?'':' selected'}>Dark backdrop</option><option value="light"${x.b==='light'?' selected':''}>Light backdrop</option></select>`:''}${logo?'':btn('inhz',i,'Hidden',!x.h,1)}${btn('inup',i,'Up',1,1)}${btn('indn',i,'Down',1,1)}${btn('indel',i,'Remove',1,1)}</div><input class="edit" data-a="intx" data-id="${i}" value="${esc(x.t||'')}" placeholder="Text shown: ${esc(def)} (type - for none)" style="flex:1 1 100%;margin-top:4px"></div>`}).join('')||'<p class="note">No images yet. The first image is shown as the logo.</p>';
     const pk=$('#inpick'),cur=pk.value,og=(t,l)=>{const a=imgs.filter(i=>i.type===t);return a.length?`<optgroup label="${l}">${a.map(i=>`<option value="${i.id}">${esc(i.name)}</option>`).join('')}</optgroup>`:''};
     const h=og('npc','Characters')+og('monster','Monsters')+og('background','Places');
     if(pk.dataset.h!==h){pk.dataset.h=h;pk.innerHTML=h;if(cur)pk.value=cur}
@@ -1270,7 +1295,7 @@ function dm(code){
   $('#inopen').onchange=e=>saveI({open:e.target.value});
   $('#insecs').onchange=e=>saveI({secs:Math.min(20,Math.max(3,+e.target.value||6))});
   $('#inmus').onchange=e=>{const v=e.target.value.trim();saveI({music:v});if(mtype(v)==='spotify'){SP.link=v;spShow(v,false)}inMusicNote()};
-  $('#inl').onchange=e=>{const t=e.target;if(t.dataset&&t.dataset.a==='intx')saveI({slides:IC.slides.map((x,i)=>i===+t.dataset.id?{...x,t:t.value.trim()}:x)});if(t.dataset&&t.dataset.a==='inwx')saveI({slides:IC.slides.map((x,i)=>i===+t.dataset.id?{...x,w:t.value}:x)})};
+  $('#inl').onchange=e=>{const t=e.target;if(t.dataset&&t.dataset.a==='intx')saveI({slides:IC.slides.map((x,i)=>i===+t.dataset.id?{...x,t:t.value.trim()}:x)});if(t.dataset&&t.dataset.a==='intod')saveI({slides:IC.slides.map((x,i)=>i===+t.dataset.id?{...x,d:t.value}:x)});if(t.dataset&&t.dataset.a==='inbg')saveI({slides:IC.slides.map((x,i)=>i===+t.dataset.id?{...x,b:t.value}:x)});if(t.dataset&&t.dataset.a==='inwx')saveI({slides:IC.slides.map((x,i)=>i===+t.dataset.id?{...x,w:t.value}:x)})};
   $('#autitle').onchange=async e=>{const aid=areaId();if(!aid)return;await updateDoc(doc(IM,aid),{titleCard:e.target.checked,title:''})};
   $('#mulink').onchange=async e=>{const aid=areaId();if(!aid)return;await updateDoc(doc(IM,aid),{music:e.target.value.trim()})};
   $('#muvol').oninput=e=>{if(MU.out)MU.out.gain.setTargetAtTime(+e.target.value/100,MU.ctx.currentTime,.05)};

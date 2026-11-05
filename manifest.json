@@ -1,14 +1,14 @@
 {
   "name": "The Arcane Table",
   "short_name": "Arcane Table",
-  "start_url": "./#display",
+  "start_url": "./#last",
   "scope": "./",
   "display": "fullscreen",
   "display_override": [
     "fullscreen",
     "standalone"
   ],
-  "orientation": "landscape",
+  "orientation": "any",
   "background_color": "#0b0704",
   "theme_color": "#2a170d",
   "icons": [
