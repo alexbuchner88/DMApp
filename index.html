@@ -255,6 +255,31 @@ input[type=checkbox]{min-height:0;width:20px;height:20px;padding:0;flex:none}
 .pvtools label{display:flex;align-items:center;gap:4px;font:13px Almendra,serif}
 .pvtools input[type=number]{width:64px;min-height:28px;padding:2px 6px;font-size:14px}
 .pvwin.big{width:min(98vw,calc((100vh - 200px)*1.6));right:1vw}
+
+#intro{position:absolute;inset:0;z-index:50;background:#000;opacity:0;pointer-events:none;overflow:hidden;transition:opacity 1.4s}
+#intro.on{opacity:1}
+.isl{position:absolute;inset:0;opacity:0;transition:opacity 1.6s;overflow:hidden}
+.isl.in{opacity:1}
+.ibg{position:absolute;inset:-8%;background:center/cover no-repeat;animation-duration:var(--d);animation-timing-function:linear;animation-fill-mode:forwards}
+.kb-zi{animation-name:kbzi}.kb-zo{animation-name:kbzo}.kb-pl{animation-name:kbpl}.kb-pr{animation-name:kbpr}
+@keyframes kbzi{from{transform:scale(1)}to{transform:scale(1.2)}}
+@keyframes kbzo{from{transform:scale(1.22)}to{transform:scale(1)}}
+@keyframes kbpl{from{transform:scale(1.18) translateX(4%)}to{transform:scale(1.18) translateX(-4%)}}
+@keyframes kbpr{from{transform:scale(1.18) translateX(-4%)}to{transform:scale(1.18) translateX(4%)}}
+.por .ibg{filter:blur(22px) brightness(.45)}
+.hz .ibg{filter:blur(10px) saturate(.45) brightness(.72)}
+.hz.por .ibg{filter:blur(26px) saturate(.4) brightness(.38)}
+.ipt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vmin}
+.ifrm{width:46vmin;height:46vmin;border-radius:50%;overflow:hidden;border:.9vmin solid var(--gold);box-shadow:0 0 6vmin #000c}
+.ifrm img{width:100%;height:100%;object-fit:cover;object-position:50% 0;animation-duration:var(--d);animation-timing-function:linear;animation-fill-mode:forwards}
+.hz .ifrm{filter:blur(6px) grayscale(.7) brightness(.62)}
+.inm,.icap{font:700 clamp(26px,6vmin,64px) 'Cinzel Decorative',Cinzel,serif;color:var(--gold);text-shadow:0 0 22px #000,0 3px 0 #000}
+.icap{position:absolute;left:0;right:0;bottom:10%;text-align:center;font-size:clamp(22px,5vmin,52px)}
+.ifog{position:absolute;inset:-25%;z-index:3;pointer-events:none;opacity:.5;mix-blend-mode:screen;transition:opacity 2s;background:radial-gradient(40% 30% at 20% 30%,rgba(222,228,235,.38),transparent 70%),radial-gradient(45% 35% at 78% 62%,rgba(222,228,235,.32),transparent 70%),radial-gradient(35% 30% at 50% 88%,rgba(222,228,235,.3),transparent 70%);animation:ifg 26s ease-in-out infinite alternate}
+.ifog::after{content:"";position:absolute;inset:0;background:radial-gradient(38% 30% at 70% 25%,rgba(222,228,235,.3),transparent 70%),radial-gradient(40% 32% at 25% 70%,rgba(222,228,235,.28),transparent 70%);animation:ifg 19s ease-in-out infinite alternate-reverse}
+#intro.hzx .ifog{opacity:.95}
+@keyframes ifg{from{transform:translate(-5%,1%) scale(1)}to{transform:translate(6%,-3%) scale(1.18)}}
+.ivig{position:absolute;inset:0;z-index:4;pointer-events:none;background:radial-gradient(ellipse at center,transparent 42%,rgba(0,0,0,.7) 100%)}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -296,7 +321,7 @@ function home(){
 
 async function display(code,pv){
   app.onclick=null;
-  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div id="bg2"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="night"></div><div id="dusk"></div><div id="glow"></div><canvas id="mapc"></canvas><canvas id="wx"></canvas><div id="npcs"></div><div id="wxb"></div><div id="tcard"></div><div id="board"><div id="papers"></div></div><div id="shopc"><div id="shopt"></div><div id="shopg"></div></div><div id="shopd"></div><div id="ver">'+VER+'</div><button id="snd" class="snd">Tap to enable sound</button></div>';
+  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div id="bg2"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="night"></div><div id="dusk"></div><div id="glow"></div><canvas id="mapc"></canvas><canvas id="wx"></canvas><div id="npcs"></div><div id="wxb"></div><div id="tcard"></div><div id="intro"></div><div id="board"><div id="papers"></div></div><div id="shopc"><div id="shopt"></div><div id="shopg"></div></div><div id="shopd"></div><div id="ver">'+VER+'</div><button id="snd" class="snd">Tap to enable sound</button></div>';
   if(pv)$('#stage').classList.add('prev');else try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(e){}
   const cache=new Map();
   const get=async id=>{if(!id)return{};if(!cache.has(id)){const s=await getDoc(doc(db,'sessions',code,'images',id));cache.set(id,s.exists()?s.data():{})}return cache.get(id)};
@@ -345,6 +370,29 @@ async function display(code,pv){
     nb.style.transition='';nb.style.opacity=1;
     bgT=setTimeout(()=>{ob.style.transition='none';ob.style.opacity=0;void ob.offsetHeight;ob.style.transition=''},1500);
   };
+  // Session intro: images fade in out of the fog with slow zooms and pans. Characters appear as framed portraits, hazy slides are the preview of what is to come.
+  let introT=[],introRun=false,lastIntro=0;
+  function introStop(){introT.forEach(clearTimeout);introT=[];introRun=false;const e=$('#intro');e.classList.remove('on','hzx');setTimeout(()=>{if(!introRun)e.innerHTML=''},1600)}
+  function showSlide(it,i,root,secs){
+    const s0=it.s,im=it.im,por=s0.k==='p',hz=!!s0.h,kb=['zi','pl','zo','pr'][i%4],url=im.data?`url(${im.data})`:'none';
+    const el=document.createElement('div');el.className='isl'+(hz?' hz':'')+(por?' por':'');el.style.setProperty('--d',(secs+3)+'s');
+    el.innerHTML=por?`<div class="ibg kb-${kb}" style="background-image:${url}"></div><div class="ipt"><div class="ifrm"><img src="${im.data||''}" alt="" class="kb-${i%2?'zo':'zi'}"></div><div class="inm">${hz?'???':esc(im.name||'')}</div></div>`:`<div class="ibg kb-${kb}" style="background-image:${url}"></div>${hz?'':`<div class="icap">${esc(im.name||'')}</div>`}`;
+    root.appendChild(el);void el.offsetWidth;el.classList.add('in');$('#intro').classList.toggle('hzx',hz);
+    const prev=el.previousElementSibling;if(prev)setTimeout(()=>{prev.classList.remove('in');setTimeout(()=>prev.remove(),1600)},900);
+  }
+  async function introPlay(cfg){
+    introStop();introRun=true;const e=$('#intro');e.innerHTML='<div class="ifog"></div><div id="iroot"></div><div class="ivig"></div>';
+    const items=await Promise.all((cfg.slides||[]).map(async s0=>({s:s0,im:await get(s0.id)})));
+    if(!introRun||!items.length)return;
+    const secs=Math.max(3,cfg.secs||6),root=$('#iroot');e.classList.add('on');
+    items.forEach((it,i)=>introT.push(setTimeout(()=>showSlide(it,i,root,secs),(i?i*secs*1000:700))));
+    introT.push(setTimeout(introStop,items.length*secs*1000+700));
+  }
+  const introCheck=()=>{const c=d.intro;
+    if(!c){if(introRun)introStop();lastIntro=0;return}
+    if(c.at===lastIntro)return;
+    const stale=lastIntro===0&&Date.now()-c.at>((c.slides||[]).length*(c.secs||6)+5)*1000;lastIntro=c.at;if(stale)return;
+    introPlay(c)};
   let lastCard=0;
   const cardCheck=()=>{const c=d.card;if(!c||!c.t||c.at===lastCard)return;const stale=lastCard===0&&Date.now()-c.at>15000;lastCard=c.at;if(stale)return;
     const el=$('#tcard');el.textContent=c.t;el.classList.remove('show');void el.offsetWidth;el.classList.add('show')};
@@ -370,7 +418,7 @@ async function display(code,pv){
     const pk=posted.map(q=>q.id+q.title+q.text+q.done).join('|'),pch=pk!==papKey;papKey=pk;
     if(pch)$('#papers').innerHTML=posted.map(q=>`<article class="paper ${q.done?'done':''}" style="--r:${rot(q.id)}"><i class="pin"></i><div class="in"><h3>${esc(q.title||'')}</h3><p>${esc(q.text||'')}</p></div></article>`).join('');
   };
-  unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};renderWx();applyAudio();cardCheck();paint()}));
+  unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};renderWx();applyAudio();cardCheck();introCheck();paint()}));
   unsubs.push(onSnapshot(collection(db,'sessions',code,'quests'),s=>{qs=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>a.created-b.created);paint()}));
 }
 
@@ -407,7 +455,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-05 v';
+const VER='2026-11-05 w';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -819,7 +867,7 @@ function dm(code){
   <div class="row" style="justify-content:space-between"><div><h1>The Arcane Table</h1><div class="note" style="margin:0">Version ${VER}</div></div><button class="btn sm alt" id="pm" data-a="pm">Hide editing</button></div>
   <details class="panel" id="d-ctl" open><summary><h2>Controls</h2></summary><div class="row">
   <button class="btn" id="cv-bg" data-a="vbg">Background</button><button class="btn" id="cv-map" data-a="vmap">Map</button><button class="btn" id="cv-shop" data-a="vshop">Shop</button><button class="btn" id="cv-board" data-a="vboard">Quest board</button></div>
-  <div class="row" style="margin-top:8px"><button class="btn" id="ct-wx" data-a="wxon">Weather</button><button class="btn" id="ct-night" data-a="night">Day</button><button class="btn" id="ct-tok" data-a="tok">Tokens</button><button class="btn" id="ct-snd" data-a="snd">Sound</button><button class="btn alt" id="ct-mu" data-a="mtoggle" disabled>Play music</button><input id="sndvol" type="range" min="0" max="100" value="70" title="Tablet volume" style="width:110px">
+  <div class="row" style="margin-top:8px"><button class="btn" id="ct-wx" data-a="wxon">Weather</button><button class="btn" id="ct-night" data-a="night">Day</button><button class="btn" id="ct-tok" data-a="tok">Tokens</button><button class="btn" id="ct-snd" data-a="snd">Sound</button><button class="btn alt" id="ct-mu" data-a="mtoggle" disabled>Play music</button><button class="btn" id="ct-in" data-a="inplay" disabled>Intro</button><input id="sndvol" type="range" min="0" max="100" value="70" title="Tablet volume" style="width:110px">
   <button class="btn sm alt edit" data-a="clear">Clear tokens</button><button class="btn sm alt edit" data-a="home">Change session</button></div>
   <div class="edit"><p class="note">Player display link for the tablet:</p><input id="lnk" readonly value="${esc(link)}" style="width:100%"><p class="note">Player link for phones:</p><input id="lnk2" readonly value="${esc(plink)}" style="width:100%"></div></details>
   <details class="panel edit" id="d-up" open><summary><h2>Add to the library</h2></summary><div class="row">
@@ -841,6 +889,12 @@ function dm(code){
   <div class="row"><button class="btn" id="mup" data-a="mplay" disabled>Play</button><button class="btn sm alt" id="mus" data-a="mstop" disabled>Stop</button><button class="btn sm" id="mloop" data-a="mloop">Loop</button><input id="muvol" type="range" min="0" max="100" value="70" title="Volume on this device" style="width:110px"></div>
   <div id="mue"></div>
   <div class="edit" style="margin-top:8px"><input id="mulink" placeholder="Spotify link or audio file for this background or map" style="width:100%" disabled><label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input id="autitle" type="checkbox" disabled> Show the name as a title card on the tablet</label></div></details>
+  <details class="panel" id="d-in" open><summary><h2>Intro <span id="inn"></span><span class="eye" id="e-in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
+  <div class="row"><button class="btn" id="inplay" data-a="inplay" disabled>Play intro</button><button class="btn sm alt" data-a="instop">Stop</button></div>
+  <div id="inl" style="margin-top:8px"></div>
+  <div class="edit"><div class="row" style="margin-top:8px"><select id="inpick"></select><button class="btn sm" data-a="inadd">Add</button><button class="btn sm alt" data-a="inalln">Add all NPCs</button></div>
+  <div class="row" style="margin-top:8px"><label>Seconds per image <input id="insecs" type="number" min="3" max="20" value="6" style="width:70px"></label></div>
+  <input id="inmus" placeholder="Intro music: audio file or Spotify link" style="width:100%;margin-top:8px"></div></details>
   <details class="panel" id="d-bg" open><summary><h2>Backgrounds <span id="cb"></span><span id="bgn"></span><span class="eye" id="e-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="bgs"></div></details>
   <details class="panel" id="d-mp" open><summary><h2>Maps <span id="cmp"></span><span id="mpn"></span><span class="eye" id="e-map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="mps"></div></details>
   <details class="panel" id="d-np" open><summary><h2>NPCs <span id="cn"></span><span class="eye" id="e-np"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="nps"></div></details>
@@ -875,7 +929,7 @@ function dm(code){
     $('#cb').textContent='('+bg.length+')';$('#cn').textContent='('+np.length+')';$('#cq').textContent='('+qs.length+')';
     
     
-    shopDraw();wxDraw();ctlDraw();muDraw();pvDraw();
+    shopDraw();wxDraw();ctlDraw();muDraw();pvDraw();inDraw();
     const qb=(a,id,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#qs').innerHTML=qs.map(q=>`<div class="qrow ${q.posted?'on':''}"><div class="qt"><b>${esc(q.title||'Untitled')}${q.done?' (done)':''}</b><p>${esc(q.text||'')}</p></div><div class="row">${qb('qcur',q.id,live.curQuest===q.id?'Current':'Set current',live.curQuest===q.id?0:1)}${qb('qpin',q.id,q.posted?'Unpin':'Pin')}${qb('qdone',q.id,q.done?'Reopen':'Done',1)}${qb('qedit',q.id,'Edit',1,1)}${qb('qdel',q.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No quests yet.</p>';
   };
@@ -988,6 +1042,35 @@ function dm(code){
     $('#pvtools').style.display=canvas?'':'none';pvFit();if(canvas)drawMap();
   }
   function pvAuto(){const v=curView();if(v!=='map')pvPl=false;if(v==='map'&&lastV!==null&&lastV!=='map'&&!pvOn){pvOn=true;pvSave()}lastV=v}
+  let IC={slides:[],secs:6,music:''},INT=0;
+  const ID=doc(db,'sessions',code,'intro','cfg');
+  const saveI=o=>{Object.assign(IC,o);return setDoc(ID,o,{merge:true})};
+  const kindOf=id=>{const t=(imgs.find(x=>x.id===id)||{}).type;return t==='npc'||t==='monster'?'p':'s'};
+  const introLen=c=>((c&&c.slides?c.slides.length:0)*((c&&c.secs)||6)+6)*1000;
+  const introIsOn=()=>!!(live.intro&&Date.now()-live.intro.at<introLen(live.intro));
+  function introPlayDM(){
+    if(!IC.slides.length)return;
+    const secs=Math.max(3,+IC.secs||6),cfg={at:Date.now(),secs,slides:IC.slides.map(x=>({id:x.id,h:!!x.h,k:kindOf(x.id)}))};
+    set({intro:cfg});
+    const m=(IC.music||'').trim(),ty=mtype(m);
+    if(ty==='file')playFile(m);else if(ty==='spotify'){SP.link=m;spShow(m,true)}else if(ty)window.open(m,'_blank','noopener');
+    clearTimeout(INT);INT=setTimeout(()=>{set({intro:null});stopMusic()},introLen(cfg)-1000);
+  }
+  function introStopDM(){clearTimeout(INT);set({intro:null});if(mtype((IC.music||'').trim()))stopMusic()}
+  function inDraw(){
+    const L=$('#inl');if(!L)return;
+    const nm=id=>imgs.find(x=>x.id===id),btn=(a,i,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${i}">${t}</button>`;
+    L.innerHTML=IC.slides.map((x,i)=>{const im=nm(x.id)||{name:'(missing)',type:''};return`<div class="qrow ${x.h?'':'on'}"><div class="row" style="flex:1 1 200px;flex-wrap:nowrap">${im.data?`<img src="${im.data}" alt="" style="width:52px;height:40px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(im.name)}</b> <small>${im.type==='npc'?'character':im.type==='monster'?'monster':'place'}${x.h?', hazy':''}</small></div></div><div class="row">${btn('inhz',i,'Hazy',!x.h,1)}${btn('inup',i,'Up',1,1)}${btn('indn',i,'Down',1,1)}${btn('indel',i,'Remove',1,1)}</div></div>`}).join('')||'<p class="note">No images yet.</p>';
+    const pk=$('#inpick'),cur=pk.value,og=(t,l)=>{const a=imgs.filter(i=>i.type===t);return a.length?`<optgroup label="${l}">${a.map(i=>`<option value="${i.id}">${esc(i.name)}</option>`).join('')}</optgroup>`:''};
+    const h=og('npc','Characters')+og('monster','Monsters')+og('background','Places');
+    if(pk.dataset.h!==h){pk.dataset.h=h;pk.innerHTML=h;if(cur)pk.value=cur}
+    const sc=$('#insecs');if(document.activeElement!==sc)sc.value=IC.secs||6;
+    const mu=$('#inmus');if(document.activeElement!==mu)mu.value=IC.music||'';
+    const on=introIsOn(),ok=IC.slides.length>0;
+    for(const id of['inplay','ct-in']){const b=$('#'+id);if(b){b.disabled=!ok&&!on;b.classList.toggle('alt',!on);b.textContent=id==='ct-in'?(on?'Stop intro':'Intro'):(on?'Playing':'Play intro')}}
+    $('#inn').textContent=ok?'('+IC.slides.length+')':'';
+    const e=$('#e-in');if(e)e.classList.toggle('on',on);
+  }
   function wxOf(id){return(imgs.find(x=>x.id===id)||{}).wx||'auto'}
   function areaId(){const v=curView();return v==='map'?live.mapId:v==='scene'?live.backgroundId:null}
   function curView(){return live.showBoard?'board':(live.showShop&&live.shopId)?'shop':(live.showMap&&live.mapId)?'map':'scene'}
@@ -1026,6 +1109,9 @@ function dm(code){
   unsubs.push(onSnapshot(GD,s=>{if(s.exists())G={...G,...s.data()};draw()}));
   const updPre=patch=>saveG({presets:G.presets.map(p=>p.id===G.cur?{...p,...patch}:p)});
   $('#pn').onchange=e=>updPre({name:e.target.value.trim()||'Preset'});
+  unsubs.push(onSnapshot(ID,s=>{IC={slides:[],secs:6,music:'',...(s.exists()?s.data():{})};inDraw()}));
+  $('#insecs').onchange=e=>saveI({secs:Math.min(20,Math.max(3,+e.target.value||6))});
+  $('#inmus').onchange=e=>saveI({music:e.target.value.trim()});
   $('#autitle').onchange=async e=>{const aid=areaId();if(!aid)return;await updateDoc(doc(IM,aid),{titleCard:e.target.checked,title:''})};
   $('#mulink').onchange=async e=>{const aid=areaId();if(!aid)return;await updateDoc(doc(IM,aid),{music:e.target.value.trim()})};
   $('#muvol').oninput=e=>{if(MU.out)MU.out.gain.setTargetAtTime(+e.target.value/100,MU.ctx.currentTime,.05)};
@@ -1143,6 +1229,13 @@ function dm(code){
     if(a==='mplay'){const m=((imgs.find(x=>x.id===areaId())||{}).music||'').trim(),ty=mtype(m);if(ty==='file')playFile(m);else if(ty)window.open(m,'_blank','noopener')}
     if(a==='mstop')stopMusic();
     if(a==='mtoggle')musicToggle();
+    if(a==='inplay'){if(introIsOn())introStopDM();else introPlayDM()}
+    if(a==='instop')introStopDM();
+    if(a==='inadd'){const v=$('#inpick').value;if(v)saveI({slides:[...IC.slides,{id:v,h:false}]})}
+    if(a==='inalln')saveI({slides:[...IC.slides,...imgs.filter(i=>i.type==='npc'&&!IC.slides.some(x=>x.id===i.id)).map(i=>({id:i.id,h:false}))]});
+    if(a==='inhz')saveI({slides:IC.slides.map((x,i)=>i===+id?{...x,h:!x.h}:x)});
+    if(a==='inup'||a==='indn'){const i=+id,j=a==='inup'?i-1:i+1;if(j>=0&&j<IC.slides.length){const l=[...IC.slides];[l[i],l[j]]=[l[j],l[i]];saveI({slides:l})}}
+    if(a==='indel')saveI({slides:IC.slides.filter((_,i)=>i!==+id)});
     if(a==='pvtoggle'){pvOn=!pvOn;pvSave();pvDraw()}
     if(a==='pvmode'){pvPl=!pvPl;pvDraw()}
     if(a==='pvsize'){pvBig=!pvBig;pvSave();pvDraw()}
