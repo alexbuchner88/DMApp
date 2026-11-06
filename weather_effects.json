@@ -11,7 +11,7 @@
                   "summer": {"name": "Warm"} } },
     "sun3": { "name": "Warm", "travel": 100, "restDC": 5, "exposure": null, "effects": ["clearSight"],
       "seasons": { "summer": {"name": "Hot", "travel": 75, "restDC": 10, "exposure": {"dc": 14, "type": "heat"}, "effects": ["fireUp", "conSaveDown2"]},
-                  "winter": {"name": "Frosty", "travel": 100, "restDC": 15, "exposure": {"dc": 12, "type": "cold"}, "effects": ["coldUp", "icyGround"]} } },
+                  "winter": {"name": "Frosty", "travel": 100, "restDC": 15, "exposure": {"dc": 12, "type": "cold"}, "effects": ["coldUp", "icyGround", "conSaveDown2"]} } },
     "cloud1": { "name": "Cloudy", "travel": 100, "restDC": 5, "exposure": null, "effects": ["clearSight"] },
     "cloud2": { "name": "Overcast", "travel": 100, "restDC": 5, "exposure": null, "effects": [] },
     "cloud3": { "name": "Fog", "travel": 75, "restDC": 10, "exposure": null, "effects": ["lightly15", "heavily30", "stealthAdv"],
@@ -27,7 +27,7 @@
     "calm": {"name": "Calm", "travelMod": 0, "restDCMod": 0, "exposureMod": {"cold": 0, "heat": 0}, "effects": []},
     "breeze": {"name": "Breeze", "travelMod": 0, "restDCMod": 2, "exposureMod": {"cold": 1, "heat": -1}, "effects": ["cloudDrift"]},
     "gust": {"name": "Gust", "travelMod": 0, "restDCMod": 5, "exposureMod": {"cold": 2, "heat": -2}, "effects": ["rangeHalved", "cloudDisperse", "flyDifficult"]},
-    "storm": {"name": "Storm", "travelMod": -25, "restDCMod": 10, "exposureMod": {"cold": 4, "heat": -4}, "effects": ["rangeHalved", "rangedDisadv", "cloudDisperse", "flyHalf", "flyMustLand", "hearingDisadv"]}
+    "storm": {"name": "Storm", "travelMod": -25, "restDCMod": 10, "exposureMod": {"cold": 4, "heat": -4}, "effects": ["rangeHalved", "rangedDisadv", "concentrationDis", "cloudDisperse", "flyHalf", "flyMustLand", "hearingDisadv"]}
   },
   "categories": [
     {"key": "senses", "name": "Senses", "icon": "eye"},
@@ -59,9 +59,10 @@
     "flyHalf": {"cat": "movement", "icon": "wing", "tone": "nerf", "short": "Fly speed ½", "text": "Fly speed is halved"},
     "flyMustLand": {"cat": "movement", "icon": "wing", "tone": "nerf", "short": "Flyers land", "text": "Flyers without Hover must end their turn on the ground or fall"},
     "flamesOut": {"cat": "combat", "icon": "flameOff", "tone": "neutral", "short": "No open flame", "text": "Unprotected flames go out; fire can't ignite objects"},
-    "rangeHalved": {"cat": "combat", "icon": "bow", "tone": "nerf", "short": "Range ½", "text": "Ranged weapon ranges halved"},
+    "rangeHalved": {"cat": "combat", "icon": "bow", "tone": "nerf", "short": "Range ½", "text": "Ranged weapon and Spell attack range halved"},
     "rangedDisadv": {"cat": "combat", "icon": "bow", "tone": "nerf", "short": "Ranged dis.", "text": "Disadvantage on ranged Weapon and Spell attacks"},
     "conSaveDown2": {"cat": "combat", "icon": "heart", "tone": "nerf", "short": "Con saves -2", "text": "Constitution saves against spell effects -2"},
+    "concentrationDis": {"cat": "combat", "icon": "heart", "tone": "nerf", "short": "Concentration dis.", "text": "Disadvantage on Concentration checks"},
     "conSaveDis": {"cat": "combat", "icon": "heart", "tone": "nerf", "short": "Con saves dis.", "text": "Disadvantage on Constitution saves (including to keep Concentration)"},
     "cloudDrift": {"cat": "combat", "icon": "cloud", "tone": "neutral", "short": "Clouds drift", "text": "Cloud spells drift 10 ft downwind each round"},
     "cloudDisperse": {"cat": "combat", "icon": "cloud", "tone": "neutral", "short": "Clouds fade", "text": "Cloud spells disperse at the end of the caster's next turn"}

@@ -598,34 +598,6 @@ async function display(code,pv){
         c.beginPath();Lp.forEach((q,j)=>j?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));for(let j=Rp.length-1;j>=0;j--)c.lineTo(Rp[j][0],Rp[j][1]);c.closePath();
         c.globalCompositeOperation='lighter';c.lineWidth=H*.012;c.strokeStyle=`rgba(${glow[0]},${glow[1]},${glow[2]},${.35*al})`;c.stroke();c.globalCompositeOperation='source-over';
         c.fillStyle=`rgba(${core[0]},${core[1]},${core[2]},${al})`;c.fill()}};
-    const seeded=n=>()=>((n=(n*1664525+1013904223)>>>0)/4294967296);
-    const mkCave=(W,H)=>{const k=mkCv(W,H),x=k.getContext('2d'),R=seeded(7);
-      let g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#17130f');g.addColorStop(.5,'#261e17');g.addColorStop(1,'#110e0b');x.fillStyle=g;x.fillRect(0,0,W,H);
-      for(let i=0;i<280;i++){const cx=R()*W,cy=R()*H,r=(.02+R()*.09)*Math.min(W,H),n=5+((R()*3)|0);x.beginPath();for(let j=0;j<n;j++){const a=j/n*6.283+R()*.6,rr=r*(.6+R()*.6),px=cx+Math.cos(a)*rr,py=cy+Math.sin(a)*rr;j?x.lineTo(px,py):x.moveTo(px,py)}x.closePath();x.fillStyle=R()<.5?`rgba(130,108,84,${.05+R()*.08})`:`rgba(0,0,0,${.1+R()*.18})`;x.fill()}
-      const cx=W/2,cy=H*.5,rx=W*.52,ry=H*.5,N=60,ph=[0,1,2,3,4,5].map(()=>R()*6.283),amp=[.07,.05,.04,.03,.02,.015];
-      const blob=sc=>{x.beginPath();for(let i=0;i<=N;i++){const a=i/N*6.283;let m=1;for(let h=0;h<6;h++)m+=amp[h]*Math.sin((h+2)*a+ph[h]);const px=cx+Math.cos(a)*rx*m*sc,py=cy+Math.sin(a)*ry*m*sc;i?x.lineTo(px,py):x.moveTo(px,py)}x.closePath()};
-      x.globalCompositeOperation='destination-out';for(const[sc,al]of[[.92,.12],[.88,.2],[.84,.3],[.8,.5],[.76,1]]){blob(sc);x.fillStyle=`rgba(0,0,0,${al})`;x.fill()}   // soft rim
-      x.globalCompositeOperation='source-over';
-      const spike=(x0,y0,len,w,dir)=>{x.fillStyle='#1b1611';x.beginPath();x.moveTo(x0-w/2,y0);x.lineTo(x0+rnd2(-.2,.2)*w,y0+dir*len);x.lineTo(x0+w/2,y0);x.closePath();x.fill();x.strokeStyle='rgba(150,125,95,.25)';x.lineWidth=1.5;x.beginPath();x.moveTo(x0-w/2,y0);x.lineTo(x0+rnd2(-.2,.2)*w,y0+dir*len);x.stroke()};
-      const rnd2=(a,b)=>a+R()*(b-a);
-      for(let i=0;i<16;i++)spike(W*(.12+R()*.76),H*.1,H*(.06+R()*.16),W*(.02+R()*.035),1);   // stalactites
-      for(let i=0;i<10;i++)spike(W*(.1+R()*.8),H*.9,H*(.04+R()*.1),W*(.02+R()*.03),-1);   // stalagmites
-      return k};
-    const mkForest=(W,H)=>{const k=mkCv(W,H),x=k.getContext('2d'),R=seeded(11);
-      const trunk=(x0,w,top,lean,sh)=>{const g=x.createLinearGradient(x0-w/2,0,x0+w/2,0);g.addColorStop(0,`rgb(${8+sh},${6+sh},${4+sh})`);g.addColorStop(.5,`rgb(${30+sh},${22+sh},${14+sh})`);g.addColorStop(1,`rgb(${6+sh},${5+sh},${3+sh})`);x.fillStyle=g;
-        x.beginPath();x.moveTo(x0-w/2,H);x.lineTo(x0-w*.32+lean*.4,H*.5);x.lineTo(x0-w*.26+lean,top);x.lineTo(x0+w*.26+lean,top);x.lineTo(x0+w*.32+lean*.4,H*.5);x.lineTo(x0+w/2,H);x.closePath();x.fill();
-        for(let b=0;b<3;b++){const by=H*(.15+R()*.4),dir=x0<W/2?1:-1,len=W*(.05+R()*.08);x.beginPath();x.moveTo(x0,by);x.lineTo(x0+dir*len,by-H*.06);x.lineTo(x0+dir*len*.9,by-H*.045);x.lineTo(x0,by+w*.2);x.closePath();x.fill()}};
-      for(const[fx,w,sh,lean]of[[.22,.03,26,6],[.13,.05,12,-8],[.045,.085,0,10]]){trunk(W*fx,W*w,H*.03,lean,sh);trunk(W*(1-fx),W*w,H*.03,-lean,sh)}
-      const leaf=(cx,cy,r,col)=>{x.fillStyle=col;x.beginPath();x.ellipse(cx,cy,r,r*.7,R()*3,0,6.283);x.fill()};
-      for(const[col,n,ym,sz]of[['rgba(26,50,32,.92)',90,.2,1],['rgba(12,30,19,.97)',80,.15,1.15],['rgba(5,14,9,1)',70,.1,1.3]])for(let i=0;i<n;i++)leaf(R()*W*1.1-W*.05,R()*H*ym,(.04+R()*.07)*Math.min(W,H)*sz,col);   // canopy
-      for(let i=0;i<280;i++){const bx=R()*W,bh=(.03+R()*.12)*H,bw=2+R()*5,lean=(R()-.5)*bh*.5;x.fillStyle=`rgba(${6+((R()*14)|0)},${18+((R()*30)|0)},${10+((R()*14)|0)},.95)`;x.beginPath();x.moveTo(bx-bw,H);x.quadraticCurveTo(bx,H-bh*.6,bx+lean,H-bh);x.quadraticCurveTo(bx+bw*.4,H-bh*.5,bx+bw,H);x.fill()}   // undergrowth
-      const g=x.createLinearGradient(0,H,0,H*.8);g.addColorStop(0,'rgba(150,175,155,.16)');g.addColorStop(1,'rgba(150,175,155,0)');x.fillStyle=g;x.fillRect(0,H*.8,W,H*.2);
-      return k};
-    // frames: gentle breathing and drifting motes inside the opening
-    const frame=(key,mk,mote,dt,t)=>{const{W,H}=S;if(!S[key]||S[key].width!==W||S[key].height!==H)S[key]=mk(W,H);
-      c.save();c.translate(W/2,H/2);const sc=1+.006*Math.sin(t*.4);c.scale(sc,sc);c.translate(-W/2,-H/2);c.drawImage(S[key],0,0);c.restore();
-      S.acc+=dt*2;while(S.acc>=1){S.acc--;if(S.P.length<40)S.P.push({x:rnd(.18,.82)*W,y:rnd(.25,.9)*H,vx:rnd(-.01,.01)*W,vy:-rnd(.005,.02)*H,life:0,max:rnd(3,6),r:rnd(1,2.4)})}
-      for(const p of S.P){p.life+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;c.globalAlpha=Math.sin(Math.PI*Math.min(1,p.life/p.max))*.5;c.fillStyle=mote;c.beginPath();c.arc(p.x,p.y,p.r,0,7);c.fill()}c.globalAlpha=1;S.P=S.P.filter(p=>p.life<p.max)};
     // a crawling creature drawn small and scaled up smoothly, so it looks out of focus
     const mkBug=()=>mkCv(48,48);
     const drawBug=(k,t,ph)=>{const x=k.getContext('2d');x.clearRect(0,0,48,48);x.save();x.translate(24,24);x.strokeStyle='rgba(8,6,6,.95)';x.lineWidth=1.8;
@@ -728,8 +700,6 @@ async function display(code,pv){
             c.save();c.translate(x,y);c.rotate(ang);c.globalAlpha=.88*Math.min(1,q*8)*Math.min(1,(1-q)*8);c.drawImage(S.bug,-k.size/2,-k.size/2,k.size,k.size);c.restore()}}},
       vignette(dt,t){const{W,H}=S,a=.74+.08*Math.sin(t*.8),g=c.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.hypot(W,H)*.55);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,`rgba(0,0,0,${a})`);c.fillStyle=g;c.fillRect(0,0,W,H)},
       redvig(dt,t){const{W,H}=S,a=.5+.22*Math.pow(Math.sin(t*2.2),2),g=c.createRadialGradient(W/2,H/2,Math.min(W,H)*.28,W/2,H/2,Math.hypot(W,H)*.55);g.addColorStop(0,'rgba(120,0,0,0)');g.addColorStop(.7,`rgba(120,0,0,${a*.6})`);g.addColorStop(1,`rgba(25,0,0,${Math.min(.9,a+.2)})`);c.fillStyle=g;c.fillRect(0,0,W,H)},
-      cave(dt,t){frame('rock',mkCave,'rgba(255,235,200,1)',dt,t)},
-      forest(dt,t){frame('wood',mkForest,'rgba(210,235,200,1)',dt,t)},
       overlay(dt,t){if(!S.ov)return;c.drawImage(S.ov,0,0,S.W,S.H)}
     };
     const layout=()=>{
@@ -826,7 +796,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-05 ae';
+const VER='2026-11-05 af';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -1124,7 +1094,7 @@ function viewMenu(){
 }
 const INFX=[['','No weather',''],['clear','Clear sky','w'],['sunny','Sunny','w'],['hot','Hot (glare)','w'],['frost','Frosty','w'],['cloudy','Cloudy','w'],['overcast','Overcast','w'],['fog','Fog','w'],['drizzle','Drizzle','w'],['rain','Rain','w'],['downpour','Downpour','w'],['storm','Thunderstorm','w'],['lsnow','Light snow','w'],['snow','Snowfall','w'],['blizzard','Blizzard','w'],['drip','Drippy / wet','a'],['torch','Torchlit','a'],['magic','Magical','a'],['dark','Underdark','a'],['haunt','Haunted','a'],['water','Underwater','a'],['fire','Lava / fiery','a'],['moon','Moonlit','a'],['fly','Fireflies','a'],['fey','Feywild','a']];
 const MONBD=[['dark','Dark backdrop'],['light','Light backdrop'],['scene','Keep the scene']];
-const MONFX=[['','No effect'],['poison','Poison wafts'],['acid','Dripping acid'],['lightning','Lightning'],['frost','Frost and cold breath'],['claws','Claw slashes'],['sword','Sword slashes'],['arrows','Flying arrows'],['smoke','Dark smoke'],['webs','Webs and a crawling spider'],['vignette','Vignette (dark)'],['redvig','Vignette (red)'],['cave','Cave frame'],['forest','Forest frame']];
+const MONFX=[['','No effect'],['poison','Poison wafts'],['acid','Dripping acid'],['lightning','Lightning'],['frost','Frost and cold breath'],['claws','Claw slashes'],['sword','Sword slashes'],['arrows','Flying arrows'],['smoke','Dark smoke'],['webs','Webs and a crawling spider'],['vignette','Vignette (dark)'],['redvig','Vignette (red)']];
 const INTOD=[['','Day'],['dusk','Dusk'],['night','Night']];
 const AMBS=['drip','torch','magic','dark','haunt','water','fire','moon','fly','fey'];
 const todFor=L=>{const e=effWx(L);return(e.area==='none'||e.amb)?'day':todOf(L)};
