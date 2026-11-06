@@ -301,7 +301,7 @@ body.intro #stage>:not(#intro){visibility:hidden}
 #intro.opening .ifrm2{opacity:0}
 .iwhite{position:absolute;inset:0;z-index:9;background:#f4f6f9;pointer-events:none}
 #intro.out #iwx{opacity:0!important;transition:opacity 1.4s}
-#itx{position:absolute;inset:0;z-index:7;pointer-events:none}
+#introtx{position:absolute;inset:0;z-index:7;pointer-events:none}
 .tsl{position:absolute;inset:0;opacity:0;transition:opacity 1.6s}
 .tsl.in{opacity:1}
 .tsl.nofade{transition:none}
@@ -451,7 +451,7 @@ async function display(code,pv){
     return c;
   }
   // portrait for the side: a picture with its own background gets soft edges so it dissolves into the dark; a cut-out with transparency is left as it is
-  function cutCv(src,w,h,max){
+  function cutCv(src,w,h,max,soft){
     const k=Math.min(1,max/Math.max(w,h)),cw=Math.max(8,Math.round(w*k)),ch=Math.max(8,Math.round(h*k)),c=mkCv(cw,ch),x=c.getContext('2d',{willReadFrequently:true});
     x.drawImage(src,0,0,cw,ch);
     let trans=false,botSolid=false;
@@ -466,7 +466,11 @@ async function display(code,pv){
       g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(a0*.5,'rgba(0,0,0,.35)');g.addColorStop(a0,'#000');g.addColorStop(1-a1,'#000');g.addColorStop(1-a1*.5,'rgba(0,0,0,.35)');g.addColorStop(1,'rgba(0,0,0,0)');
       x.fillStyle=g;x.fillRect(0,0,cw,ch)};
     x.globalCompositeOperation='destination-in';
-    if(!trans){fade(true,.13,.13);fade(false,.09,.24)}else if(botSolid){fade(false,0.001,.16)}
+    if(!trans){
+      if(soft){fade(true,.26,.26);fade(false,.24,.32);   // wide, smooth edges and rounded corners, so no hard square is left
+        x.save();x.translate(cw/2,ch*.5);x.scale(cw/2*1.06,ch/2*1.06);const g=x.createRadialGradient(0,0,0,0,0,1);g.addColorStop(0,'#000');g.addColorStop(.58,'#000');g.addColorStop(.8,'rgba(0,0,0,.55)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(-1,-1,2,2);x.restore()}
+      else{fade(true,.13,.13);fade(false,.09,.24)}
+    }else if(botSolid){fade(false,0.001,.16)}
     x.globalCompositeOperation='source-over';return c;
   }
   async function prepSlide(it,i,secs){
@@ -497,11 +501,11 @@ async function display(code,pv){
     return{el,tx};
   }
   function addText(tx){
-    const r=$('#itx');if(!tx||!r)return;r.appendChild(tx);fitText(tx);
+    const r=$('#introtx');if(!tx||!r)return;r.appendChild(tx);fitText(tx);
     if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>fitText(tx));   // measure again once the real font is in
   }
   function showSlide(p,s0,root){
-    const el=p.el,tx=p.tx,r=$('#itx');
+    const el=p.el,tx=p.tx,r=$('#introtx');
     root.appendChild(el);addText(tx);void el.offsetWidth;el.classList.add('in');if(tx)tx.classList.add('in');
     introFx(s0.w||'',s0.d);
     const prev=el.previousElementSibling;if(prev)setTimeout(()=>prev.remove(),1900);   // the old slide stays until the new one is fully in: no dark dip in between
@@ -534,7 +538,7 @@ async function display(code,pv){
   async function introPlay(cfg){
     introStop();introRun=true;wk='';renderWx();
     const pl=introPlan(cfg),e=$('#intro');
-    e.innerHTML='<div id="iroot"></div><canvas id="iwx"></canvas><div class="ifrm2"><i></i><i></i><i></i><i></i></div><div id="itx"></div>'+(pl.fog?'<div class="iwhite"></div>':'');
+    e.innerHTML='<div id="iroot"></div><canvas id="iwx"></canvas><div class="ifrm2"><i></i><i></i><i></i><i></i></div><div id="introtx"></div>'+(pl.fog?'<div class="iwhite"></div>':'');
     e.classList.add('opening','on');   // the screen goes white or black at once; the frame waits for the logo
     const items=await Promise.all((cfg.slides||[]).map(async s0=>({s:s0,im:await get(s0.id)})));
     try{await Promise.race([document.fonts&&document.fonts.load("700 48px 'Cinzel Decorative'"),new Promise(r=>setTimeout(r,1500))])}catch(err){}   // the font must be in before text is measured
@@ -548,7 +552,7 @@ async function display(code,pv){
       if(k)introT.push(setTimeout(()=>prep(k),Math.max(0,t-3500)));   // decode the next picture ahead of time
       introT.push(setTimeout(()=>prep(k).then(p=>{P[k]=null;if(!introRun)return;if(k)showSlide(p,it.s,root);else showLogo(p,it.s,pl,root)}),t))});   // P[k]=null lets the memory of shown slides go
     introT.push(setTimeout(()=>{e.classList.add('out');const l=$('#iroot .isl:last-child');if(l){l.classList.remove('nofade');l.style.transitionDuration='1600ms';l.classList.remove('in')}
-      document.querySelectorAll('#itx .tsl').forEach(t=>{t.classList.remove('nofade');t.style.transitionDuration='1600ms';t.classList.remove('in')});introFx('','')},pl.fadeEnd));   // last image and its text fade to black
+      document.querySelectorAll('#introtx .tsl').forEach(t=>{t.classList.remove('nofade');t.style.transitionDuration='1600ms';t.classList.remove('in')});introFx('','')},pl.fadeEnd));   // last image and its text fade to black
     introT.push(setTimeout(introStop,pl.total));   // after a moment of black the screen comes back
   }
   const introCheck=()=>{const c=d.intro;
@@ -571,7 +575,7 @@ async function display(code,pv){
   }
   function monArt(x){   // soft feathered edges for pictures with a background, transparent ones stay as they are (same method as the intro)
     const key=x.id+'|'+(x.data||'').length;
-    if(!MA.has(key))MA.set(key,(async()=>{try{const im=await loadIm(x.data);if(!im)return null;const w=im.naturalWidth||1,h=im.naturalHeight||1,cut=cutCv(im,w,h,900);
+    if(!MA.has(key))MA.set(key,(async()=>{try{const im=await loadIm(x.data);if(!im)return null;const w=im.naturalWidth||1,h=im.naturalHeight||1,cut=cutCv(im,w,h,900,true);
       return{url:cut.toDataURL('image/png'),w:cut.width,h:cut.height,soft:softCv(im,w,h,48,.4,.4),...silPts(cut)}}catch(e){return null}})());
     return MA.get(key);
   }
@@ -594,6 +598,45 @@ async function display(code,pv){
         c.beginPath();Lp.forEach((q,j)=>j?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));for(let j=Rp.length-1;j>=0;j--)c.lineTo(Rp[j][0],Rp[j][1]);c.closePath();
         c.globalCompositeOperation='lighter';c.lineWidth=H*.012;c.strokeStyle=`rgba(${glow[0]},${glow[1]},${glow[2]},${.35*al})`;c.stroke();c.globalCompositeOperation='source-over';
         c.fillStyle=`rgba(${core[0]},${core[1]},${core[2]},${al})`;c.fill()}};
+    const seeded=n=>()=>((n=(n*1664525+1013904223)>>>0)/4294967296);
+    const mkCave=(W,H)=>{const k=mkCv(W,H),x=k.getContext('2d'),R=seeded(7);
+      let g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#17130f');g.addColorStop(.5,'#261e17');g.addColorStop(1,'#110e0b');x.fillStyle=g;x.fillRect(0,0,W,H);
+      for(let i=0;i<280;i++){const cx=R()*W,cy=R()*H,r=(.02+R()*.09)*Math.min(W,H),n=5+((R()*3)|0);x.beginPath();for(let j=0;j<n;j++){const a=j/n*6.283+R()*.6,rr=r*(.6+R()*.6),px=cx+Math.cos(a)*rr,py=cy+Math.sin(a)*rr;j?x.lineTo(px,py):x.moveTo(px,py)}x.closePath();x.fillStyle=R()<.5?`rgba(130,108,84,${.05+R()*.08})`:`rgba(0,0,0,${.1+R()*.18})`;x.fill()}
+      const cx=W/2,cy=H*.5,rx=W*.52,ry=H*.5,N=60,ph=[0,1,2,3,4,5].map(()=>R()*6.283),amp=[.07,.05,.04,.03,.02,.015];
+      const blob=sc=>{x.beginPath();for(let i=0;i<=N;i++){const a=i/N*6.283;let m=1;for(let h=0;h<6;h++)m+=amp[h]*Math.sin((h+2)*a+ph[h]);const px=cx+Math.cos(a)*rx*m*sc,py=cy+Math.sin(a)*ry*m*sc;i?x.lineTo(px,py):x.moveTo(px,py)}x.closePath()};
+      x.globalCompositeOperation='destination-out';for(const[sc,al]of[[.92,.12],[.88,.2],[.84,.3],[.8,.5],[.76,1]]){blob(sc);x.fillStyle=`rgba(0,0,0,${al})`;x.fill()}   // soft rim
+      x.globalCompositeOperation='source-over';
+      const spike=(x0,y0,len,w,dir)=>{x.fillStyle='#1b1611';x.beginPath();x.moveTo(x0-w/2,y0);x.lineTo(x0+rnd2(-.2,.2)*w,y0+dir*len);x.lineTo(x0+w/2,y0);x.closePath();x.fill();x.strokeStyle='rgba(150,125,95,.25)';x.lineWidth=1.5;x.beginPath();x.moveTo(x0-w/2,y0);x.lineTo(x0+rnd2(-.2,.2)*w,y0+dir*len);x.stroke()};
+      const rnd2=(a,b)=>a+R()*(b-a);
+      for(let i=0;i<16;i++)spike(W*(.12+R()*.76),H*.1,H*(.06+R()*.16),W*(.02+R()*.035),1);   // stalactites
+      for(let i=0;i<10;i++)spike(W*(.1+R()*.8),H*.9,H*(.04+R()*.1),W*(.02+R()*.03),-1);   // stalagmites
+      return k};
+    const mkForest=(W,H)=>{const k=mkCv(W,H),x=k.getContext('2d'),R=seeded(11);
+      const trunk=(x0,w,top,lean,sh)=>{const g=x.createLinearGradient(x0-w/2,0,x0+w/2,0);g.addColorStop(0,`rgb(${8+sh},${6+sh},${4+sh})`);g.addColorStop(.5,`rgb(${30+sh},${22+sh},${14+sh})`);g.addColorStop(1,`rgb(${6+sh},${5+sh},${3+sh})`);x.fillStyle=g;
+        x.beginPath();x.moveTo(x0-w/2,H);x.lineTo(x0-w*.32+lean*.4,H*.5);x.lineTo(x0-w*.26+lean,top);x.lineTo(x0+w*.26+lean,top);x.lineTo(x0+w*.32+lean*.4,H*.5);x.lineTo(x0+w/2,H);x.closePath();x.fill();
+        for(let b=0;b<3;b++){const by=H*(.15+R()*.4),dir=x0<W/2?1:-1,len=W*(.05+R()*.08);x.beginPath();x.moveTo(x0,by);x.lineTo(x0+dir*len,by-H*.06);x.lineTo(x0+dir*len*.9,by-H*.045);x.lineTo(x0,by+w*.2);x.closePath();x.fill()}};
+      for(const[fx,w,sh,lean]of[[.22,.03,26,6],[.13,.05,12,-8],[.045,.085,0,10]]){trunk(W*fx,W*w,H*.03,lean,sh);trunk(W*(1-fx),W*w,H*.03,-lean,sh)}
+      const leaf=(cx,cy,r,col)=>{x.fillStyle=col;x.beginPath();x.ellipse(cx,cy,r,r*.7,R()*3,0,6.283);x.fill()};
+      for(const[col,n,ym,sz]of[['rgba(26,50,32,.92)',90,.2,1],['rgba(12,30,19,.97)',80,.15,1.15],['rgba(5,14,9,1)',70,.1,1.3]])for(let i=0;i<n;i++)leaf(R()*W*1.1-W*.05,R()*H*ym,(.04+R()*.07)*Math.min(W,H)*sz,col);   // canopy
+      for(let i=0;i<280;i++){const bx=R()*W,bh=(.03+R()*.12)*H,bw=2+R()*5,lean=(R()-.5)*bh*.5;x.fillStyle=`rgba(${6+((R()*14)|0)},${18+((R()*30)|0)},${10+((R()*14)|0)},.95)`;x.beginPath();x.moveTo(bx-bw,H);x.quadraticCurveTo(bx,H-bh*.6,bx+lean,H-bh);x.quadraticCurveTo(bx+bw*.4,H-bh*.5,bx+bw,H);x.fill()}   // undergrowth
+      const g=x.createLinearGradient(0,H,0,H*.8);g.addColorStop(0,'rgba(150,175,155,.16)');g.addColorStop(1,'rgba(150,175,155,0)');x.fillStyle=g;x.fillRect(0,H*.8,W,H*.2);
+      return k};
+    // frames: gentle breathing and drifting motes inside the opening
+    const frame=(key,mk,mote,dt,t)=>{const{W,H}=S;if(!S[key]||S[key].width!==W||S[key].height!==H)S[key]=mk(W,H);
+      c.save();c.translate(W/2,H/2);const sc=1+.006*Math.sin(t*.4);c.scale(sc,sc);c.translate(-W/2,-H/2);c.drawImage(S[key],0,0);c.restore();
+      S.acc+=dt*2;while(S.acc>=1){S.acc--;if(S.P.length<40)S.P.push({x:rnd(.18,.82)*W,y:rnd(.25,.9)*H,vx:rnd(-.01,.01)*W,vy:-rnd(.005,.02)*H,life:0,max:rnd(3,6),r:rnd(1,2.4)})}
+      for(const p of S.P){p.life+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;c.globalAlpha=Math.sin(Math.PI*Math.min(1,p.life/p.max))*.5;c.fillStyle=mote;c.beginPath();c.arc(p.x,p.y,p.r,0,7);c.fill()}c.globalAlpha=1;S.P=S.P.filter(p=>p.life<p.max)};
+    // a crawling creature drawn small and scaled up smoothly, so it looks out of focus
+    const mkBug=()=>mkCv(48,48);
+    const drawBug=(k,t,ph)=>{const x=k.getContext('2d');x.clearRect(0,0,48,48);x.save();x.translate(24,24);x.strokeStyle='rgba(8,6,6,.95)';x.lineWidth=1.8;
+      for(let i=0;i<8;i++){const side=i<4?-1:1,n=i%4,base=(-.7+n*.5)*(side<0?1:1),sw=Math.sin(t*9+ph+n*1.6+(side<0?0:3.14))*.3,a=base+sw;
+        x.beginPath();x.moveTo(side*3,-2+n*2);const kx=side*(10+Math.cos(a)*5),ky=-4+n*3.5-Math.sin(a)*8;x.quadraticCurveTo(kx,ky-6,side*(15+Math.abs(Math.cos(a))*6),ky+9);x.stroke()}
+      x.fillStyle='rgba(8,6,6,.97)';x.beginPath();x.ellipse(0,7,6.5,8.5,0,0,7);x.fill();x.beginPath();x.ellipse(0,-5,4,4.5,0,0,7);x.fill();x.restore()};
+    const mkWebSoft=R=>{const r=Math.max(26,Math.round(R/13)),k=mkCv(r,r),x=k.getContext('2d'),rays=7;x.strokeStyle='rgba(235,240,246,.8)';x.lineWidth=1;
+      for(let i=0;i<rays;i++){const a=i/(rays-1)*Math.PI/2;x.beginPath();x.moveTo(0,0);x.lineTo(Math.cos(a)*r,Math.sin(a)*r);x.stroke()}
+      x.lineWidth=.8;for(let q=1;q<=5;q++){const rr=r*Math.pow(q/5,1.1);x.beginPath();for(let i=0;i<rays-1;i++){const a0=i/(rays-1)*Math.PI/2,a1=(i+1)/(rays-1)*Math.PI/2,am=(a0+a1)/2;if(i===0)x.moveTo(Math.cos(a0)*rr,Math.sin(a0)*rr);x.quadraticCurveTo(Math.cos(am)*rr*.9,Math.sin(am)*rr*.9,Math.cos(a1)*rr,Math.sin(a1)*rr)}x.stroke()}
+      x.globalCompositeOperation='destination-in';const fg=x.createRadialGradient(0,0,r*.3,0,0,r);fg.addColorStop(0,'#000');fg.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=fg;x.fillRect(0,0,r,r);   // fade the web out toward its outer edge
+      return k};
     const FX={
       poison(dt,t){const{W,H}=S;
         const g=c.createLinearGradient(0,H,0,H*.7);g.addColorStop(0,`rgba(150,200,60,${.3+.06*Math.sin(t*1.3)})`);g.addColorStop(1,'rgba(150,200,60,0)');c.fillStyle=g;c.fillRect(0,H*.7,W,H*.3);
@@ -637,14 +680,14 @@ async function display(code,pv){
         for(const e of S.E){e.life+=dt;const a=Math.sin(Math.PI*e.life/e.max);c.globalCompositeOperation='lighter';c.strokeStyle=`rgba(235,248,255,${a})`;c.lineWidth=1.2;c.beginPath();c.moveTo(e.x-6,e.y);c.lineTo(e.x+6,e.y);c.moveTo(e.x,e.y-6);c.lineTo(e.x,e.y+6);c.stroke();c.globalCompositeOperation='source-over'}
         S.E=S.E.filter(e=>e.life<e.max)},
       claws(dt,t){const{W,H,L}=S;
-        S.flash=Math.max(0,S.flash-dt*4);if(S.flash>.01){c.fillStyle=`rgba(190,20,20,${S.flash*.22})`;c.fillRect(0,0,W,H)}
-        S.nextA-=dt;if(S.nextA<=0){S.E.push({a:rnd(-.9,.9)+Math.PI/2+(Math.random()<.5?0:Math.PI),cx:L.x+L.w*rnd(.3,.7),cy:L.y+L.h*rnd(.3,.65),len:H*rnd(.65,.95),gap:W*.035,life:0,max:1,n:3});S.flash=1;S.nextA=rnd(1.5,3)}
+        S.flash=Math.max(0,S.flash-dt*4);if(S.flash>.01){c.fillStyle=`rgba(190,20,20,${S.flash*.15})`;c.fillRect(0,0,W,H)}
+        S.nextA-=dt;if(S.nextA<=0){S.E.push({a:rnd(-.9,.9)+Math.PI/2+(Math.random()<.5?0:Math.PI),cx:L.x+L.w*rnd(.3,.7),cy:L.y+L.h*rnd(.3,.65),len:H*rnd(.65,.95),gap:W*.035,life:0,max:1,n:3});S.flash=1;S.nextA=rnd(5,9)}
         for(const e of S.E){e.life+=dt;slash(e,Math.min(1,e.life/.16),e.life<.4?1:Math.max(0,1-(e.life-.4)/.6),[255,236,230],[200,30,30])}
         S.E=S.E.filter(e=>e.life<e.max)},
       sword(dt,t){const{W,H,L}=S;
         S.flash=Math.max(0,S.flash-dt*5);if(S.flash>.01){c.fillStyle=`rgba(220,235,255,${S.flash*.12})`;c.fillRect(0,0,W,H)}
         S.nextA-=dt;if(S.nextA<=0){const a=rnd(-.8,.8)+(Math.random()<.5?Math.PI/4:-Math.PI/4+Math.PI),cx=L.x+L.w*rnd(.3,.7),cy=L.y+L.h*rnd(.3,.6);S.E.push({a,cx,cy,len:H*1.05,gap:0,life:0,max:.8,n:1,spark:1});
-          if(Math.random()<.3)S.E.push({a:a+Math.PI/2+rnd(-.3,.3),cx:cx+rnd(-30,30),cy:cy+rnd(-30,30),len:H*.9,gap:0,life:-.14,max:.8,n:1,spark:1});S.flash=1;S.nextA=rnd(1.6,3.2)}
+          if(Math.random()<.2)S.E.push({a:a+Math.PI/2+rnd(-.3,.3),cx:cx+rnd(-30,30),cy:cy+rnd(-30,30),len:H*.9,gap:0,life:-.14,max:.8,n:1,spark:1});S.flash=1;S.nextA=rnd(5,10)}
         for(const e of S.E){e.life+=dt;if(e.life<0)continue;const p=Math.min(1,e.life/.12);slash(e,p,e.life<.25?1:Math.max(0,1-(e.life-.25)/.55),[238,246,255],[110,165,255],H*.008);
           if(e.spark&&!e.sp&&p>=1){e.sp=1;const ex=e.cx+Math.cos(e.a)*e.len/2,ey=e.cy+Math.sin(e.a)*e.len/2;for(let k=0;k<14;k++)S.P.push({x:ex,y:ey,vx:rnd(-.5,.5)*W*.5,vy:rnd(-.6,.2)*H*.5,life:0,max:rnd(.3,.6)})}}
         S.E=S.E.filter(e=>e.life<e.max);
@@ -665,21 +708,29 @@ async function display(code,pv){
           c.restore()}
         S.E=S.E.filter(a=>a.life<a.max)},
       smoke(dt,t){const{W,H}=S;
-        let g=c.createLinearGradient(0,H,0,H*.62);g.addColorStop(0,'rgba(10,8,14,.6)');g.addColorStop(1,'rgba(10,8,14,0)');c.fillStyle=g;c.fillRect(0,H*.62,W,H*.38);
-        g=c.createLinearGradient(0,0,0,H*.4);g.addColorStop(0,`rgba(0,0,0,${.35+.1*Math.sin(t*.9)})`);g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(0,0,W,H*.4);
-        S.acc+=dt*5;while(S.acc>=1){S.acc--;if(S.P.length>46)break;const m=Math.random()<.5,u=m?pick(S.edge):null,dark=Math.random()<.7;
-          S.P.push({x:m?X(u[0]):rnd(0,W),y:m?Y(u[1]):H*rnd(.85,1.05),vx:rnd(-.025,.025)*W,vy:-rnd(.03,.09)*H,r:rnd(.12,.26)*H,life:0,max:rnd(4,7),ph:rnd(0,6.3),col:dark?'14,12,20':'80,80,92',a:dark?rnd(.22,.36):rnd(.08,.15)})}
+        let g=c.createLinearGradient(0,H,0,H*.5);g.addColorStop(0,'rgba(8,6,12,.92)');g.addColorStop(1,'rgba(8,6,12,0)');c.fillStyle=g;c.fillRect(0,H*.5,W,H*.5);
+        g=c.createLinearGradient(0,0,0,H*.5);g.addColorStop(0,`rgba(0,0,0,${.6+.1*Math.sin(t*.9)})`);g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(0,0,W,H*.5);
+        g=c.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.hypot(W,H)*.55);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.55)');c.fillStyle=g;c.fillRect(0,0,W,H);
+        S.acc+=dt*9;while(S.acc>=1){S.acc--;if(S.P.length>90)break;const kind=Math.random(),m=kind<.4,u=m?pick(S.edge):null,dark=Math.random()<.75,big=kind>.85;
+          S.P.push({x:m?X(u[0]):(big?(Math.random()<.5?-.1:1.1)*W:rnd(0,W)),y:m?Y(u[1]):(big?rnd(.3,1)*H:H*rnd(.85,1.08)),vx:big?(S.P.length%2?1:-1)*rnd(.01,.03)*W:rnd(-.025,.025)*W,vy:-rnd(.03,.1)*H,r:(big?rnd(.34,.55):rnd(.16,.34))*H,life:0,max:rnd(4,7.5),ph:rnd(0,6.3),col:dark?'10,8,16':'70,70,84',a:dark?(big?rnd(.3,.45):rnd(.4,.62)):rnd(.12,.22)})}
         for(const p of S.P){p.life+=dt;p.x+=p.vx*dt+Math.sin(t*.7+p.ph)*10*dt;p.y+=p.vy*dt;p.r*=1+dt*.05;const k=p.life/p.max;c.globalAlpha=Math.sin(Math.PI*Math.min(1,k))*p.a;c.drawImage(spr(p.col),p.x-p.r,p.y-p.r*.8,p.r*2,p.r*1.6)}
         c.globalAlpha=1;S.P=S.P.filter(p=>p.life<p.max)},
       webs(dt,t){const{W,H}=S;
-        if(!S.web){S.web=mkWeb(Math.min(W,H)*.6);S.th=Array.from({length:4},(_,i)=>({x:W*(.18+.22*i)+rnd(-.03,.03)*W,len:H*rnd(.22,.45),ph:rnd(0,6.3)}))}
-        const sw=Math.sin(t*.6)*.012;
-        c.save();c.rotate(sw);c.drawImage(S.web,0,0);c.restore();
-        c.save();c.translate(W,0);c.scale(-1,1);c.rotate(-sw);c.drawImage(S.web,0,0);c.restore();
-        for(const th of S.th){const bob=.5+.5*Math.sin(t*.35+th.ph),y=th.len*(.55+.45*bob),sx=th.x+Math.sin(t*.8+th.ph)*3;
-          c.strokeStyle='rgba(235,240,245,.45)';c.lineWidth=1.2;c.beginPath();c.moveTo(th.x,0);c.lineTo(sx,y);c.stroke();
-          c.fillStyle='#14110f';c.beginPath();c.ellipse(sx,y+6,5,6.5,0,0,7);c.fill();c.beginPath();c.arc(sx,y-1,3.2,0,7);c.fill();
-          c.strokeStyle='#14110f';c.lineWidth=1.3;for(let l=-1;l<=1;l+=2)for(let k=0;k<4;k++){c.beginPath();c.moveTo(sx,y+4);c.lineTo(sx+l*(9+k*2),y+k*3-1);c.lineTo(sx+l*(13+k*2),y+9+k*2);c.stroke()}}}
+        if(!S.web){S.web=mkWebSoft(Math.min(W,H)*.6);S.bug=mkBug();S.crawl=null;S.wait=rnd(1,3)}
+        const R=Math.min(W,H)*.6,sw=Math.sin(t*.5)*.01;c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';   // abstract, out-of-focus webs in two corners
+        c.save();c.globalAlpha=.32;c.rotate(sw);c.drawImage(S.web,0,0,R,R);c.restore();
+        c.save();c.globalAlpha=.26;c.translate(W,0);c.scale(-1,1);c.rotate(-sw);c.drawImage(S.web,0,0,R*.85,R*.85);c.restore();
+        if(!S.crawl){S.wait-=dt;if(S.wait<=0){const big=Math.random(),size=(big<.4?.3:big<.8?.17:.09)*H,left=Math.random()<.5,y0=rnd(.15,.85)*H,y1=Math.min(.95*H,Math.max(.05*H,y0+rnd(-.35,.35)*H));
+            S.crawl={x:left?-size:W+size,y:y0,tx:left?W+size:-size,ty:y1,size,t:0,dur:rnd(9,14)*(size>H*.2?1.2:1),ph:rnd(0,6)};S.wait=rnd(5,10)}}
+        else{const k=S.crawl;k.t+=dt;const q=k.t/k.dur;if(q>=1)S.crawl=null;else{
+            const e=q+Math.sin(q*18+k.ph)*.012,x=k.x+(k.tx-k.x)*e,y=k.y+(k.ty-k.y)*e+Math.sin(q*6+k.ph)*H*.04,x2=k.x+(k.tx-k.x)*(e+.01),y2=k.y+(k.ty-k.y)*(e+.01)+Math.sin((q+.01)*6+k.ph)*H*.04;
+            drawBug(S.bug,t*(.4+.6*Math.abs(Math.sin(q*9+k.ph))),k.ph);const ang=Math.atan2(y2-y,x2-x)+Math.PI/2;
+            c.save();c.translate(x,y);c.rotate(ang);c.globalAlpha=.88*Math.min(1,q*8)*Math.min(1,(1-q)*8);c.drawImage(S.bug,-k.size/2,-k.size/2,k.size,k.size);c.restore()}}},
+      vignette(dt,t){const{W,H}=S,a=.74+.08*Math.sin(t*.8),g=c.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.hypot(W,H)*.55);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,`rgba(0,0,0,${a})`);c.fillStyle=g;c.fillRect(0,0,W,H)},
+      redvig(dt,t){const{W,H}=S,a=.5+.22*Math.pow(Math.sin(t*2.2),2),g=c.createRadialGradient(W/2,H/2,Math.min(W,H)*.28,W/2,H/2,Math.hypot(W,H)*.55);g.addColorStop(0,'rgba(120,0,0,0)');g.addColorStop(.7,`rgba(120,0,0,${a*.6})`);g.addColorStop(1,`rgba(25,0,0,${Math.min(.9,a+.2)})`);c.fillStyle=g;c.fillRect(0,0,W,H)},
+      cave(dt,t){frame('rock',mkCave,'rgba(255,235,200,1)',dt,t)},
+      forest(dt,t){frame('wood',mkForest,'rgba(210,235,200,1)',dt,t)},
+      overlay(dt,t){if(!S.ov)return;c.drawImage(S.ov,0,0,S.W,S.H)}
     };
     const layout=()=>{
       if(!S)return;const sr=$('#stage').getBoundingClientRect(),W=Math.round(sr.width),H=Math.round(sr.height);if(!W||!H)return;
@@ -690,11 +741,12 @@ async function display(code,pv){
     const loop=ts=>{raf=0;if(!S)return;const dt=Math.min(.08,(ts-(last||ts))/1000);last=ts;if(!S.ready)layout();if(S.ready){c.clearRect(0,0,S.W,S.H);FX[S.kind](dt,ts*.001)}raf=requestAnimationFrame(loop)};
     addEventListener('resize',layout);
     function stop(){S=null;cancelAnimationFrame(raf);raf=0;c.clearRect(0,0,cv.width,cv.height)}
-    function set(kind,fig,art){
+    function set(kind,fig,art,ovId){
       if(!FX[kind]){stop();return}
-      if(S&&S.kind===kind){S.fig=fig;S.art=art;layout();setTimeout(layout,700);return}
-      S={kind,fig,art,P:[],E:[],acc:0,nextA:rnd(.3,1),nextB:0,flash:0,fr:0,pool:0,ready:false,edge:art.edge,body:art.body,any:art.body.concat(art.edge)};
+      if(S&&S.kind===kind&&S.ovId===(ovId||'')){S.fig=fig;S.art=art;layout();setTimeout(layout,700);return}
+      S={kind,fig,art,ovId:ovId||'',P:[],E:[],acc:0,nextA:(kind==='claws'||kind==='sword')?rnd(1.5,3):rnd(.3,1),nextB:0,flash:0,fr:0,pool:0,ready:false,edge:art.edge,body:art.body,any:art.body.concat(art.edge)};
       S.edgeLow=art.edge.filter(u=>u[1]>.5);if(!S.edgeLow.length)S.edgeLow=art.edge;
+      if(kind==='overlay')get(ovId).then(d=>d&&d.data?loadIm(d.data):null).then(im=>{if(S&&S.ovId===ovId)S.ov=im});
       layout();setTimeout(layout,700);   // once more when the entrance animation is over
       if(!raf){last=0;raf=requestAnimationFrame(loop)}
     }
@@ -709,8 +761,8 @@ async function display(code,pv){
     const W=INTROFX[cfg.wx]||null,A=INTROFX[cfg.amb]||null;   // area look and weather, from the same engine as the areas and the intro
     if(on&&(W||A)){MW.set(W&&W.s?(WXS.find(x=>x.id===W.s)||WXS[0]):null,W&&W.s?W.w:0,!!(W&&W.c),false,(W&&W.g)||0,(A&&A.am)||'');$('#mwx').classList.add('on')}
     else{MW.set(null,0,false,false,0,'');$('#mwx').classList.remove('on')}
-    const fig=document.querySelector('#npcs figure.mon.free');
-    if(on&&cfg.fx&&fig){MFX.set(cfg.fx,fig,art);$('#mfx').classList.add('on')}else{MFX.stop();$('#mfx').classList.remove('on')}
+    const fig=document.querySelector('#npcs figure.mon.free'),fx0=cfg.fx||'',ovId=fx0.startsWith('img:')?fx0.slice(4):'',kind=ovId?'overlay':fx0;
+    if(on&&kind&&fig){MFX.set(kind,fig,art,ovId);$('#mfx').classList.add('on')}else{MFX.stop();$('#mfx').classList.remove('on')}
   }
   unsubs.push(onSnapshot(doc(db,'sessions',code,'monfx','cfg'),s=>{MN=s.exists()?s.data():{};paint()}));
   const rot=id=>{let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))%7;return h-3};
@@ -774,7 +826,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-05 ad';
+const VER='2026-11-05 ae';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -1072,7 +1124,7 @@ function viewMenu(){
 }
 const INFX=[['','No weather',''],['clear','Clear sky','w'],['sunny','Sunny','w'],['hot','Hot (glare)','w'],['frost','Frosty','w'],['cloudy','Cloudy','w'],['overcast','Overcast','w'],['fog','Fog','w'],['drizzle','Drizzle','w'],['rain','Rain','w'],['downpour','Downpour','w'],['storm','Thunderstorm','w'],['lsnow','Light snow','w'],['snow','Snowfall','w'],['blizzard','Blizzard','w'],['drip','Drippy / wet','a'],['torch','Torchlit','a'],['magic','Magical','a'],['dark','Underdark','a'],['haunt','Haunted','a'],['water','Underwater','a'],['fire','Lava / fiery','a'],['moon','Moonlit','a'],['fly','Fireflies','a'],['fey','Feywild','a']];
 const MONBD=[['dark','Dark backdrop'],['light','Light backdrop'],['scene','Keep the scene']];
-const MONFX=[['','No effect'],['poison','Poison wafts'],['acid','Dripping acid'],['lightning','Lightning'],['frost','Frost and cold breath'],['claws','Claw slashes'],['sword','Sword slashes'],['arrows','Flying arrows'],['smoke','Dark smoke'],['webs','Webs and spiders']];
+const MONFX=[['','No effect'],['poison','Poison wafts'],['acid','Dripping acid'],['lightning','Lightning'],['frost','Frost and cold breath'],['claws','Claw slashes'],['sword','Sword slashes'],['arrows','Flying arrows'],['smoke','Dark smoke'],['webs','Webs and a crawling spider'],['vignette','Vignette (dark)'],['redvig','Vignette (red)'],['cave','Cave frame'],['forest','Forest frame']];
 const INTOD=[['','Day'],['dusk','Dusk'],['night','Night']];
 const AMBS=['drip','torch','magic','dark','haunt','water','fire','moon','fly','fey'];
 const todFor=L=>{const e=effWx(L);return(e.area==='none'||e.amb)?'day':todOf(L)};
@@ -1210,7 +1262,7 @@ function dm(code){
   <button class="btn sm alt edit" data-a="clear">Clear tokens</button><button class="btn sm alt edit" data-a="home">Change session</button></div>
   <div class="edit"><p class="note">Player display link for the tablet:</p><input id="lnk" readonly value="${esc(link)}" style="width:100%"><p class="note">Player link for phones:</p><input id="lnk2" readonly value="${esc(plink)}" style="width:100%"></div></details>
   <details class="panel edit" id="d-up" open><summary><h2>Add to the library</h2></summary><div class="row">
-  <select id="type"><option value="background">Background</option><option value="npc">NPC portrait</option><option value="monster">Monster token</option><option value="map">Map</option></select>
+  <select id="type"><option value="background">Background</option><option value="npc">NPC portrait</option><option value="monster">Monster token</option><option value="map">Map</option><option value="overlay">Overlay (transparent center)</option></select>
   <input id="nm" placeholder="Name (optional)"><input id="file" type="file" accept="image/*" multiple>
   <button class="btn" data-a="up">Add image</button></div><p class="note" id="msg">Several files at once keep their file names. Rename any image later with the pencil on its tile.</p></details>
   <details class="panel" id="d-wx" open><summary><h2>Weather <span class="eye" id="e-wx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
@@ -1396,9 +1448,10 @@ function dm(code){
     const cfg={bd:'dark',fx:'',amb:'',wx:'',...(MFD[m.id]||{})},on=vis.includes(m.id);
     const opt=(list,v)=>list.map(o=>`<option value="${o[0]}"${o[0]===v?' selected':''}>${o[1]}</option>`).join('');
     const ambs=[['','No area look'],...INFX.filter(f=>f[2]==='a').map(f=>[f[0],f[1]])],wxs=[['','No weather'],...INFX.filter(f=>f[2]==='w').map(f=>[f[0],f[1]])];
+    const ovs=imgs.filter(x=>x.type==='overlay'),fxs=[...MONFX,...ovs.map(o=>['img:'+o.id,'Overlay: '+o.name])];
     const lab=(t,k,list,v)=>`<label style="font-size:12px">${t}<br><select data-k="${k}" style="min-height:34px;padding:2px 6px;font-size:14px">${opt(list,v)}</select></label>`;
     box.dataset.id=m.id;
-    box.innerHTML=`<h3 style="margin:12px 0 4px;font-size:15px;color:var(--gold)">Monster look: ${esc(m.name)} <small style="font-weight:400">${on?(vis[0]===m.id?'on screen':'on screen, but another monster is first'):'not on screen'}</small></h3><div class="row" style="gap:10px;align-items:flex-end">${lab('Backdrop','bd',MONBD,cfg.bd)}${lab('Effect','fx',MONFX,cfg.fx)}${lab('Area look','amb',ambs,cfg.amb)}${lab('Weather','wx',wxs,cfg.wx)}</div><p class="note" style="margin:6px 0 0">The first monster on screen sets the backdrop and effects for the whole screen. Use the ✦ on a monster in edit mode to set it up before it appears.</p>`;
+    box.innerHTML=`<h3 style="margin:12px 0 4px;font-size:15px;color:var(--gold)">Monster look: ${esc(m.name)} <small style="font-weight:400">${on?(vis[0]===m.id?'on screen':'on screen, but another monster is first'):'not on screen'}</small></h3><div class="row" style="gap:10px;align-items:flex-end">${lab('Backdrop','bd',MONBD,cfg.bd)}${lab('Effect','fx',fxs,cfg.fx)}${lab('Area look','amb',ambs,cfg.amb)}${lab('Weather','wx',wxs,cfg.wx)}</div><p class="note" style="margin:6px 0 0">The first monster on screen sets the backdrop and effects for the whole screen. Use the ✦ on a monster in edit mode to set it up before it appears. Upload an image with a transparent center as type Overlay to use your own frame.</p>${ovs.length?`<div class="row edit" style="margin-top:6px">${ovs.map(o=>`<span class="qt">${esc(o.name)} <button class="btn sm alt" data-a="del" data-id="${o.id}">Remove</button></span>`).join('')}</div>`:''}`;
   }
   let IC={slides:[],secs:6,music:'',open:'fog'},INT=0,INT2=0,INT3=0;
   const ID=doc(db,'sessions',code,'intro','cfg');
@@ -1724,7 +1777,7 @@ function dm(code){
           if(type==='map'){const nm0=(files.length===1&&$('#nm').value.trim())||f.name.replace(/\.[^.]+$/,'');const M=await prepMap(f),ref=doc(IM);
             for(let i=0;i<M.tiles.length;i++){msg.textContent='Saving map part '+(i+1)+' of '+M.tiles.length+'...';await setDoc(doc(db,'sessions',code,'images',ref.id,'tiles',String(i)),{data:M.tiles[i]})}
             await setDoc(ref,{name:nm0,type:'map',data:M.thumb,w:M.w,h:M.h,cols:M.cols,rows:M.rows,created:Date.now()});msg.textContent='Added '+nm0+'.';continue}
-          const data=await shrink(f,type==='background'?1920:type==='monster'?900:640);
+          const data=await shrink(f,type==='background'||type==='overlay'?1920:type==='monster'?900:640);
           const name=(files.length===1&&$('#nm').value.trim())||f.name.replace(/\.[^.]+$/,'');
           await setDoc(doc(IM),{name,type,data,created:Date.now()});
           msg.textContent='Added '+name+'.';
