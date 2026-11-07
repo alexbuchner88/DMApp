@@ -825,7 +825,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-07 ai';
+const VER='2026-11-07 aj';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -1589,12 +1589,13 @@ function dm(code){
     $('#shl').innerHTML=shops.map(x=>`<button class="btn sm ${x.id===selShop?'':'alt'}" data-a="shsel" data-id="${x.id}">${esc(x.name)}${x._r==='_shared'?' <small>shared</small>':''}${(live.pshops||[]).includes((x._r||code)+':'+x.id)?EYE_SM:''} (${items.filter(i=>i.shopId===x.id).length})</button>`).join('')||'<span class="note">No shops yet.</span>';
     $('#shb').innerHTML=sel?bt('shpl',sel.id,(live.pshops||[]).includes((sel._r||code)+':'+sel.id)?'Hide from players':'Show to players',!(live.pshops||[]).includes((sel._r||code)+':'+sel.id))+bt('shren',sel.id,'Rename',1,1)+bt('shdel',sel.id,'Delete shop',1,1):'';
     const shH=sel?items.filter(i=>i.shopId===sel.id).map(i=>`<div class="qrow itr ${on&&live.shopItemId===i.id?'on':''} ${i.stock===0?'out':''} ${editIt===i.id?'ed':''}" data-row="${i.id}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${picTag(i,'rm','width:44px;height:44px;flex:none;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)')}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${i.weight?' / '+esc(i.weight):''}${i.rarity?' <span class="rar'+rCls(i)+'" style="font:700 12px Cinzel,serif">'+RAR[i.rarity]+'</span>':''}${i.stock===0?' <small>(sold out, hidden from players)</small>':''}${i.desc?`<p class="dd">${esc(i.desc)}</p>`:''}${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row">${typeof i.stock==='number'?`<span class="stkb">${bt('stk-',i.id,'−',1)}${i.stock}${bt('stk+',i.id,'+',1)}</span>`:''}${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${editIt===i.id?'':bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':'';
-    if(shH!==shiK){shiK=shH;$('#shi').innerHTML=shH}   // only redraw the list when it changed, so typing in the form isn't interrupted
+    if(shH!==shiK){shiK=shH;const f=itForm();if(f&&f.parentNode!==$('#itHome'))$('#itHome').appendChild(f);$('#shi').innerHTML=shH}   // only redraw the list when it changed, so typing in the form isn't interrupted
     placeForm();
   }
   // the item form sits in "Add item", or right under the item being edited
-  var shiK;
-  function placeForm(scroll){const f=$('#itf');if(!f)return;const row=editIt&&document.querySelector(`#shi [data-row="${editIt}"]`);
+  var shiK,FORM;
+  function itForm(){return FORM||(FORM=$('#itf'))}   // keep a handle so the form survives list redraws
+  function placeForm(scroll){const f=itForm();if(!f)return;const row=editIt&&document.querySelector(`#shi [data-row="${editIt}"]`);
     if(row){if(row.nextSibling!==f)row.after(f);if(scroll){f.scrollIntoView({block:'nearest',behavior:'smooth'});$('#itn').focus({preventScroll:true})}}
     else if(f.parentNode!==$('#itHome'))$('#itHome').appendChild(f);
     $('#itb').textContent=editIt?'Save item':'Add item';$('#itcx').style.display=editIt?'':'none'}
