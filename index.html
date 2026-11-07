@@ -174,6 +174,12 @@ summary h2{display:flex;align-items:center;gap:.4em}
 .card.r-uncommon{border-color:#4f8a3a}.card.r-rare{border-color:#3a64a8}.card.r-veryrare{border-color:#7b4aa8}.card.r-legendary{border-color:#c0701c}
 .card .stk{margin:0;align-self:center;font:italic clamp(11px,1.8vmin,18px) Almendra,serif;color:#5a3a1a}
 .sheet .rar{margin:0 0 .3em;font:700 .75em Cinzel,serif;letter-spacing:.06em;color:#6a4a22}.rar.r-uncommon{color:#3f7a2c}.rar.r-rare{color:#2f569a}.rar.r-veryrare{color:#6b3c98}.rar.r-legendary{color:#a85a12}
+.itf{display:flex;flex-direction:column;gap:6px}.itf .row{gap:6px}.itf input,.itf select,.itf textarea{font-size:15px;padding:6px 8px;min-height:36px}
+.itg{display:grid;grid-template-columns:1fr 1fr;gap:6px}@media(max-width:640px){.itg{grid-template-columns:1fr}}
+.itf .itfile{font-size:14px;display:flex;align-items:center;gap:6px}.itf .itfile input{min-height:0;padding:2px;font-size:13px;max-width:210px}
+#shi .itf{margin:-4px 0 10px;padding:10px;border:2px solid var(--hl);border-top:0;border-radius:0 0 4px 4px;background:#f6edcf}
+.qrow.itr{padding:6px 8px;margin:5px 0;gap:6px}.qrow.itr.ed{border-color:var(--hl);border-radius:4px 4px 0 0}
+.itr .qt p.dd{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;font-size:15px}
 .qrow.out{opacity:.5}.qrow .stkb{display:inline-flex;align-items:center;gap:6px;font:700 14px Cinzel,serif}
 .card .wgt{margin:0;align-self:center;font:clamp(12px,2vmin,20px) Almendra,serif;color:#5a3a1a}
 
@@ -351,11 +357,20 @@ const RAR={common:'Common',uncommon:'Uncommon',rare:'Rare','very rare':'Very Rar
 const normR=v=>{const t=String(v||'').trim().toLowerCase().replace(/\s+/g,' ').replace('veryrare','very rare');return RAR[t]?t:''};
 const normS=v=>{const t=String(v??'').trim();if(!t||/^(-|∞|inf|unlimited)$/i.test(t))return null;const n=parseInt(t,10);return isNaN(n)?null:Math.max(0,n)};
 const rCls=i=>i.rarity&&i.rarity!=='common'?' r-'+i.rarity.replace(' ',''):'';
-const iPic=i=>i.pic?(/[\/:]/.test(i.pic)?i.pic:'items/'+i.pic):(i.img||'');
+const slug=t=>String(t||'').trim().toLowerCase().replace(/['’]/g,'').replace(/[^a-z0-9.]+/g,'-').replace(/^-+|-+$/g,'');
+const PIC_EXT=['png','jpg','webp'];
+const picList=t=>{const f=slug(t);if(!f)return[];return /\.[a-z0-9]{3,4}$/.test(f)?['items/'+f]:PIC_EXT.map(e=>'items/'+f+'.'+e)};
+// Picture field first, then an uploaded picture, then a file named after the item (Health Potion -> items/health-potion.png, .jpg or .webp)
+const iPics=i=>i.pic?(/[\/:]/.test(i.pic)?[i.pic]:picList(i.pic)):i.img?[i.img]:picList(i.name);
+const iPic=i=>iPics(i)[0]||'';
+// <img> that tries the next file type when one is missing; mode: ph = show ✦, rm = remove image, rmp = remove its frame
+window.picNext=(el,mode)=>{const r=(el.dataset.alt||'').split('|').filter(Boolean);if(r.length){el.dataset.alt=r.slice(1).join('|');el.src=r[0];return}
+  if(mode==='ph')el.outerHTML='<span class="ph">✦</span>';else if(mode==='rmp')el.parentNode.remove();else el.remove()};
+const picTag=(i,mode,st)=>{const l=iPics(i);return l.length?`<img src="${esc(l[0])}" data-alt="${esc(l.slice(1).join('|'))}" alt="" onerror="picNext(this,'${mode}')"${st?` style="${st}"`:''}>`:''};
 const forSale=i=>i.stock!==0;
-const PH_ERR=`onerror="this.outerHTML='<span class=&quot;ph&quot;>✦</span>'"`;
-const itemCard=i=>{const p=iPic(i);return `<div class="card${rCls(i)}" data-i="${i.id}"><div class="pic">${p?`<img src="${esc(p)}" alt="" ${PH_ERR}>`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${i.weight?`<p class="wgt">${esc(i.weight)}</p>`:''}${typeof i.stock==='number'?`<p class="stk">${i.stock} left</p>`:''}</div>`};
-const itemSheet=it=>{const p=iPic(it);return `<div class="sheet"><div class="sin">${p?`<div class="pic2"><img src="${esc(p)}" alt="" onerror="this.parentNode.remove()"></div>`:''}<h4>${esc(it.name)}</h4>${it.rarity?`<div class="rar${rCls(it)}">${RAR[it.rarity]||''}</div>`:''}${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}${it.weight?`<div class="wt">Weight: ${esc(it.weight)}</div>`:''}${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`};
+
+const itemCard=i=>{return `<div class="card${rCls(i)}" data-i="${i.id}"><div class="pic">${picTag(i,'ph')||'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${i.weight?`<p class="wgt">${esc(i.weight)}</p>`:''}${typeof i.stock==='number'?`<p class="stk">${i.stock} left</p>`:''}</div>`};
+const itemSheet=it=>{const p=picTag(it,'rmp');return `<div class="sheet"><div class="sin">${p?`<div class="pic2">${p}</div>`:''}<h4>${esc(it.name)}</h4>${it.rarity?`<div class="rar${rCls(it)}">${RAR[it.rarity]||''}</div>`:''}${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}${it.weight?`<div class="wt">Weight: ${esc(it.weight)}</div>`:''}${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`};
 let unsubs=[];
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 if(CFG.projectId==="PASTE"){app.innerHTML='<div class="wrap"><h1>The Arcane Table</h1><div class="panel"><h2>Firebase is not set up yet</h2><p>Open index.html and paste your Firebase web app config into the CFG object near the top of the script.</p></div></div>';throw 0}
@@ -810,7 +825,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-07 ag';
+const VER='2026-11-07 ai';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -1283,10 +1298,13 @@ function dm(code){
   <p class="note edit" style="margin:0 0 8px">Use a shop for stores, loot or party inventory. Tap a card on the tablet to read it.</p>
   <div class="row edit"><input id="shn" placeholder="Shop or loot list name"><label><input id="shsh" type="checkbox" checked> Shared</label><button class="btn" data-a="shadd">Add shop</button></div>
   <div class="row" id="shl" style="margin:10px 0"></div><div class="row" id="shb"></div>
-  <div class="edit" style="margin-top:10px"><div class="row"><input id="itn" placeholder="Item name" style="flex:2 1 160px"><input id="itc" placeholder="Cost, e.g. 50 gp" style="flex:1 1 110px"><input id="itw" placeholder="Weight" style="flex:1 1 90px"></div>
-  <div class="row" style="margin-top:8px"><select id="ity" style="flex:1 1 120px"><option value="">Rarity: none</option><option value="common">Common</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option><option value="very rare">Very Rare</option><option value="legendary">Legendary</option></select><input id="its" type="number" min="0" placeholder="Stock (empty = unlimited)" style="flex:1 1 150px"><input id="itp" placeholder="Picture file in items/, e.g. potion-red.png" style="flex:2 1 220px"></div>
-  <textarea id="itd" rows="2" placeholder="Description" style="margin-top:8px"></textarea><textarea id="itr" rows="2" placeholder="Statblock" style="margin-top:8px"></textarea><textarea id="itx" rows="2" placeholder="DM notes (never shown to players)" style="margin-top:8px"></textarea>
-  <div class="row" style="margin:8px 0"><input id="iti" type="file" accept="image/*"><button class="btn" id="itb" data-a="itsave">Add item</button></div><p class="note" id="itm"></p></div>
+  <details class="edit" id="d-add" style="margin-top:10px"><summary><h2 style="font-size:17px">Add item</h2></summary><div id="itHome"><div class="edit itf" id="itf">
+  <div class="row"><input id="itn" placeholder="Item name" style="flex:3 1 160px"><input id="itc" placeholder="Cost" style="flex:1 1 80px"><input id="itw" placeholder="Weight" style="flex:1 1 70px"></div>
+  <div class="row"><select id="ity" style="flex:1 1 110px"><option value="">Rarity: none</option><option value="common">Common</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option><option value="very rare">Very Rare</option><option value="legendary">Legendary</option></select><input id="its" type="number" min="0" placeholder="Stock (empty = unlimited)" style="flex:1 1 120px"><input id="itp" placeholder="Picture (empty = item name)" style="flex:2 1 170px"></div>
+  <div class="itg"><textarea id="itd" rows="3" placeholder="Description"></textarea><textarea id="itr" rows="3" placeholder="Statblock"></textarea></div>
+  <textarea id="itx" rows="1" placeholder="DM notes (never shown to players)"></textarea>
+  <div class="row"><button class="btn sm" id="itb" data-a="itsave">Add item</button><button class="btn sm alt" id="itcx" data-a="itcancel" style="display:none">Cancel</button><label class="itfile">Upload picture <input id="iti" type="file" accept="image/*"></label><span class="note" id="itm"></span></div>
+  </div></div></details>
   <details class="edit" id="d-imp" style="margin-top:10px"><summary><h2 style="font-size:17px">Import items</h2></summary>
   <p class="note">Rows from your sheet: Name, Cost, Weight, Description, Statblock, DM notes, Rarity, Stock, Picture. The last three are optional. Existing names are updated, and empty optional cells keep the current value.</p>
   <textarea id="imt" rows="6" placeholder="Paste rows here"></textarea>
@@ -1570,8 +1588,17 @@ function dm(code){
     $('#csh').textContent='('+shops.length+')';
     $('#shl').innerHTML=shops.map(x=>`<button class="btn sm ${x.id===selShop?'':'alt'}" data-a="shsel" data-id="${x.id}">${esc(x.name)}${x._r==='_shared'?' <small>shared</small>':''}${(live.pshops||[]).includes((x._r||code)+':'+x.id)?EYE_SM:''} (${items.filter(i=>i.shopId===x.id).length})</button>`).join('')||'<span class="note">No shops yet.</span>';
     $('#shb').innerHTML=sel?bt('shpl',sel.id,(live.pshops||[]).includes((sel._r||code)+':'+sel.id)?'Hide from players':'Show to players',!(live.pshops||[]).includes((sel._r||code)+':'+sel.id))+bt('shren',sel.id,'Rename',1,1)+bt('shdel',sel.id,'Delete shop',1,1):'';
-    $('#shi').innerHTML=sel?items.filter(i=>i.shopId===sel.id).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''} ${i.stock===0?'out':''}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${iPic(i)?`<img src="${esc(iPic(i))}" alt="" onerror="this.remove()" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${i.weight?' / '+esc(i.weight):''}${i.rarity?' <span class="rar'+rCls(i)+'" style="font:700 12px Cinzel,serif">'+RAR[i.rarity]+'</span>':''}${i.stock===0?' <small>(sold out, hidden from players)</small>':''}<p>${esc(i.desc||'')}</p>${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row">${typeof i.stock==='number'?`<span class="stkb">${bt('stk-',i.id,'−',1)}${i.stock}${bt('stk+',i.id,'+',1)}</span>`:''}${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':'';
+    const shH=sel?items.filter(i=>i.shopId===sel.id).map(i=>`<div class="qrow itr ${on&&live.shopItemId===i.id?'on':''} ${i.stock===0?'out':''} ${editIt===i.id?'ed':''}" data-row="${i.id}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${picTag(i,'rm','width:44px;height:44px;flex:none;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)')}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${i.weight?' / '+esc(i.weight):''}${i.rarity?' <span class="rar'+rCls(i)+'" style="font:700 12px Cinzel,serif">'+RAR[i.rarity]+'</span>':''}${i.stock===0?' <small>(sold out, hidden from players)</small>':''}${i.desc?`<p class="dd">${esc(i.desc)}</p>`:''}${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row">${typeof i.stock==='number'?`<span class="stkb">${bt('stk-',i.id,'−',1)}${i.stock}${bt('stk+',i.id,'+',1)}</span>`:''}${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${editIt===i.id?'':bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':'';
+    if(shH!==shiK){shiK=shH;$('#shi').innerHTML=shH}   // only redraw the list when it changed, so typing in the form isn't interrupted
+    placeForm();
   }
+  // the item form sits in "Add item", or right under the item being edited
+  var shiK;
+  function placeForm(scroll){const f=$('#itf');if(!f)return;const row=editIt&&document.querySelector(`#shi [data-row="${editIt}"]`);
+    if(row){if(row.nextSibling!==f)row.after(f);if(scroll){f.scrollIntoView({block:'nearest',behavior:'smooth'});$('#itn').focus({preventScroll:true})}}
+    else if(f.parentNode!==$('#itHome'))$('#itHome').appendChild(f);
+    $('#itb').textContent=editIt?'Save item':'Add item';$('#itcx').style.display=editIt?'':'none'}
+  function clearForm(){['#itn','#itc','#itw','#itd','#itr','#itx','#iti','#ity','#its','#itp'].forEach(k=>$(k).value='')}
   let shS={},itS={},ntS={},NT={};
   const mergeSh=()=>{shops=[...(shS[code]||[]),...(shS._shared||[])];items=[...(itS[code]||[]),...(itS._shared||[])];NT={...(ntS[code]||{}),...(ntS._shared||{})};if(selShop&&shS[code]&&shS._shared&&!shops.some(x=>x.id===selShop))selShop=null};
   [code,'_shared'].forEach(r=>{
@@ -1689,11 +1716,12 @@ function dm(code){
         if(editIt)await updateDoc(doc(db,'sessions',rt,'items',nid),body);
         else await setDoc(doc(db,'sessions',rt,'items',nid),{shopId:selShop,img:'',created:Date.now(),...body});
         await setDoc(doc(db,'sessions',rt,'notes',nid),{text:$('#itx').value.trim()});
-        editIt=null;['#itn','#itc','#itw','#itd','#itr','#itx','#iti','#ity','#its','#itp'].forEach(k=>$(k).value='');$('#itb').textContent='Add item';msg.textContent='Saved.';
+        const was=editIt;editIt=null;clearForm();shopDraw();msg.textContent='Saved.';if(was){const r=document.querySelector(`#shi [data-row="${was}"]`);r&&r.scrollIntoView({block:'nearest'})}
       }catch(err){msg.className='note err';msg.textContent='Could not save: '+err.message}}
-    if(a==='itedit'){const i=items.find(x=>x.id===id);if(i){editIt=id;$('#itn').value=i.name||'';$('#itc').value=i.cost||'';$('#itd').value=i.desc||'';$('#itr').value=i.rules||'';$('#itw').value=i.weight||'';$('#itx').value=NT[id]||'';$('#ity').value=i.rarity||'';$('#its').value=typeof i.stock==='number'?i.stock:'';$('#itp').value=i.pic||'';$('#itb').textContent='Save item';$('#itn').focus()}}
+    if(a==='itedit'){const i=items.find(x=>x.id===id);if(i){editIt=id;$('#itn').value=i.name||'';$('#itc').value=i.cost||'';$('#itd').value=i.desc||'';$('#itr').value=i.rules||'';$('#itw').value=i.weight||'';$('#itx').value=NT[id]||'';$('#ity').value=i.rarity||'';$('#its').value=typeof i.stock==='number'?i.stock:'';$('#itp').value=i.pic||'';$('#itm').textContent='';shopDraw();placeForm(true)}}
+    if(a==='itcancel'){const was=editIt;editIt=null;clearForm();$('#itm').textContent='';shopDraw();const r=was&&document.querySelector(`#shi [data-row="${was}"]`);r&&r.scrollIntoView({block:'nearest'})}
     if(a==='stk-'||a==='stk+'){const i=items.find(x=>x.id===id);if(i&&typeof i.stock==='number'){const n=Math.max(0,i.stock+(a==='stk+'?1:-1));if(n!==i.stock)updateDoc(doc(db,'sessions',i._r||code,'items',id),{stock:n})}}
-    if(a==='itdel'&&confirm('Delete this item?')){if(editIt===id){editIt=null;$('#itb').textContent='Add item'}const rt=(items.find(x=>x.id===id)||{})._r||code;deleteDoc(doc(db,'sessions',rt,'items',id));deleteDoc(doc(db,'sessions',rt,'notes',id))}
+    if(a==='itdel'&&confirm('Delete this item?')){if(editIt===id){editIt=null;clearForm();placeForm()}const rt=(items.find(x=>x.id===id)||{})._r||code;deleteDoc(doc(db,'sessions',rt,'items',id));deleteDoc(doc(db,'sessions',rt,'notes',id))}
     if(a==='imp'){
       const msg=$('#imm'),sh=shops.find(x=>x.id===selShop);
       if(!sh){msg.className='note err';msg.textContent='Select a shop first.';return}
