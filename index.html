@@ -171,6 +171,10 @@ summary h2{display:flex;align-items:center;gap:.4em}
 
 .sheet .wt{margin:-.3em 0 .5em;font:.85em Almendra,serif;color:#5a3a1a}
 
+.card.r-uncommon{border-color:#4f8a3a}.card.r-rare{border-color:#3a64a8}.card.r-veryrare{border-color:#7b4aa8}.card.r-legendary{border-color:#c0701c}
+.card .stk{margin:0;align-self:center;font:italic clamp(11px,1.8vmin,18px) Almendra,serif;color:#5a3a1a}
+.sheet .rar{margin:0 0 .3em;font:700 .75em Cinzel,serif;letter-spacing:.06em;color:#6a4a22}.rar.r-uncommon{color:#3f7a2c}.rar.r-rare{color:#2f569a}.rar.r-veryrare{color:#6b3c98}.rar.r-legendary{color:#a85a12}
+.qrow.out{opacity:.5}.qrow .stkb{display:inline-flex;align-items:center;gap:6px;font:700 14px Cinzel,serif}
 .card .wgt{margin:0;align-self:center;font:clamp(12px,2vmin,20px) Almendra,serif;color:#5a3a1a}
 
 .esm{width:15px;height:15px;margin-left:5px;vertical-align:-2px;color:var(--hl)}
@@ -342,6 +346,16 @@ const CFG={apiKey:"AIzaSyCZJdQ3Lq9VuMkOj2OzhJ1FhRPY9LGNaKE",authDomain:"dm-app-b
 
 const $=s=>document.querySelector(s),app=$('#app');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// shop items: rarity, stock and pictures
+const RAR={common:'Common',uncommon:'Uncommon',rare:'Rare','very rare':'Very Rare',legendary:'Legendary'};
+const normR=v=>{const t=String(v||'').trim().toLowerCase().replace(/\s+/g,' ').replace('veryrare','very rare');return RAR[t]?t:''};
+const normS=v=>{const t=String(v??'').trim();if(!t||/^(-|∞|inf|unlimited)$/i.test(t))return null;const n=parseInt(t,10);return isNaN(n)?null:Math.max(0,n)};
+const rCls=i=>i.rarity&&i.rarity!=='common'?' r-'+i.rarity.replace(' ',''):'';
+const iPic=i=>i.pic?(/[\/:]/.test(i.pic)?i.pic:'items/'+i.pic):(i.img||'');
+const forSale=i=>i.stock!==0;
+const PH_ERR=`onerror="this.outerHTML='<span class=&quot;ph&quot;>✦</span>'"`;
+const itemCard=i=>{const p=iPic(i);return `<div class="card${rCls(i)}" data-i="${i.id}"><div class="pic">${p?`<img src="${esc(p)}" alt="" ${PH_ERR}>`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${i.weight?`<p class="wgt">${esc(i.weight)}</p>`:''}${typeof i.stock==='number'?`<p class="stk">${i.stock} left</p>`:''}</div>`};
+const itemSheet=it=>{const p=iPic(it);return `<div class="sheet"><div class="sin">${p?`<div class="pic2"><img src="${esc(p)}" alt="" onerror="this.parentNode.remove()"></div>`:''}<h4>${esc(it.name)}</h4>${it.rarity?`<div class="rar${rCls(it)}">${RAR[it.rarity]||''}</div>`:''}${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}${it.weight?`<div class="wt">Weight: ${esc(it.weight)}</div>`:''}${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`};
 let unsubs=[];
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 if(CFG.projectId==="PASTE"){app.innerHTML='<div class="wrap"><h1>The Arcane Table</h1><div class="panel"><h2>Firebase is not set up yet</h2><p>Open index.html and paste your Firebase web app config into the CFG object near the top of the script.</p></div></div>';throw 0}
@@ -391,9 +405,9 @@ async function display(code,pv){
   let IT=[],SH={},sid=null,su1=null,su2=null,lo=null,dis=null,prevS=null,gk='',dk='';
   const renderShop=()=>{
     $('#shopt').textContent=SH.name||'';
-    {const gh=IT.map(i=>`<div class="card" data-i="${i.id}"><div class="pic">${i.img?`<img src="${i.img}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${i.weight?`<p class="wgt">${esc(i.weight)}</p>`:''}</div>`).join('');if(gh!==gk){gk=gh;$('#shopg').innerHTML=gh}}
-    const oid=lo||(d.shopItemId&&d.shopItemId!==dis?d.shopItemId:null),it=IT.find(x=>x.id===oid);
-    {const dh=it?`<div class="sheet"><div class="sin">${it.img?`<div class="pic2"><img src="${it.img}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}${it.weight?`<div class="wt">Weight: ${esc(it.weight)}</div>`:''}${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`:'';if(dh!==dk){dk=dh;$('#shopd').innerHTML=dh}}
+    {const gh=IT.filter(forSale).map(itemCard).join('');if(gh!==gk){gk=gh;$('#shopg').innerHTML=gh}}
+    const oid=lo||(d.shopItemId&&d.shopItemId!==dis?d.shopItemId:null),it=IT.filter(forSale).find(x=>x.id===oid);
+    {const dh=it?itemSheet(it):'';if(dh!==dk){dk=dh;$('#shopd').innerHTML=dh}}
     $('#shopd').classList.toggle('on',!!it);
   };
   const watchShop=(id,rt)=>{
@@ -796,7 +810,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-05 af';
+const VER='2026-11-07 ag';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -1119,7 +1133,7 @@ function player(code){
   app.innerHTML='<div class="pv"><div class="pvh"><h1>The Arcane Table</h1><div class="pvt"><button class="btn sm" data-t="quest">Quest</button><button class="btn sm" data-t="weather">Weather</button><button class="btn sm" data-t="shops">Shops</button><button class="btn sm alt" data-vm="1">Views</button></div></div><div id="pvb"></div><div id="pvd"></div></div>';
   let d={},tab=sessionStorage.getItem('pvtab')||'quest',Q=null,qid=null,qu=null,psel=null,open=null,fxSel=null,last='',lastD='';
   const SHP={},subs={};
-  const card=i=>`<div class="card" data-i="${i.id}"><div class="pic">${i.img?`<img src="${i.img}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${i.weight?`<p class="wgt">${esc(i.weight)}</p>`:''}</div>`;
+  const card=itemCard;
   const render=()=>{
     document.querySelectorAll('.pvt [data-t]').forEach(b=>b.classList.toggle('alt',b.dataset.t!==tab));
     const keys=d.pshops||[];let h='',sheet='';
@@ -1128,9 +1142,9 @@ function player(code){
     else if(!keys.length)h='<div class="pvempty">No shops are open.</div>';
     else{
       const k=keys.includes(psel)?psel:keys[0],S=SHP[k]||{name:'',items:[]};
-      h=(keys.length>1?'<div class="row" style="margin-bottom:10px">'+keys.map(x=>`<button class="btn sm ${x===k?'':'alt'}" data-s="${x}">${esc((SHP[x]||{}).name||'...')}</button>`).join('')+'</div>':'')+`<div class="pvname">${esc(S.name)}</div><div class="pvg">${S.items.map(card).join('')}</div>`;
-      const it=S.items.find(x=>x.id===open);
-      if(it)sheet=`<div class="sheet"><div class="sin">${it.img?`<div class="pic2"><img src="${it.img}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}${it.weight?`<div class="wt">Weight: ${esc(it.weight)}</div>`:''}${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`;
+      h=(keys.length>1?'<div class="row" style="margin-bottom:10px">'+keys.map(x=>`<button class="btn sm ${x===k?'':'alt'}" data-s="${x}">${esc((SHP[x]||{}).name||'...')}</button>`).join('')+'</div>':'')+`<div class="pvname">${esc(S.name)}</div><div class="pvg">${S.items.filter(forSale).map(card).join('')||'<div class="pvempty">Sold out.</div>'}</div>`;
+      const it=S.items.filter(forSale).find(x=>x.id===open);
+      if(it)sheet=itemSheet(it);
     }
     const key=tab+'|'+h;if(key!==last){last=key;$('#pvb').innerHTML=h}
     if(sheet!==lastD){lastD=sheet;$('#pvd').innerHTML=sheet;$('#pvd').classList.toggle('on',!!sheet)}
@@ -1270,10 +1284,11 @@ function dm(code){
   <div class="row edit"><input id="shn" placeholder="Shop or loot list name"><label><input id="shsh" type="checkbox" checked> Shared</label><button class="btn" data-a="shadd">Add shop</button></div>
   <div class="row" id="shl" style="margin:10px 0"></div><div class="row" id="shb"></div>
   <div class="edit" style="margin-top:10px"><div class="row"><input id="itn" placeholder="Item name" style="flex:2 1 160px"><input id="itc" placeholder="Cost, e.g. 50 gp" style="flex:1 1 110px"><input id="itw" placeholder="Weight" style="flex:1 1 90px"></div>
+  <div class="row" style="margin-top:8px"><select id="ity" style="flex:1 1 120px"><option value="">Rarity: none</option><option value="common">Common</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option><option value="very rare">Very Rare</option><option value="legendary">Legendary</option></select><input id="its" type="number" min="0" placeholder="Stock (empty = unlimited)" style="flex:1 1 150px"><input id="itp" placeholder="Picture file in items/, e.g. potion-red.png" style="flex:2 1 220px"></div>
   <textarea id="itd" rows="2" placeholder="Description" style="margin-top:8px"></textarea><textarea id="itr" rows="2" placeholder="Statblock" style="margin-top:8px"></textarea><textarea id="itx" rows="2" placeholder="DM notes (never shown to players)" style="margin-top:8px"></textarea>
   <div class="row" style="margin:8px 0"><input id="iti" type="file" accept="image/*"><button class="btn" id="itb" data-a="itsave">Add item</button></div><p class="note" id="itm"></p></div>
   <details class="edit" id="d-imp" style="margin-top:10px"><summary><h2 style="font-size:17px">Import items</h2></summary>
-  <p class="note">Rows from your sheet: Name, Cost, Weight, Description, Statblock, DM notes. Existing names are updated.</p>
+  <p class="note">Rows from your sheet: Name, Cost, Weight, Description, Statblock, DM notes, Rarity, Stock, Picture. The last three are optional. Existing names are updated, and empty optional cells keep the current value.</p>
   <textarea id="imt" rows="6" placeholder="Paste rows here"></textarea>
   <div class="row" style="margin-top:8px"><button class="btn sm" data-a="imp">Import</button><button class="btn sm alt" data-a="exp">Copy shop as table</button></div><div class="row" style="margin-top:8px"><input id="imf" type="file" accept=".json"><button class="btn sm" data-a="impf">Import file</button></div><p class="note" id="imm"></p></details>
   <div id="shi"></div></details></div>`;
@@ -1555,7 +1570,7 @@ function dm(code){
     $('#csh').textContent='('+shops.length+')';
     $('#shl').innerHTML=shops.map(x=>`<button class="btn sm ${x.id===selShop?'':'alt'}" data-a="shsel" data-id="${x.id}">${esc(x.name)}${x._r==='_shared'?' <small>shared</small>':''}${(live.pshops||[]).includes((x._r||code)+':'+x.id)?EYE_SM:''} (${items.filter(i=>i.shopId===x.id).length})</button>`).join('')||'<span class="note">No shops yet.</span>';
     $('#shb').innerHTML=sel?bt('shpl',sel.id,(live.pshops||[]).includes((sel._r||code)+':'+sel.id)?'Hide from players':'Show to players',!(live.pshops||[]).includes((sel._r||code)+':'+sel.id))+bt('shren',sel.id,'Rename',1,1)+bt('shdel',sel.id,'Delete shop',1,1):'';
-    $('#shi').innerHTML=sel?items.filter(i=>i.shopId===sel.id).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${i.img?`<img src="${i.img}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${i.weight?' / '+esc(i.weight):''}<p>${esc(i.desc||'')}</p>${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row">${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':'';
+    $('#shi').innerHTML=sel?items.filter(i=>i.shopId===sel.id).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''} ${i.stock===0?'out':''}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${iPic(i)?`<img src="${esc(iPic(i))}" alt="" onerror="this.remove()" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${i.weight?' / '+esc(i.weight):''}${i.rarity?' <span class="rar'+rCls(i)+'" style="font:700 12px Cinzel,serif">'+RAR[i.rarity]+'</span>':''}${i.stock===0?' <small>(sold out, hidden from players)</small>':''}<p>${esc(i.desc||'')}</p>${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row">${typeof i.stock==='number'?`<span class="stkb">${bt('stk-',i.id,'−',1)}${i.stock}${bt('stk+',i.id,'+',1)}</span>`:''}${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':'';
   }
   let shS={},itS={},ntS={},NT={};
   const mergeSh=()=>{shops=[...(shS[code]||[]),...(shS._shared||[])];items=[...(itS[code]||[]),...(itS._shared||[])];NT={...(ntS[code]||{}),...(ntS._shared||{})};if(selShop&&shS[code]&&shS._shared&&!shops.some(x=>x.id===selShop))selShop=null};
@@ -1669,14 +1684,15 @@ function dm(code){
       if(!selShop){msg.className='note err';msg.textContent='Select or add a shop first.';return}
       if(!name){msg.className='note err';msg.textContent='Give the item a name.';return}
       try{msg.className='note';msg.textContent='Saving...';
-        const f=$('#iti').files[0],img=f?await shrink(f,480):null,body={name,cost:$('#itc').value.trim(),desc:$('#itd').value.trim(),rules:$('#itr').value.trim(),weight:$('#itw').value.trim(),...(img?{img}:{})};
+        const f=$('#iti').files[0],img=f?await shrink(f,480):null,body={name,cost:$('#itc').value.trim(),desc:$('#itd').value.trim(),rules:$('#itr').value.trim(),weight:$('#itw').value.trim(),rarity:normR($('#ity').value),stock:normS($('#its').value),pic:$('#itp').value.trim(),...(img?{img}:{})};
         const rt=editIt?((items.find(x=>x.id===editIt)||{})._r||code):((shops.find(x=>x.id===selShop)||{})._r||code),nid=editIt||doc(collection(db,'sessions',rt,'items')).id;
         if(editIt)await updateDoc(doc(db,'sessions',rt,'items',nid),body);
         else await setDoc(doc(db,'sessions',rt,'items',nid),{shopId:selShop,img:'',created:Date.now(),...body});
         await setDoc(doc(db,'sessions',rt,'notes',nid),{text:$('#itx').value.trim()});
-        editIt=null;['#itn','#itc','#itw','#itd','#itr','#itx','#iti'].forEach(k=>$(k).value='');$('#itb').textContent='Add item';msg.textContent='Saved.';
+        editIt=null;['#itn','#itc','#itw','#itd','#itr','#itx','#iti','#ity','#its','#itp'].forEach(k=>$(k).value='');$('#itb').textContent='Add item';msg.textContent='Saved.';
       }catch(err){msg.className='note err';msg.textContent='Could not save: '+err.message}}
-    if(a==='itedit'){const i=items.find(x=>x.id===id);if(i){editIt=id;$('#itn').value=i.name||'';$('#itc').value=i.cost||'';$('#itd').value=i.desc||'';$('#itr').value=i.rules||'';$('#itw').value=i.weight||'';$('#itx').value=NT[id]||'';$('#itb').textContent='Save item';$('#itn').focus()}}
+    if(a==='itedit'){const i=items.find(x=>x.id===id);if(i){editIt=id;$('#itn').value=i.name||'';$('#itc').value=i.cost||'';$('#itd').value=i.desc||'';$('#itr').value=i.rules||'';$('#itw').value=i.weight||'';$('#itx').value=NT[id]||'';$('#ity').value=i.rarity||'';$('#its').value=typeof i.stock==='number'?i.stock:'';$('#itp').value=i.pic||'';$('#itb').textContent='Save item';$('#itn').focus()}}
+    if(a==='stk-'||a==='stk+'){const i=items.find(x=>x.id===id);if(i&&typeof i.stock==='number'){const n=Math.max(0,i.stock+(a==='stk+'?1:-1));if(n!==i.stock)updateDoc(doc(db,'sessions',i._r||code,'items',id),{stock:n})}}
     if(a==='itdel'&&confirm('Delete this item?')){if(editIt===id){editIt=null;$('#itb').textContent='Add item'}const rt=(items.find(x=>x.id===id)||{})._r||code;deleteDoc(doc(db,'sessions',rt,'items',id));deleteDoc(doc(db,'sessions',rt,'notes',id))}
     if(a==='imp'){
       const msg=$('#imm'),sh=shops.find(x=>x.id===selShop);
@@ -1686,6 +1702,7 @@ function dm(code){
       msg.className='note';msg.textContent='Importing...';let add=0,upd=0;
       try{for(const r of rows){const name=(r[0]||'').trim();if(!name)continue;
           const body={name,cost:(r[1]||'').trim(),weight:(r[2]||'').trim(),desc:(r[3]||'').trim(),rules:(r[4]||'').trim()},note=(r[5]||'').trim();
+          if((r[6]||'').trim())body.rarity=normR(r[6]);if((r[7]||'').trim())body.stock=normS(r[7]);if((r[8]||'').trim())body.pic=r[8].trim();
           const ex=items.find(i=>i.shopId===sh.id&&(i.name||'').trim().toLowerCase()===name.toLowerCase());
           let nid;if(ex){nid=ex.id;await updateDoc(doc(db,'sessions',sh._r,'items',nid),body);upd++}
           else{nid=doc(collection(db,'sessions',sh._r,'items')).id;await setDoc(doc(db,'sessions',sh._r,'items',nid),{shopId:sh.id,img:'',created:Date.now()+add,...body});add++}
@@ -1704,6 +1721,7 @@ function dm(code){
           map[nm]=sh}
         for(const x of arr){const sh=map[(x.shop||'Imported').trim()],name=(x.name||'').trim();if(!name)continue;
           const body={name,cost:x.cost||'',weight:x.weight||'',desc:x.description||x.desc||'',rules:x.rules||''};
+          if(x.rarity)body.rarity=normR(x.rarity);if(x.stock!==undefined&&x.stock!=='')body.stock=normS(x.stock);if(x.pic||x.image)body.pic=String(x.pic||x.image).trim();
           const ex=items.find(i=>i._r==='_shared'&&i.shopId===sh.id&&(i.name||'').trim().toLowerCase()===name.toLowerCase());let nid;
           if(ex){nid=ex.id;await updateDoc(doc(db,'sessions','_shared','items',nid),body);upd++}
           else{nid=doc(collection(db,'sessions','_shared','items')).id;await setDoc(doc(db,'sessions','_shared','items',nid),{shopId:sh.id,img:'',created:Date.now()+add,...body});add++}
@@ -1713,7 +1731,7 @@ function dm(code){
     if(a==='exp'){
       const sh=shops.find(x=>x.id===selShop),msg=$('#imm');if(!sh)return;
       const q=v=>/[\t\n\r"]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;
-      const t=['Name\tCost\tWeight\tDescription\tStatblock\tDM notes',...items.filter(i=>i.shopId===sh.id).map(i=>[i.name,i.cost,i.weight,i.desc,i.rules,NT[i.id]].map(v=>q(v||'')).join('\t'))].join('\n');
+      const t=['Name\tCost\tWeight\tDescription\tStatblock\tDM notes\tRarity\tStock\tPicture',...items.filter(i=>i.shopId===sh.id).map(i=>[i.name,i.cost,i.weight,i.desc,i.rules,NT[i.id],RAR[i.rarity]||'',typeof i.stock==='number'?String(i.stock):'',i.pic].map(v=>q(v||'')).join('\t'))].join('\n');
       try{await navigator.clipboard.writeText(t);msg.className='note';msg.textContent='Copied '+(t.split('\n').length-1)+' items. Paste them into your sheet.'}
       catch(e){$('#imt').value=t;msg.className='note';msg.textContent='Clipboard blocked. The table is in the box above.'}}
     if(a==='itshow'){const i=items.find(x=>x.id===id);if(i){const on=live.showShop&&live.shopId===i.shopId;set(on?{shopItemId:live.shopItemId===id?null:id}:{showShop:true,shopId:i.shopId,shopRoot:i._r,shopItemId:id,showBoard:false,showMap:false})}}
