@@ -1,6 +1,6 @@
 {
-  "name": "The Arcane Table",
-  "short_name": "Arcane Table",
+  "name": "Infini DnD",
+  "short_name": "Infini DnD",
   "start_url": "./#last",
   "scope": "./",
   "display": "fullscreen",
@@ -9,8 +9,8 @@
     "standalone"
   ],
   "orientation": "any",
-  "background_color": "#0b0704",
-  "theme_color": "#2a170d",
+  "background_color": "#15110d",
+  "theme_color": "#15110d",
   "icons": [
     {
       "src": "icon-192.png",

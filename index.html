@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>The Arcane Table</title>
+<title>Infini DnD</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2a170d">
+<meta name="theme-color" content="#15110d">
+<link rel="icon" href="icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -171,16 +172,6 @@ summary h2{display:flex;align-items:center;gap:.4em}
 
 .sheet .wt{margin:-.3em 0 .5em;font:.85em Almendra,serif;color:#5a3a1a}
 
-.card.r-uncommon{border-color:#4f8a3a}.card.r-rare{border-color:#3a64a8}.card.r-veryrare{border-color:#7b4aa8}.card.r-legendary{border-color:#c0701c}
-.card .stk{margin:0;align-self:center;font:italic clamp(11px,1.8vmin,18px) Almendra,serif;color:#5a3a1a}
-.sheet .rar{margin:0 0 .3em;font:700 .75em Cinzel,serif;letter-spacing:.06em;color:#6a4a22}.rar.r-uncommon{color:#3f7a2c}.rar.r-rare{color:#2f569a}.rar.r-veryrare{color:#6b3c98}.rar.r-legendary{color:#a85a12}
-.itf{display:flex;flex-direction:column;gap:6px}.itf .row{gap:6px}.itf input,.itf select,.itf textarea{font-size:15px;padding:6px 8px;min-height:36px}
-.itg{display:grid;grid-template-columns:1fr 1fr;gap:6px}@media(max-width:640px){.itg{grid-template-columns:1fr}}
-.itf .itfile{font-size:14px;display:flex;align-items:center;gap:6px}.itf .itfile input{min-height:0;padding:2px;font-size:13px;max-width:210px}
-#shi .itf{margin:-4px 0 10px;padding:10px;border:2px solid var(--hl);border-top:0;border-radius:0 0 4px 4px;background:#f6edcf}
-.qrow.itr{padding:6px 8px;margin:5px 0;gap:6px}.qrow.itr.ed{border-color:var(--hl);border-radius:4px 4px 0 0}
-.itr .qt p.dd{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;font-size:15px}
-.qrow.out{opacity:.5}.qrow .stkb{display:inline-flex;align-items:center;gap:6px;font:700 14px Cinzel,serif}
 .card .wgt{margin:0;align-self:center;font:clamp(12px,2vmin,20px) Almendra,serif;color:#5a3a1a}
 
 .esm{width:15px;height:15px;margin-left:5px;vertical-align:-2px;color:var(--hl)}
@@ -251,7 +242,8 @@ input[type=checkbox]{min-height:0;width:20px;height:20px;padding:0;flex:none}
 .pvwin{position:fixed;right:12px;bottom:74px;z-index:40;width:min(44vw,520px);display:none;border:3px solid var(--gold2);border-radius:8px;background:#0b0704;box-shadow:0 10px 30px #000d;overflow:hidden}
 .pvwin.on{display:block}
 .pvwin.big{width:min(94vw,900px)}
-@media(max-width:760px){.pvwin{width:94vw;right:3vw}}
+@media(max-width:760px){.pvwin{left:8px;right:8px;width:auto;bottom:70px}.pvbar b{display:none}}
+.pvbar,.pvtools{flex-wrap:wrap}.pvbar .btn,.pvtools .btn{white-space:nowrap;flex:none}.pvwin{max-width:calc(100vw - 16px);contain:layout paint}.pvbtn{opacity:.92}
 .pvbar{display:flex;align-items:center;gap:6px;padding:4px 8px;background:linear-gradient(#4a2c18,#2a170d);color:var(--gold);font:700 13px Cinzel,serif}
 .pvbar .btn{min-height:30px;padding:2px 10px;font-size:12px}
 .pvbox{position:relative;width:100%;background:#000;overflow:hidden}
@@ -341,6 +333,17 @@ body.intro #stage>:not(#intro){visibility:hidden}
 #stage.night #npcs figure.mon.free{filter:none}
 #stage.night #npcs figure.mon.free img{filter:brightness(.66) saturate(.85)}
 .tile u{position:absolute;top:4px;left:38px;width:30px;height:30px;line-height:28px;text-align:center;text-decoration:none;border-radius:50%;background:#2a170dd9;color:var(--gold);border:1px solid var(--gold2)}
+body.dmv::before{background:radial-gradient(ellipse at 50% -10%,#33261b 0,#1a130d 50%,#0d0906 100%)}
+body.dmv .wrap{max-width:1000px;padding:14px}
+body.dmv h1{font-size:clamp(24px,4.4vw,36px);margin:.1em 0;text-shadow:0 0 14px #f0a93a66,0 2px 0 #000}
+body.dmv h1 .inf{font-family:Georgia,serif;font-size:1.15em;margin-right:.1em}
+body.dmv .panel{background:#e9dcb8;border:1px solid #a98a47;border-radius:12px;padding:14px 16px;margin:12px 0;box-shadow:0 3px 14px #000b}
+body.dmv .panel::before{display:none}
+body.dmv summary h2{font-size:18px}
+body.dmv .btn{border-radius:8px;border-width:1px;box-shadow:0 2px 0 #000a}
+body.dmv .tile{border-radius:10px;border-width:2px}
+.card .qty{margin:0;font:700 clamp(12px,2vmin,20px) Cinzel,serif;color:#6b2d12}
+.card.out{opacity:.5}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -352,32 +355,13 @@ const CFG={apiKey:"AIzaSyCZJdQ3Lq9VuMkOj2OzhJ1FhRPY9LGNaKE",authDomain:"dm-app-b
 
 const $=s=>document.querySelector(s),app=$('#app');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-// shop items: rarity, stock and pictures
-const RAR={common:'Common',uncommon:'Uncommon',rare:'Rare','very rare':'Very Rare',legendary:'Legendary'};
-const normR=v=>{const t=String(v||'').trim().toLowerCase().replace(/\s+/g,' ').replace('veryrare','very rare');return RAR[t]?t:''};
-const normS=v=>{const t=String(v??'').trim();if(!t||/^(-|∞|inf|unlimited)$/i.test(t))return null;const n=parseInt(t,10);return isNaN(n)?null:Math.max(0,n)};
-const rCls=i=>i.rarity&&i.rarity!=='common'?' r-'+i.rarity.replace(' ',''):'';
-const slug=t=>String(t||'').trim().toLowerCase().replace(/['’]/g,'').replace(/[^a-z0-9.]+/g,'-').replace(/^-+|-+$/g,'');
-const PIC_EXT=['png','jpg','webp'];
-const picList=t=>{const f=slug(t);if(!f)return[];return /\.[a-z0-9]{3,4}$/.test(f)?['items/'+f]:PIC_EXT.map(e=>'items/'+f+'.'+e)};
-// Picture field first, then an uploaded picture, then a file named after the item (Health Potion -> items/health-potion.png, .jpg or .webp)
-const iPics=i=>i.pic?(/[\/:]/.test(i.pic)?[i.pic]:picList(i.pic)):i.img?[i.img]:picList(i.name);
-const iPic=i=>iPics(i)[0]||'';
-// <img> that tries the next file type when one is missing; mode: ph = show ✦, rm = remove image, rmp = remove its frame
-window.picNext=(el,mode)=>{const r=(el.dataset.alt||'').split('|').filter(Boolean);if(r.length){el.dataset.alt=r.slice(1).join('|');el.src=r[0];return}
-  if(mode==='ph')el.outerHTML='<span class="ph">✦</span>';else if(mode==='rmp')el.parentNode.remove();else el.remove()};
-const picTag=(i,mode,st)=>{const l=iPics(i);return l.length?`<img src="${esc(l[0])}" data-alt="${esc(l.slice(1).join('|'))}" alt="" onerror="picNext(this,'${mode}')"${st?` style="${st}"`:''}>`:''};
-const forSale=i=>i.stock!==0;
-
-const itemCard=i=>{return `<div class="card${rCls(i)}" data-i="${i.id}"><div class="pic">${picTag(i,'ph')||'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${i.weight?`<p class="wgt">${esc(i.weight)}</p>`:''}${typeof i.stock==='number'?`<p class="stk">${i.stock} left</p>`:''}</div>`};
-const itemSheet=it=>{const p=picTag(it,'rmp');return `<div class="sheet"><div class="sin">${p?`<div class="pic2">${p}</div>`:''}<h4>${esc(it.name)}</h4>${it.rarity?`<div class="rar${rCls(it)}">${RAR[it.rarity]||''}</div>`:''}${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}${it.weight?`<div class="wt">Weight: ${esc(it.weight)}</div>`:''}${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`};
 let unsubs=[];
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-if(CFG.projectId==="PASTE"){app.innerHTML='<div class="wrap"><h1>The Arcane Table</h1><div class="panel"><h2>Firebase is not set up yet</h2><p>Open index.html and paste your Firebase web app config into the CFG object near the top of the script.</p></div></div>';throw 0}
+if(CFG.projectId==="PASTE"){app.innerHTML='<div class="wrap"><h1>Infini DnD</h1><div class="panel"><h2>Firebase is not set up yet</h2><p>Open index.html and paste your Firebase web app config into the CFG object near the top of the script.</p></div></div>';throw 0}
 const db=getFirestore(initializeApp(CFG));
 
 function route(){
-  unsubs.forEach(u=>u());unsubs=[];
+  unsubs.forEach(u=>u());unsubs=[];document.body.classList.remove('dmv');
   let [v,c,pm]=location.hash.slice(1).split('/');
   if(v==='last')v=localStorage.getItem('view')||'display';   // the installed app opens on the view this device used last
   const code=(c||localStorage.getItem('code')||'').toLowerCase();
@@ -390,7 +374,7 @@ function route(){
 
 
 function home(){
-  app.innerHTML=`<div class="wrap"><h1>The Arcane Table</h1>
+  app.innerHTML=`<div class="wrap"><h1>Infini DnD</h1>
   <div class="panel"><h2>Session code</h2>
   <p class="note">Pick any word. Every device that uses the same code sees the same table.</p>
   <div class="row"><input id="code" placeholder="e.g. dragonkeep" value="${esc(localStorage.getItem('code')||'')}" autocapitalize="off">
@@ -420,9 +404,9 @@ async function display(code,pv){
   let IT=[],SH={},sid=null,su1=null,su2=null,lo=null,dis=null,prevS=null,gk='',dk='';
   const renderShop=()=>{
     $('#shopt').textContent=SH.name||'';
-    {const gh=IT.filter(forSale).map(itemCard).join('');if(gh!==gk){gk=gh;$('#shopg').innerHTML=gh}}
-    const oid=lo||(d.shopItemId&&d.shopItemId!==dis?d.shopItemId:null),it=IT.filter(forSale).find(x=>x.id===oid);
-    {const dh=it?itemSheet(it):'';if(dh!==dk){dk=dh;$('#shopd').innerHTML=dh}}
+    {const gh=IT.map(i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${i.img?`<img src="${i.img}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${i.weight?`<p class="wgt">${esc(i.weight)}</p>`:''}${i.qty!=null?`<p class="qty">${i.qty>0?'×'+i.qty:'Sold out'}</p>`:''}</div>`).join('');if(gh!==gk){gk=gh;$('#shopg').innerHTML=gh}}
+    const oid=lo||(d.shopItemId&&d.shopItemId!==dis?d.shopItemId:null),it=IT.find(x=>x.id===oid);
+    {const dh=it?`<div class="sheet"><div class="sin">${it.img?`<div class="pic2"><img src="${it.img}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}${it.weight?`<div class="wt">Weight: ${esc(it.weight)}</div>`:''}${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`:'';if(dh!==dk){dk=dh;$('#shopd').innerHTML=dh}}
     $('#shopd').classList.toggle('on',!!it);
   };
   const watchShop=(id,rt)=>{
@@ -825,7 +809,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-07 ak';
+const VER='2026-11-05 ag';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -1145,10 +1129,10 @@ function wxBoxHTML(cur,w,L,role,day,sel,area,open){
 }
 function player(code){
   app.onclick=null;
-  app.innerHTML='<div class="pv"><div class="pvh"><h1>The Arcane Table</h1><div class="pvt"><button class="btn sm" data-t="quest">Quest</button><button class="btn sm" data-t="weather">Weather</button><button class="btn sm" data-t="shops">Shops</button><button class="btn sm alt" data-vm="1">Views</button></div></div><div id="pvb"></div><div id="pvd"></div></div>';
+  app.innerHTML='<div class="pv"><div class="pvh"><h1>Infini DnD</h1><div class="pvt"><button class="btn sm" data-t="quest">Quest</button><button class="btn sm" data-t="weather">Weather</button><button class="btn sm" data-t="shops">Shops</button><button class="btn sm alt" data-vm="1">Views</button></div></div><div id="pvb"></div><div id="pvd"></div></div>';
   let d={},tab=sessionStorage.getItem('pvtab')||'quest',Q=null,qid=null,qu=null,psel=null,open=null,fxSel=null,last='',lastD='';
   const SHP={},subs={};
-  const card=itemCard;
+  const card=i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${i.img?`<img src="${i.img}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${i.weight?`<p class="wgt">${esc(i.weight)}</p>`:''}${i.qty!=null?`<p class="qty">${i.qty>0?'×'+i.qty:'Sold out'}</p>`:''}</div>`;
   const render=()=>{
     document.querySelectorAll('.pvt [data-t]').forEach(b=>b.classList.toggle('alt',b.dataset.t!==tab));
     const keys=d.pshops||[];let h='',sheet='';
@@ -1157,9 +1141,9 @@ function player(code){
     else if(!keys.length)h='<div class="pvempty">No shops are open.</div>';
     else{
       const k=keys.includes(psel)?psel:keys[0],S=SHP[k]||{name:'',items:[]};
-      h=(keys.length>1?'<div class="row" style="margin-bottom:10px">'+keys.map(x=>`<button class="btn sm ${x===k?'':'alt'}" data-s="${x}">${esc((SHP[x]||{}).name||'...')}</button>`).join('')+'</div>':'')+`<div class="pvname">${esc(S.name)}</div><div class="pvg">${S.items.filter(forSale).map(card).join('')||'<div class="pvempty">Sold out.</div>'}</div>`;
-      const it=S.items.filter(forSale).find(x=>x.id===open);
-      if(it)sheet=itemSheet(it);
+      h=(keys.length>1?'<div class="row" style="margin-bottom:10px">'+keys.map(x=>`<button class="btn sm ${x===k?'':'alt'}" data-s="${x}">${esc((SHP[x]||{}).name||'...')}</button>`).join('')+'</div>':'')+`<div class="pvname">${esc(S.name)}</div><div class="pvg">${S.items.map(card).join('')}</div>`;
+      const it=S.items.find(x=>x.id===open);
+      if(it)sheet=`<div class="sheet"><div class="sin">${it.img?`<div class="pic2"><img src="${it.img}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}${it.weight?`<div class="wt">Weight: ${esc(it.weight)}</div>`:''}${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`;
     }
     const key=tab+'|'+h;if(key!==last){last=key;$('#pvb').innerHTML=h}
     if(sheet!==lastD){lastD=sheet;$('#pvd').innerHTML=sheet;$('#pvd').classList.toggle('on',!!sheet)}
@@ -1247,6 +1231,7 @@ async function shrink(file,max){
 }
 
 function dm(code){
+  document.body.classList.add('dmv');
   const L=doc(db,'sessions',code,'live','state'),IM=collection(db,'sessions',code,'images'),QC=collection(db,'sessions',code,'quests');
   let live={},imgs=[],qs=[],shops=[],items=[],selShop=localStorage.getItem('selShop'),editIt=null,edit=null,MO=null,MS={},view={x:.5,y:.5,ft:60},mode=null,tmr=0,dirty=false;
   const link=location.origin+location.pathname+'#display/'+code,plink=location.origin+location.pathname+'#player/'+code;
@@ -1254,7 +1239,7 @@ function dm(code){
   <button id="pvbtn" class="pvbtn alt" data-a="pvtoggle" title="Preview of the players' screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>
   <div id="pvwin" class="pvwin"><div class="pvbar"><b>Players' screen</b><span style="flex:1"></span><button class="btn sm alt" id="pvmode" data-a="pvmode" style="display:none">Players' view</button><button class="btn sm alt" data-a="pvsize">Size</button><button class="btn sm alt" data-a="pvtoggle">Close</button></div><div id="pvbox" class="pvbox"><iframe id="pvf" title="Players' screen"></iframe><canvas id="mc"></canvas></div><div id="pvtools" class="pvtools" style="display:none"><button class="btn sm alt" data-a="mlight">Add light</button><button class="btn sm alt" data-a="mrm">Remove light</button><button class="btn sm alt" data-a="mreset">Reset explored</button><label><input id="mrev" type="checkbox"> Reveal all</label><span class="edit" style="display:contents"><label>Squares <input id="msq" type="number" min="5" value="30"></label><label>Light ft <input id="mft" type="number" min="5" value="30"></label></span></div></div>
   
-  <div class="row" style="justify-content:space-between"><div><h1>The Arcane Table</h1><div class="note" style="margin:0">Version ${VER}</div></div><div class="row"><button class="btn sm alt" data-a="vm">Views</button><button class="btn sm alt" id="pm" data-a="pm">Hide editing</button></div></div>
+  <div class="row" style="justify-content:space-between"><div><h1><span class="inf">∞</span> Infini DnD</h1><div class="note edit" style="margin:0">Version ${VER}</div></div><div class="row"><button class="btn sm alt edit" data-a="vm">Views</button><button class="btn sm alt" id="pm" data-a="pm">Hide editing</button></div></div>
   <details class="panel" id="d-ctl" open><summary><h2>Controls</h2></summary><div class="row">
   <button class="btn" id="cv-bg" data-a="vbg">Background</button><button class="btn" id="cv-map" data-a="vmap">Map</button><button class="btn" id="cv-shop" data-a="vshop">Shop</button><button class="btn" id="cv-board" data-a="vboard">Quest board</button></div>
   <div class="row" style="margin-top:8px"><button class="btn" id="ct-wx" data-a="wxon">Weather</button><button class="btn" id="ct-night" data-a="night">Day</button><button class="btn" id="ct-tok" data-a="tok">Tokens</button><button class="btn" id="ct-snd" data-a="snd">Sound</button><button class="btn alt" id="ct-mu" data-a="mtoggle" disabled>Play music</button><button class="btn" id="ct-in" data-a="inplay" disabled>Intro</button><input id="sndvol" type="range" min="0" max="100" value="70" title="Tablet volume" style="width:110px">
@@ -1267,7 +1252,7 @@ function dm(code){
   <details class="panel" id="d-wx" open><summary><h2>Weather <span class="eye" id="e-wx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
   <div id="wxres"></div>
   <div class="row" style="margin-top:10px"><button class="btn" id="wxds" data-a="wxd" data-id="s">Sun</button><button class="btn" id="wxdc" data-a="wxd" data-id="c">Cloud</button><button class="btn" id="wxdr" data-a="wxd" data-id="r">Rain</button><button class="btn" data-a="wxwr">Wind</button></div>
-  <div class="row" style="margin-top:8px"><button class="btn sm" data-a="wxquick">New day</button><button class="btn sm alt" data-a="wxundo">Undo</button><button class="btn sm alt edit" data-a="wxrefill">Refill</button><select id="wxsel"></select><select id="wxarea"></select></div>
+  <div class="row" style="margin-top:8px"><button class="btn sm" data-a="wxquick">New day</button><button class="btn sm alt" data-a="wxundo">Undo</button><button class="btn sm alt edit" data-a="wxrefill">Refill</button><select id="wxsel" class="edit"></select><select id="wxarea"></select></div>
   <div class="edit"><div id="wxl" style="margin-top:10px"></div><div class="row" id="wxw"></div></div>
   <details class="edit" id="d-wxe" style="margin-top:14px"><summary><h2 style="font-size:17px">Edit season presets</h2></summary>
   <div class="row"><input id="pn" placeholder="Name"><label><input id="pc" type="checkbox"> Cold season</label><label><input id="ph" type="checkbox"> Hot season</label></div>
@@ -1298,24 +1283,24 @@ function dm(code){
   <p class="note edit" style="margin:0 0 8px">Use a shop for stores, loot or party inventory. Tap a card on the tablet to read it.</p>
   <div class="row edit"><input id="shn" placeholder="Shop or loot list name"><label><input id="shsh" type="checkbox" checked> Shared</label><button class="btn" data-a="shadd">Add shop</button></div>
   <div class="row" id="shl" style="margin:10px 0"></div><div class="row" id="shb"></div>
-  <details class="edit" id="d-add" style="margin-top:10px"><summary><h2 style="font-size:17px">Add item</h2></summary><div id="itHome"><div class="edit itf" id="itf">
-  <div class="row"><input id="itn" placeholder="Item name" style="flex:3 1 160px"><input id="itc" placeholder="Cost" style="flex:1 1 80px"><input id="itw" placeholder="Weight" style="flex:1 1 70px"></div>
-  <div class="row"><select id="ity" style="flex:1 1 110px"><option value="">Rarity: none</option><option value="common">Common</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option><option value="very rare">Very Rare</option><option value="legendary">Legendary</option></select><input id="its" type="number" min="0" placeholder="Stock (empty = unlimited)" style="flex:1 1 120px"><input id="itp" placeholder="Picture (empty = item name)" style="flex:2 1 170px"></div>
-  <div class="itg"><textarea id="itd" rows="3" placeholder="Description"></textarea><textarea id="itr" rows="3" placeholder="Statblock"></textarea></div>
-  <textarea id="itx" rows="1" placeholder="DM notes (never shown to players)"></textarea>
-  <div class="row"><button class="btn sm" id="itb" data-a="itsave">Add item</button><button class="btn sm alt" id="itcx" data-a="itcancel" style="display:none">Cancel</button><label class="itfile">Upload picture <input id="iti" type="file" accept="image/*"></label><span class="note" id="itm"></span></div>
-  </div></div></details>
+  <div class="edit" style="margin-top:10px"><div class="row"><input id="itn" placeholder="Item name" style="flex:2 1 160px"><input id="itc" placeholder="Cost, e.g. 50 gp" style="flex:1 1 110px"><input id="itw" placeholder="Weight" style="flex:1 1 90px"></div>
+  <textarea id="itd" rows="2" placeholder="Description" style="margin-top:8px"></textarea><textarea id="itr" rows="2" placeholder="Statblock" style="margin-top:8px"></textarea><textarea id="itx" rows="2" placeholder="DM notes (never shown to players)" style="margin-top:8px"></textarea>
+  <div class="row" style="margin:8px 0"><input id="iti" type="file" accept="image/*"><button class="btn" id="itb" data-a="itsave">Add item</button></div><p class="note" id="itm"></p></div>
   <details class="edit" id="d-imp" style="margin-top:10px"><summary><h2 style="font-size:17px">Import items</h2></summary>
-  <p class="note">Rows from your sheet: Name, Cost, Weight, Description, Statblock, DM notes, Rarity, Stock, Picture. The last three are optional. Existing names are updated, and empty optional cells keep the current value.</p>
+  <p class="note">Rows from your sheet: Name, Cost, Weight, Description, Statblock, DM notes. Existing names are updated.</p>
   <textarea id="imt" rows="6" placeholder="Paste rows here"></textarea>
   <div class="row" style="margin-top:8px"><button class="btn sm" data-a="imp">Import</button><button class="btn sm alt" data-a="exp">Copy shop as table</button></div><div class="row" style="margin-top:8px"><input id="imf" type="file" accept=".json"><button class="btn sm" data-a="impf">Import file</button></div><p class="note" id="imm"></p></details>
   <div id="shi"></div></details></div>`;
   if(localStorage.getItem('play')==='1'){$('.wrap').classList.add('play');$('#pm').textContent='Show editing'}
   document.querySelectorAll('details[id]').forEach(el=>{const k='open-'+el.id,v=localStorage.getItem(k);if(v!==null)el.open=v==='1';el.addEventListener('toggle',()=>localStorage.setItem(k,el.open?'1':'0'))});
+  // backgrounds, maps, NPCs and monsters: what is on screen first, then what was picked most recently (kept in a small document)
+  const UF=doc(db,'sessions',code,'usage','last');let UD={};
+  const useId=id=>{UD={...UD,[id]:Date.now()};setDoc(UF,{[id]:UD[id]},{merge:true})};
   const draw=()=>{
     const tile=(i,on,a)=>`<div class="tile ${on?'on':''} ${a==='npc'?'npc':''} ${i.type==='monster'?'mon':''}" tabindex="0" data-a="${a}" data-id="${i.id}"><img src="${i.data}" alt=""><span>${esc(i.name)}</span><i class="edit" data-a="ren" data-id="${i.id}" title="Rename">✎</i>${i.type==='monster'?`<u class="edit" data-a="monset" data-id="${i.id}" title="Look and effects">✦</u>`:''}<b class="edit" data-a="del" data-id="${i.id}" title="Delete">×</b></div>`;
     const bg=imgs.filter(i=>i.type==='background'),np=imgs.filter(i=>i.type==='npc'),mo=imgs.filter(i=>i.type==='monster'),mp=imgs.filter(i=>i.type==='map');
-    const onN=i=>(live.visibleNpcIds||[]).includes(i.id);bg.sort((a,b)=>(live.backgroundId===b.id)-(live.backgroundId===a.id));np.sort((a,b)=>onN(b)-onN(a));mo.sort((a,b)=>onN(b)-onN(a));mp.sort((a,b)=>(live.mapId===b.id)-(live.mapId===a.id));
+    const ud=i=>UD[i.id]||0,onN=i=>(live.visibleNpcIds||[]).includes(i.id);
+    bg.sort((a,b)=>((live.backgroundId===b.id)-(live.backgroundId===a.id))||ud(b)-ud(a));np.sort((a,b)=>(onN(b)-onN(a))||ud(b)-ud(a));mo.sort((a,b)=>(onN(b)-onN(a))||ud(b)-ud(a));mp.sort((a,b)=>((live.mapId===b.id)-(live.mapId===a.id))||ud(b)-ud(a));
     $('#bgs').innerHTML=bg.map(i=>tile(i,live.backgroundId===i.id,'bg')).join('')||'<p class="note">No backgrounds yet.</p>';
     $('#nps').innerHTML=np.map(i=>tile(i,(live.visibleNpcIds||[]).includes(i.id),'npc')).join('')||'<p class="note">No NPCs yet.</p>';
     $('#mos').innerHTML=mo.map(i=>tile(i,(live.visibleNpcIds||[]).includes(i.id),'npc')).join('')||'<p class="note">No monsters yet.</p>';
@@ -1546,6 +1531,7 @@ function dm(code){
   $('#pn').onchange=e=>updPre({name:e.target.value.trim()||'Preset'});
   unsubs.push(onSnapshot(ID,s=>{IC={slides:[],secs:6,music:'',open:'fog',...(s.exists()?s.data():{})};inDraw()}));
   unsubs.push(onSnapshot(MF,s=>{MFD=s.exists()?s.data():{};monDraw()}));
+  unsubs.push(onSnapshot(UF,s=>{UD=s.exists()?s.data():{};draw()}));
   $('#monfx').onchange=e=>{const t=e.target,id=$('#monfx').dataset.id;if(!t.dataset||!t.dataset.k||!id)return;const cur={bd:'dark',fx:'',amb:'',wx:'',...(MFD[id]||{})};cur[t.dataset.k]=t.value;MFD={...MFD,[id]:cur};setDoc(MF,{[id]:cur},{merge:true})};
   $('#inopen').onchange=e=>saveI({open:e.target.value});
   $('#insecs').onchange=e=>saveI({secs:Math.min(20,Math.max(3,+e.target.value||6))});
@@ -1588,18 +1574,8 @@ function dm(code){
     $('#csh').textContent='('+shops.length+')';
     $('#shl').innerHTML=shops.map(x=>`<button class="btn sm ${x.id===selShop?'':'alt'}" data-a="shsel" data-id="${x.id}">${esc(x.name)}${x._r==='_shared'?' <small>shared</small>':''}${(live.pshops||[]).includes((x._r||code)+':'+x.id)?EYE_SM:''} (${items.filter(i=>i.shopId===x.id).length})</button>`).join('')||'<span class="note">No shops yet.</span>';
     $('#shb').innerHTML=sel?bt('shpl',sel.id,(live.pshops||[]).includes((sel._r||code)+':'+sel.id)?'Hide from players':'Show to players',!(live.pshops||[]).includes((sel._r||code)+':'+sel.id))+bt('shren',sel.id,'Rename',1,1)+bt('shdel',sel.id,'Delete shop',1,1):'';
-    const shH=sel?items.filter(i=>i.shopId===sel.id).map(i=>`<div class="qrow itr ${on&&live.shopItemId===i.id?'on':''} ${i.stock===0?'out':''} ${editIt===i.id?'ed':''}" data-row="${i.id}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${picTag(i,'rm','width:44px;height:44px;flex:none;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)')}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${i.weight?' / '+esc(i.weight):''}${i.rarity?' <span class="rar'+rCls(i)+'" style="font:700 12px Cinzel,serif">'+RAR[i.rarity]+'</span>':''}${i.stock===0?' <small>(sold out, hidden from players)</small>':''}${i.desc?`<p class="dd">${esc(i.desc)}</p>`:''}${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row">${typeof i.stock==='number'?`<span class="stkb">${bt('stk-',i.id,'−',1)}${i.stock}${bt('stk+',i.id,'+',1)}</span>`:''}${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${editIt===i.id?'':bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':'';
-    if(shH!==shiK){shiK=shH;const f=itForm();if(f&&f.parentNode!==$('#itHome'))$('#itHome').appendChild(f);$('#shi').innerHTML=shH}   // only redraw the list when it changed, so typing in the form isn't interrupted
-    placeForm();
+    $('#shi').innerHTML=sel?items.filter(i=>i.shopId===sel.id).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${i.img?`<img src="${i.img}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${i.weight?' / '+esc(i.weight):''}<p>${esc(i.desc||'')}</p>${i.qty!=null?`<p style="margin:2px 0;font-weight:700">Stock: ${i.qty}</p>`:''}${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row"><span class="edit" style="display:inline-flex;align-items:center;gap:6px">${bt('qtym',i.id,'−',1)}<b style="min-width:1.6em;text-align:center">${i.qty==null?'–':i.qty}</b>${bt('qtyp',i.id,'+',1)}</span>${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':'';
   }
-  // the item form sits in "Add item", or right under the item being edited
-  var shiK,FORM;
-  function itForm(){return FORM||(FORM=$('#itf'))}   // keep a handle so the form survives list redraws
-  function placeForm(scroll){const f=itForm();if(!f)return;const row=editIt&&document.querySelector(`#shi [data-row="${editIt}"]`);
-    if(row){if(row.nextSibling!==f)row.after(f);if(scroll){f.scrollIntoView({block:'nearest',behavior:'smooth'});$('#itn').focus({preventScroll:true})}}
-    else if(f.parentNode!==$('#itHome'))$('#itHome').appendChild(f);
-    $('#itb').textContent=editIt?'Save item':'Add item';$('#itcx').style.display=editIt?'':'none'}
-  function clearForm(){['#itn','#itc','#itw','#itd','#itr','#itx','#iti','#ity','#its','#itp'].forEach(k=>$(k).value='')}
   let shS={},itS={},ntS={},NT={};
   const mergeSh=()=>{shops=[...(shS[code]||[]),...(shS._shared||[])];items=[...(itS[code]||[]),...(itS._shared||[])];NT={...(ntS[code]||{}),...(ntS._shared||{})};if(selShop&&shS[code]&&shS._shared&&!shops.some(x=>x.id===selShop))selShop=null};
   [code,'_shared'].forEach(r=>{
@@ -1653,10 +1629,12 @@ function dm(code){
   const set=o=>setDoc(L,o,{merge:true});
   app.onclick=async e=>{
     const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,id=t.dataset.id;
+    if(a==='bg'||a==='map')useId(id);
     if(a==='bg'){if(live.backgroundId!==id&&curView()==='scene'){autoMusic(id);autoCard(id)}set({backgroundId:live.backgroundId===id?null:id,bgWx:wxOf(id),bgOff:false})}
     if(a==='npc'&&MO&&live.showMap&&!(live.visibleNpcIds||[]).includes(id)){MS.tk={...(MS.tk||{}),[id]:{x:view.x,y:view.y}};dirty=true;flush()}
     if(a==='monset'){monSel=id;monDraw()}
     if(a==='npc'){const im=imgs.find(x=>x.id===id);if(im&&im.type==='monster')monSel=id}
+    if(a==='npc')useId(id);
     if(a==='npc')set({visibleNpcIds:(live.visibleNpcIds||[]).includes(id)?arrayRemove(id):arrayUnion(id)});
     if(a==='black')set({backgroundId:null});
     if(a==='clear')set({visibleNpcIds:[]});
@@ -1700,7 +1678,7 @@ function dm(code){
     if(a==='pdup'){const n2={...curPre(),id:'p'+Date.now(),name:curPre().name+' copy'};await saveG({presets:[...G.presets,n2],cur:n2.id});syncPre(true)}
     if(a==='pdel'&&G.presets.length>1&&confirm('Delete this preset?')){const pr=G.presets.filter(p=>p.id!==G.cur);await saveG({presets:pr,cur:pr[0].id,bag:{...pr[0].d},day:0});await set({cold:!!pr[0].cold,season:seasonP(pr[0])});wxDraw();syncPre(true)}
     if(a==='shadd'){const nm=$('#shn').value.trim();if(!nm)return;const r=doc(collection(db,'sessions',$('#shsh').checked?'_shared':code,'shops'));await setDoc(r,{name:nm,created:Date.now()});selShop=r.id;localStorage.setItem('selShop',r.id);$('#shn').value='';draw()}
-    if(a==='shsel'){selShop=id;localStorage.setItem('selShop',id);if(curView()==='shop'&&live.shopId!==id)set({shopId:id,shopRoot:(shops.find(x=>x.id===id)||{})._r||code,shopItemId:null});draw()}   // shop on the tablet follows the selected shop
+    if(a==='shsel'){selShop=id;localStorage.setItem('selShop',id);draw()}
     if(a==='shshow'&&selShop){const on=live.showShop&&live.shopId===selShop;set(on?{showShop:false,shopItemId:null}:{showShop:true,shopId:selShop,shopRoot:(shops.find(x=>x.id===selShop)||{})._r||code,shopItemId:null,showBoard:false,showMap:false})}
     if(a==='shpl'){const sh=shops.find(x=>x.id===id);if(sh){const k=(sh._r||code)+':'+sh.id;set({pshops:(live.pshops||[]).includes(k)?arrayRemove(k):arrayUnion(k)})}}
     if(a==='shren'){const sh=shops.find(x=>x.id===selShop),nn=sh&&prompt('Shop name',sh.name);if(nn&&nn.trim())updateDoc(doc(db,'sessions',sh._r||code,'shops',selShop),{name:nn.trim()})}
@@ -1712,17 +1690,15 @@ function dm(code){
       if(!selShop){msg.className='note err';msg.textContent='Select or add a shop first.';return}
       if(!name){msg.className='note err';msg.textContent='Give the item a name.';return}
       try{msg.className='note';msg.textContent='Saving...';
-        const f=$('#iti').files[0],img=f?await shrink(f,480):null,body={name,cost:$('#itc').value.trim(),desc:$('#itd').value.trim(),rules:$('#itr').value.trim(),weight:$('#itw').value.trim(),rarity:normR($('#ity').value),stock:normS($('#its').value),pic:$('#itp').value.trim(),...(img?{img}:{})};
+        const f=$('#iti').files[0],img=f?await shrink(f,480):null,body={name,cost:$('#itc').value.trim(),desc:$('#itd').value.trim(),rules:$('#itr').value.trim(),weight:$('#itw').value.trim(),...(img?{img}:{})};
         const rt=editIt?((items.find(x=>x.id===editIt)||{})._r||code):((shops.find(x=>x.id===selShop)||{})._r||code),nid=editIt||doc(collection(db,'sessions',rt,'items')).id;
         if(editIt)await updateDoc(doc(db,'sessions',rt,'items',nid),body);
         else await setDoc(doc(db,'sessions',rt,'items',nid),{shopId:selShop,img:'',created:Date.now(),...body});
         await setDoc(doc(db,'sessions',rt,'notes',nid),{text:$('#itx').value.trim()});
-        const was=editIt;editIt=null;clearForm();shopDraw();msg.textContent='Saved.';if(was){const r=document.querySelector(`#shi [data-row="${was}"]`);r&&r.scrollIntoView({block:'nearest'})}
+        editIt=null;['#itn','#itc','#itw','#itd','#itr','#itx','#iti'].forEach(k=>$(k).value='');$('#itb').textContent='Add item';msg.textContent='Saved.';
       }catch(err){msg.className='note err';msg.textContent='Could not save: '+err.message}}
-    if(a==='itedit'){const i=items.find(x=>x.id===id);if(i){editIt=id;$('#itn').value=i.name||'';$('#itc').value=i.cost||'';$('#itd').value=i.desc||'';$('#itr').value=i.rules||'';$('#itw').value=i.weight||'';$('#itx').value=NT[id]||'';$('#ity').value=i.rarity||'';$('#its').value=typeof i.stock==='number'?i.stock:'';$('#itp').value=i.pic||'';$('#itm').textContent='';shopDraw();placeForm(true)}}
-    if(a==='itcancel'){const was=editIt;editIt=null;clearForm();$('#itm').textContent='';shopDraw();const r=was&&document.querySelector(`#shi [data-row="${was}"]`);r&&r.scrollIntoView({block:'nearest'})}
-    if(a==='stk-'||a==='stk+'){const i=items.find(x=>x.id===id);if(i&&typeof i.stock==='number'){const n=Math.max(0,i.stock+(a==='stk+'?1:-1));if(n!==i.stock)updateDoc(doc(db,'sessions',i._r||code,'items',id),{stock:n})}}
-    if(a==='itdel'&&confirm('Delete this item?')){if(editIt===id){editIt=null;clearForm();placeForm()}const rt=(items.find(x=>x.id===id)||{})._r||code;deleteDoc(doc(db,'sessions',rt,'items',id));deleteDoc(doc(db,'sessions',rt,'notes',id))}
+    if(a==='itedit'){const i=items.find(x=>x.id===id);if(i){editIt=id;$('#itn').value=i.name||'';$('#itc').value=i.cost||'';$('#itd').value=i.desc||'';$('#itr').value=i.rules||'';$('#itw').value=i.weight||'';$('#itx').value=NT[id]||'';$('#itb').textContent='Save item';$('#itn').focus()}}
+    if(a==='itdel'&&confirm('Delete this item?')){if(editIt===id){editIt=null;$('#itb').textContent='Add item'}const rt=(items.find(x=>x.id===id)||{})._r||code;deleteDoc(doc(db,'sessions',rt,'items',id));deleteDoc(doc(db,'sessions',rt,'notes',id))}
     if(a==='imp'){
       const msg=$('#imm'),sh=shops.find(x=>x.id===selShop);
       if(!sh){msg.className='note err';msg.textContent='Select a shop first.';return}
@@ -1731,7 +1707,6 @@ function dm(code){
       msg.className='note';msg.textContent='Importing...';let add=0,upd=0;
       try{for(const r of rows){const name=(r[0]||'').trim();if(!name)continue;
           const body={name,cost:(r[1]||'').trim(),weight:(r[2]||'').trim(),desc:(r[3]||'').trim(),rules:(r[4]||'').trim()},note=(r[5]||'').trim();
-          if((r[6]||'').trim())body.rarity=normR(r[6]);if((r[7]||'').trim())body.stock=normS(r[7]);if((r[8]||'').trim())body.pic=r[8].trim();
           const ex=items.find(i=>i.shopId===sh.id&&(i.name||'').trim().toLowerCase()===name.toLowerCase());
           let nid;if(ex){nid=ex.id;await updateDoc(doc(db,'sessions',sh._r,'items',nid),body);upd++}
           else{nid=doc(collection(db,'sessions',sh._r,'items')).id;await setDoc(doc(db,'sessions',sh._r,'items',nid),{shopId:sh.id,img:'',created:Date.now()+add,...body});add++}
@@ -1750,7 +1725,6 @@ function dm(code){
           map[nm]=sh}
         for(const x of arr){const sh=map[(x.shop||'Imported').trim()],name=(x.name||'').trim();if(!name)continue;
           const body={name,cost:x.cost||'',weight:x.weight||'',desc:x.description||x.desc||'',rules:x.rules||''};
-          if(x.rarity)body.rarity=normR(x.rarity);if(x.stock!==undefined&&x.stock!=='')body.stock=normS(x.stock);if(x.pic||x.image)body.pic=String(x.pic||x.image).trim();
           const ex=items.find(i=>i._r==='_shared'&&i.shopId===sh.id&&(i.name||'').trim().toLowerCase()===name.toLowerCase());let nid;
           if(ex){nid=ex.id;await updateDoc(doc(db,'sessions','_shared','items',nid),body);upd++}
           else{nid=doc(collection(db,'sessions','_shared','items')).id;await setDoc(doc(db,'sessions','_shared','items',nid),{shopId:sh.id,img:'',created:Date.now()+add,...body});add++}
@@ -1760,9 +1734,10 @@ function dm(code){
     if(a==='exp'){
       const sh=shops.find(x=>x.id===selShop),msg=$('#imm');if(!sh)return;
       const q=v=>/[\t\n\r"]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;
-      const t=['Name\tCost\tWeight\tDescription\tStatblock\tDM notes\tRarity\tStock\tPicture',...items.filter(i=>i.shopId===sh.id).map(i=>[i.name,i.cost,i.weight,i.desc,i.rules,NT[i.id],RAR[i.rarity]||'',typeof i.stock==='number'?String(i.stock):'',i.pic].map(v=>q(v||'')).join('\t'))].join('\n');
+      const t=['Name\tCost\tWeight\tDescription\tStatblock\tDM notes',...items.filter(i=>i.shopId===sh.id).map(i=>[i.name,i.cost,i.weight,i.desc,i.rules,NT[i.id]].map(v=>q(v||'')).join('\t'))].join('\n');
       try{await navigator.clipboard.writeText(t);msg.className='note';msg.textContent='Copied '+(t.split('\n').length-1)+' items. Paste them into your sheet.'}
       catch(e){$('#imt').value=t;msg.className='note';msg.textContent='Clipboard blocked. The table is in the box above.'}}
+    if(a==='qtyp'||a==='qtym'){const i=items.find(x=>x.id===id);if(i){const n=Math.max(0,(i.qty==null?0:+i.qty)+(a==='qtyp'?1:-1));i.qty=n;updateDoc(doc(db,'sessions',i._r||code,'items',id),{qty:n});draw()}}
     if(a==='itshow'){const i=items.find(x=>x.id===id);if(i){const on=live.showShop&&live.shopId===i.shopId;set(on?{shopItemId:live.shopItemId===id?null:id}:{showShop:true,shopId:i.shopId,shopRoot:i._r,shopItemId:id,showBoard:false,showMap:false})}}
     if(a==='map'){if(curView()==='map'){autoMusic(id);autoCard(id)}set({mapId:id,mapWx:wxOf(id),mapView:{x:.5,y:.5,ft:60}})}
     if(a==='mshow'&&live.mapId)set({showMap:!live.showMap,...(!live.showMap?{showBoard:false,showShop:false}:{})});
