@@ -342,6 +342,12 @@ body.dmv .panel::before{display:none}
 body.dmv summary h2{font-size:18px}
 body.dmv .btn{border-radius:8px;border-width:1px;box-shadow:0 2px 0 #000a}
 body.dmv .tile{border-radius:10px;border-width:2px}
+body.dmv .qrow,body.dmv .qrow .row{min-width:0}
+body.dmv .qt{min-width:0;flex:1 1 0;overflow:hidden}
+body.dmv .qt b{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
+body.dmv .qt p,body.dmv .qt small{overflow-wrap:anywhere}
+body.dmv .btn{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.dmv select,body.dmv input:not([type=checkbox]):not([type=range]):not([type=file]){max-width:100%;min-width:0;text-overflow:ellipsis}
 .card .qty{margin:0;font:700 clamp(12px,2vmin,20px) Cinzel,serif;color:#6b2d12}
 .card.out{opacity:.5}
 </style></head>
@@ -809,7 +815,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-05 ag';
+const VER='2026-11-05 ah';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -1241,14 +1247,25 @@ function dm(code){
   
   <div class="row" style="justify-content:space-between"><div><h1><span class="inf">∞</span> Infini DnD</h1><div class="note edit" style="margin:0">Version ${VER}</div></div><div class="row"><button class="btn sm alt edit" data-a="vm">Views</button><button class="btn sm alt" id="pm" data-a="pm">Hide editing</button></div></div>
   <details class="panel" id="d-ctl" open><summary><h2>Controls</h2></summary><div class="row">
-  <button class="btn" id="cv-bg" data-a="vbg">Background</button><button class="btn" id="cv-map" data-a="vmap">Map</button><button class="btn" id="cv-shop" data-a="vshop">Shop</button><button class="btn" id="cv-board" data-a="vboard">Quest board</button></div>
-  <div class="row" style="margin-top:8px"><button class="btn" id="ct-wx" data-a="wxon">Weather</button><button class="btn" id="ct-night" data-a="night">Day</button><button class="btn" id="ct-tok" data-a="tok">Tokens</button><button class="btn" id="ct-snd" data-a="snd">Sound</button><button class="btn alt" id="ct-mu" data-a="mtoggle" disabled>Play music</button><button class="btn" id="ct-in" data-a="inplay" disabled>Intro</button><input id="sndvol" type="range" min="0" max="100" value="70" title="Tablet volume" style="width:110px">
+  <button class="btn" id="cv-bg" data-a="vbg">Main</button><button class="btn" id="cv-map" data-a="vmap">Map</button><button class="btn" id="cv-shop" data-a="vshop">Shop</button><button class="btn" id="cv-board" data-a="vboard">Quests</button><button class="btn edit" id="ct-in" data-a="inplay" disabled>Intro</button></div>
+  <div class="row" style="margin-top:8px"><button class="btn" id="ct-tok" data-a="tok">Tokens</button><button class="btn" id="ct-wx" data-a="wxon">Weather</button><button class="btn" id="ct-night" data-a="night">Day</button><button class="btn" id="ct-snd" data-a="snd">Ambience</button><button class="btn alt" id="ct-mu" data-a="mtoggle" disabled>Play music</button><input id="sndvol" class="edit" type="range" min="0" max="100" value="70" title="Tablet volume" style="width:110px">
   <button class="btn sm alt edit" data-a="clear">Clear tokens</button><button class="btn sm alt edit" data-a="home">Change session</button></div>
   <div class="edit"><p class="note">Player display link for the tablet:</p><input id="lnk" readonly value="${esc(link)}" style="width:100%"><p class="note">Player link for phones:</p><input id="lnk2" readonly value="${esc(plink)}" style="width:100%"></div></details>
   <details class="panel edit" id="d-up" open><summary><h2>Add to the library</h2></summary><div class="row">
   <select id="type"><option value="background">Background</option><option value="npc">NPC portrait</option><option value="monster">Monster token</option><option value="map">Map</option><option value="overlay">Overlay (transparent center)</option></select>
   <input id="nm" placeholder="Name (optional)"><input id="file" type="file" accept="image/*" multiple>
   <button class="btn" data-a="up">Add image</button></div><p class="note" id="msg">Several files at once keep their file names. Rename any image later with the pencil on its tile.</p></details>
+  <details class="panel edit" id="d-in" open><summary><h2>Intro <span id="inn"></span><span class="eye" id="e-in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
+  <div class="row"><button class="btn" id="inplay" data-a="inplay" disabled>Play intro</button><button class="btn sm alt" data-a="instop">Stop</button></div>
+  <div id="inl" style="margin-top:8px"></div>
+  <div class="edit"><div class="row" style="margin-top:8px"><select id="inpick"></select><button class="btn sm" data-a="inadd">Add</button><button class="btn sm alt" data-a="inalln">Add all NPCs</button></div>
+  <div class="row" style="margin-top:8px"><label>Opening <select id="inopen"><option value="fog">Dense fog (white)</option><option value="black">Fade from black</option></select></label></div>
+  <div class="row" style="margin-top:8px"><label>Seconds per image <input id="insecs" type="number" min="3" max="20" value="6" style="width:70px"></label></div>
+  <input id="inmus" placeholder="Intro music: audio file or Spotify link" style="width:100%;margin-top:8px"><p class="note" id="inmst" style="margin:4px 0 0"></p></div></details>
+  <details class="panel edit" id="d-mu" open><summary><h2>Music <span id="mun"></span><span class="eye" id="e-mu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
+  <div class="row"><button class="btn" id="mup" data-a="mplay" disabled>Play</button><button class="btn sm alt" id="mus" data-a="mstop" disabled>Stop</button><button class="btn sm" id="mloop" data-a="mloop">Loop</button><input id="muvol" type="range" min="0" max="100" value="70" title="Volume on this device" style="width:110px"></div>
+  <div id="mue"></div>
+  <div class="edit" style="margin-top:8px"><input id="mulink" placeholder="Spotify link or audio file for this background or map" style="width:100%" disabled><label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input id="autitle" type="checkbox" disabled> Show the name as a title card on the tablet</label></div></details>
   <details class="panel" id="d-wx" open><summary><h2>Weather <span class="eye" id="e-wx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
   <div id="wxres"></div>
   <div class="row" style="margin-top:10px"><button class="btn" id="wxds" data-a="wxd" data-id="s">Sun</button><button class="btn" id="wxdc" data-a="wxd" data-id="c">Cloud</button><button class="btn" id="wxdr" data-a="wxd" data-id="r">Rain</button><button class="btn" data-a="wxwr">Wind</button></div>
@@ -1260,18 +1277,7 @@ function dm(code){
   <p class="note" style="margin:10px 0 4px">Cloud die on Sun 1, 2, 3 gives:</p><div class="row"><select id="tc0"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tc1"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tc2"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select></div>
   <p class="note" style="margin:10px 0 4px">Rain die on Sun 1, 2, 3 gives:</p><div class="row"><select id="tr0"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tr1"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select><select id="tr2"><option value="stay">Stay in Sun</option><option value="c1">Cloud 1</option><option value="c2">Cloud 2</option><option value="c3">Cloud 3 (fog)</option><option value="r1">Rain 1</option><option value="r2">Rain 2</option><option value="r3">Rain 3</option></select></div>
   <div class="row" style="margin-top:10px"><button class="btn sm alt" data-a="pdup">Duplicate preset</button><button class="btn sm alt" data-a="pdel">Delete preset</button></div></details></details>
-  <details class="panel edit" id="d-mu" open><summary><h2>Music <span id="mun"></span><span class="eye" id="e-mu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
-  <div class="row"><button class="btn" id="mup" data-a="mplay" disabled>Play</button><button class="btn sm alt" id="mus" data-a="mstop" disabled>Stop</button><button class="btn sm" id="mloop" data-a="mloop">Loop</button><input id="muvol" type="range" min="0" max="100" value="70" title="Volume on this device" style="width:110px"></div>
-  <div id="mue"></div>
-  <div class="edit" style="margin-top:8px"><input id="mulink" placeholder="Spotify link or audio file for this background or map" style="width:100%" disabled><label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input id="autitle" type="checkbox" disabled> Show the name as a title card on the tablet</label></div></details>
-  <details class="panel edit" id="d-in" open><summary><h2>Intro <span id="inn"></span><span class="eye" id="e-in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
-  <div class="row"><button class="btn" id="inplay" data-a="inplay" disabled>Play intro</button><button class="btn sm alt" data-a="instop">Stop</button></div>
-  <div id="inl" style="margin-top:8px"></div>
-  <div class="edit"><div class="row" style="margin-top:8px"><select id="inpick"></select><button class="btn sm" data-a="inadd">Add</button><button class="btn sm alt" data-a="inalln">Add all NPCs</button></div>
-  <div class="row" style="margin-top:8px"><label>Opening <select id="inopen"><option value="fog">Dense fog (white)</option><option value="black">Fade from black</option></select></label></div>
-  <div class="row" style="margin-top:8px"><label>Seconds per image <input id="insecs" type="number" min="3" max="20" value="6" style="width:70px"></label></div>
-  <input id="inmus" placeholder="Intro music: audio file or Spotify link" style="width:100%;margin-top:8px"><p class="note" id="inmst" style="margin:4px 0 0"></p></div></details>
-  <details class="panel" id="d-bg" open><summary><h2>Backgrounds <span id="cb"></span><span id="bgn"></span><span class="eye" id="e-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="bgs"></div></details>
+      <details class="panel" id="d-bg" open><summary><h2>Images <span id="cb"></span><span id="bgn"></span><span class="eye" id="e-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="bgs"></div></details>
   <details class="panel" id="d-mp" open><summary><h2>Maps <span id="cmp"></span><span id="mpn"></span><span class="eye" id="e-map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="mps"></div></details>
   <details class="panel" id="d-np" open><summary><h2>NPCs <span id="cn"></span><span class="eye" id="e-np"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="nps"></div></details>
   <details class="panel" id="d-mo" open><summary><h2>Monsters <span id="cm"></span><span class="eye" id="e-mo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="mos"></div><div id="monfx"></div></details>
@@ -1283,9 +1289,9 @@ function dm(code){
   <p class="note edit" style="margin:0 0 8px">Use a shop for stores, loot or party inventory. Tap a card on the tablet to read it.</p>
   <div class="row edit"><input id="shn" placeholder="Shop or loot list name"><label><input id="shsh" type="checkbox" checked> Shared</label><button class="btn" data-a="shadd">Add shop</button></div>
   <div class="row" id="shl" style="margin:10px 0"></div><div class="row" id="shb"></div>
-  <div class="edit" style="margin-top:10px"><div class="row"><input id="itn" placeholder="Item name" style="flex:2 1 160px"><input id="itc" placeholder="Cost, e.g. 50 gp" style="flex:1 1 110px"><input id="itw" placeholder="Weight" style="flex:1 1 90px"></div>
+  <div class="edit" id="shform" style="margin-top:10px"><div class="row"><input id="itn" placeholder="Item name" style="flex:2 1 160px"><input id="itc" placeholder="Cost, e.g. 50 gp" style="flex:1 1 110px"><input id="itw" placeholder="Weight" style="flex:1 1 90px"></div>
   <textarea id="itd" rows="2" placeholder="Description" style="margin-top:8px"></textarea><textarea id="itr" rows="2" placeholder="Statblock" style="margin-top:8px"></textarea><textarea id="itx" rows="2" placeholder="DM notes (never shown to players)" style="margin-top:8px"></textarea>
-  <div class="row" style="margin:8px 0"><input id="iti" type="file" accept="image/*"><button class="btn" id="itb" data-a="itsave">Add item</button></div><p class="note" id="itm"></p></div>
+  <div class="row" style="margin:8px 0"><input id="iti" type="file" accept="image/*"><button class="btn" id="itb" data-a="itsave">Add item</button><button class="btn alt" id="itcx" data-a="itcancel" style="display:none">Cancel</button></div><p class="note" id="itm"></p></div>
   <details class="edit" id="d-imp" style="margin-top:10px"><summary><h2 style="font-size:17px">Import items</h2></summary>
   <p class="note">Rows from your sheet: Name, Cost, Weight, Description, Statblock, DM notes. Existing names are updated.</p>
   <textarea id="imt" rows="6" placeholder="Paste rows here"></textarea>
@@ -1294,6 +1300,8 @@ function dm(code){
   if(localStorage.getItem('play')==='1'){$('.wrap').classList.add('play');$('#pm').textContent='Show editing'}
   document.querySelectorAll('details[id]').forEach(el=>{const k='open-'+el.id,v=localStorage.getItem(k);if(v!==null)el.open=v==='1';el.addEventListener('toggle',()=>localStorage.setItem(k,el.open?'1':'0'))});
   // backgrounds, maps, NPCs and monsters: what is on screen first, then what was picked most recently (kept in a small document)
+  const LIM=15;let EXPD={};try{EXPD=JSON.parse(localStorage.getItem('expd')||'{}')}catch(e){}
+  const lim=(arr,key,fn)=>{const all=!!EXPD[key],list=all?arr:arr.slice(0,LIM);return list.map(fn).join('')+(arr.length>LIM?`<button class="btn sm alt" style="grid-column:1/-1" data-a="more" data-id="${key}">${all?'Show fewer':'Show '+(arr.length-LIM)+' more'}</button>`:'')};
   const UF=doc(db,'sessions',code,'usage','last');let UD={};
   const useId=id=>{UD={...UD,[id]:Date.now()};setDoc(UF,{[id]:UD[id]},{merge:true})};
   const draw=()=>{
@@ -1301,11 +1309,11 @@ function dm(code){
     const bg=imgs.filter(i=>i.type==='background'),np=imgs.filter(i=>i.type==='npc'),mo=imgs.filter(i=>i.type==='monster'),mp=imgs.filter(i=>i.type==='map');
     const ud=i=>UD[i.id]||0,onN=i=>(live.visibleNpcIds||[]).includes(i.id);
     bg.sort((a,b)=>((live.backgroundId===b.id)-(live.backgroundId===a.id))||ud(b)-ud(a));np.sort((a,b)=>(onN(b)-onN(a))||ud(b)-ud(a));mo.sort((a,b)=>(onN(b)-onN(a))||ud(b)-ud(a));mp.sort((a,b)=>((live.mapId===b.id)-(live.mapId===a.id))||ud(b)-ud(a));
-    $('#bgs').innerHTML=bg.map(i=>tile(i,live.backgroundId===i.id,'bg')).join('')||'<p class="note">No backgrounds yet.</p>';
-    $('#nps').innerHTML=np.map(i=>tile(i,(live.visibleNpcIds||[]).includes(i.id),'npc')).join('')||'<p class="note">No NPCs yet.</p>';
-    $('#mos').innerHTML=mo.map(i=>tile(i,(live.visibleNpcIds||[]).includes(i.id),'npc')).join('')||'<p class="note">No monsters yet.</p>';
+    $('#bgs').innerHTML=lim(bg,'bgs',i=>tile(i,live.backgroundId===i.id,'bg'))||'<p class="note">No backgrounds yet.</p>';
+    $('#nps').innerHTML=lim(np,'nps',i=>tile(i,(live.visibleNpcIds||[]).includes(i.id),'npc'))||'<p class="note">No NPCs yet.</p>';
+    $('#mos').innerHTML=lim(mo,'mos',i=>tile(i,(live.visibleNpcIds||[]).includes(i.id),'npc'))||'<p class="note">No monsters yet.</p>';
     $('#cm').textContent='('+mo.length+')';
-    $('#mps').innerHTML=mp.map(i=>tile(i,live.mapId===i.id,'map')).join('')||'<p class="note">No maps yet.</p>';$('#cmp').textContent='('+mp.length+')';
+    $('#mps').innerHTML=lim(mp,'mps',i=>tile(i,live.mapId===i.id,'map'))||'<p class="note">No maps yet.</p>';$('#cmp').textContent='('+mp.length+')';
     $('#cb').textContent='('+bg.length+')';$('#cn').textContent='('+np.length+')';$('#cq').textContent='('+qs.length+')';
     
     
@@ -1568,13 +1576,27 @@ function dm(code){
     const to=await drawDie(die),q=rollWind(1+Math.floor(Math.random()*6),to);
     await set({wind:q.w});wxMsg=wxMsg.replace(' Now enter the wind roll.',' '+q.txt);wxDraw();
   }
+  // the item form moves to sit right below the item being edited, and back to its place when done
+  let shHome=null;
+  const clearForm=()=>{['#itn','#itc','#itw','#itd','#itr','#itx','#iti'].forEach(k=>{const e=$(k);if(e)e.value=''});$('#itb').textContent='Add item'};
+  function placeForm(){
+    const f=$('#shform');if(!f)return;
+    if(!shHome){shHome=document.createElement('div');shHome.className='note';shHome.style.margin='0';f.before(shHome)}
+    let row=editIt?$('#shi .qrow[data-item="'+editIt+'"]'):null;
+    if(editIt&&!row){editIt=null;clearForm()}   // the item is not in this shop (any more)
+    if(row){if(f.previousElementSibling!==row){const h=f.offsetHeight;row.after(f);shHome.style.minHeight=h+'px';shHome.textContent='Editing an item in the list below. Save or Cancel to add new items here.'}}
+    else if(shHome.nextElementSibling!==f){shHome.after(f);shHome.style.minHeight='';shHome.textContent=''}
+    $('#itcx').style.display=editIt?'':'none';
+  }
   function shopDraw(){
+    {const f=$('#shform');if(f&&shHome&&$('#shi').contains(f))shHome.after(f)}
     const sel=shops.find(x=>x.id===selShop),on=!!sel&&live.showShop&&live.shopId===sel.id;
     const bt=(a,id,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#csh').textContent='('+shops.length+')';
     $('#shl').innerHTML=shops.map(x=>`<button class="btn sm ${x.id===selShop?'':'alt'}" data-a="shsel" data-id="${x.id}">${esc(x.name)}${x._r==='_shared'?' <small>shared</small>':''}${(live.pshops||[]).includes((x._r||code)+':'+x.id)?EYE_SM:''} (${items.filter(i=>i.shopId===x.id).length})</button>`).join('')||'<span class="note">No shops yet.</span>';
     $('#shb').innerHTML=sel?bt('shpl',sel.id,(live.pshops||[]).includes((sel._r||code)+':'+sel.id)?'Hide from players':'Show to players',!(live.pshops||[]).includes((sel._r||code)+':'+sel.id))+bt('shren',sel.id,'Rename',1,1)+bt('shdel',sel.id,'Delete shop',1,1):'';
-    $('#shi').innerHTML=sel?items.filter(i=>i.shopId===sel.id).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${i.img?`<img src="${i.img}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${i.weight?' / '+esc(i.weight):''}<p>${esc(i.desc||'')}</p>${i.qty!=null?`<p style="margin:2px 0;font-weight:700">Stock: ${i.qty}</p>`:''}${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row"><span class="edit" style="display:inline-flex;align-items:center;gap:6px">${bt('qtym',i.id,'−',1)}<b style="min-width:1.6em;text-align:center">${i.qty==null?'–':i.qty}</b>${bt('qtyp',i.id,'+',1)}</span>${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':'';
+    $('#shi').innerHTML=sel?items.filter(i=>i.shopId===sel.id).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''}" data-item="${i.id}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${i.img?`<img src="${i.img}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${i.weight?' / '+esc(i.weight):''}<p>${esc(i.desc||'')}</p>${i.qty!=null?`<p style="margin:2px 0;font-weight:700">Stock: ${i.qty}</p>`:''}${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row"><span class="edit" style="display:inline-flex;align-items:center;gap:6px">${bt('qtym',i.id,'−',1)}<b style="min-width:1.6em;text-align:center">${i.qty==null?'–':i.qty}</b>${bt('qtyp',i.id,'+',1)}</span>${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':'';
+    placeForm();
   }
   let shS={},itS={},ntS={},NT={};
   const mergeSh=()=>{shops=[...(shS[code]||[]),...(shS._shared||[])];items=[...(itS[code]||[]),...(itS._shared||[])];NT={...(ntS[code]||{}),...(ntS._shared||{})};if(selShop&&shS[code]&&shS._shared&&!shops.some(x=>x.id===selShop))selShop=null};
@@ -1629,6 +1651,7 @@ function dm(code){
   const set=o=>setDoc(L,o,{merge:true});
   app.onclick=async e=>{
     const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,id=t.dataset.id;
+    if(a==='more'){EXPD[id]=!EXPD[id];localStorage.setItem('expd',JSON.stringify(EXPD));draw();return}
     if(a==='bg'||a==='map')useId(id);
     if(a==='bg'){if(live.backgroundId!==id&&curView()==='scene'){autoMusic(id);autoCard(id)}set({backgroundId:live.backgroundId===id?null:id,bgWx:wxOf(id),bgOff:false})}
     if(a==='npc'&&MO&&live.showMap&&!(live.visibleNpcIds||[]).includes(id)){MS.tk={...(MS.tk||{}),[id]:{x:view.x,y:view.y}};dirty=true;flush()}
@@ -1695,10 +1718,11 @@ function dm(code){
         if(editIt)await updateDoc(doc(db,'sessions',rt,'items',nid),body);
         else await setDoc(doc(db,'sessions',rt,'items',nid),{shopId:selShop,img:'',created:Date.now(),...body});
         await setDoc(doc(db,'sessions',rt,'notes',nid),{text:$('#itx').value.trim()});
-        editIt=null;['#itn','#itc','#itw','#itd','#itr','#itx','#iti'].forEach(k=>$(k).value='');$('#itb').textContent='Add item';msg.textContent='Saved.';
+        editIt=null;clearForm();placeForm();msg.textContent='Saved.';
       }catch(err){msg.className='note err';msg.textContent='Could not save: '+err.message}}
-    if(a==='itedit'){const i=items.find(x=>x.id===id);if(i){editIt=id;$('#itn').value=i.name||'';$('#itc').value=i.cost||'';$('#itd').value=i.desc||'';$('#itr').value=i.rules||'';$('#itw').value=i.weight||'';$('#itx').value=NT[id]||'';$('#itb').textContent='Save item';$('#itn').focus()}}
-    if(a==='itdel'&&confirm('Delete this item?')){if(editIt===id){editIt=null;$('#itb').textContent='Add item'}const rt=(items.find(x=>x.id===id)||{})._r||code;deleteDoc(doc(db,'sessions',rt,'items',id));deleteDoc(doc(db,'sessions',rt,'notes',id))}
+    if(a==='itedit'){const i=items.find(x=>x.id===id);if(i){editIt=id;$('#itn').value=i.name||'';$('#itc').value=i.cost||'';$('#itd').value=i.desc||'';$('#itr').value=i.rules||'';$('#itw').value=i.weight||'';$('#itx').value=NT[id]||'';$('#itb').textContent='Save item';placeForm();$('#itn').focus({preventScroll:true});$('#shform').scrollIntoView({block:'nearest'})}}
+    if(a==='itcancel'){editIt=null;clearForm();placeForm();$('#itm').textContent=''}
+    if(a==='itdel'&&confirm('Delete this item?')){if(editIt===id){editIt=null;clearForm();placeForm()}const rt=(items.find(x=>x.id===id)||{})._r||code;deleteDoc(doc(db,'sessions',rt,'items',id));deleteDoc(doc(db,'sessions',rt,'notes',id))}
     if(a==='imp'){
       const msg=$('#imm'),sh=shops.find(x=>x.id===selShop);
       if(!sh){msg.className='note err';msg.textContent='Select a shop first.';return}
