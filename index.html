@@ -350,6 +350,33 @@ body.dmv .btn{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:
 body.dmv select,body.dmv input:not([type=checkbox]):not([type=range]):not([type=file]){max-width:100%;min-width:0;text-overflow:ellipsis}
 .card .qty{margin:0;font:700 clamp(12px,2vmin,20px) Cinzel,serif;color:#6b2d12}
 .card.out{opacity:.5}
+.pvt{flex-wrap:wrap;justify-content:center}.pvt .btn{padding:8px 12px}
+.take{margin-top:10px;text-align:center}
+.inv{display:flex;flex-direction:column;gap:10px}
+.invh{display:flex;justify-content:space-between;align-items:center;color:var(--gold);font:700 20px Cinzel,serif}
+.ivcap{background:#2a170d;border:2px solid var(--gold2);border-radius:8px;padding:8px 10px;color:var(--parch)}
+.invbar{height:14px;border-radius:7px;background:#14100c;overflow:hidden}
+.invbar i{display:block;height:100%;background:linear-gradient(#f0cc6a,#b5801f)}
+.invbar.over i{background:linear-gradient(#e0603c,#9b2a12)}
+.ivnum{font:700 18px Cinzel,serif;margin-top:4px}.ivnum.over{color:#ff8a6a}
+.ivsub{font-size:12px;opacity:.8}
+.ivsec{background:linear-gradient(#efe3bf,#dcc994);border:2px solid var(--gold2);border-radius:8px;padding:8px;color:var(--ink)}
+.ivsec h4{margin:0 0 6px;font:700 13px Cinzel,serif}
+.ivgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.ivs{min-height:56px;border:2px dashed #8a6a24aa;border-radius:6px;padding:5px;display:flex;align-items:center;justify-content:center;text-align:center;background:#f6edcf88}
+.ivs .lbl,.ivpack .lbl{font-size:12px;opacity:.55}
+.ivs.valid,.ivpack.valid{border-color:#2f7a2f;background:#dff0c8cc;animation:ivp 1.1s ease-in-out infinite alternate}
+@keyframes ivp{to{box-shadow:0 0 0 3px #2f7a2f55}}
+.ivi{position:relative;width:100%;box-sizing:border-box;min-height:44px;background:#2a170d;color:var(--parch);border:2px solid transparent;border-radius:6px;padding:6px 8px;font-size:13px;line-height:1.15;cursor:pointer;display:flex;flex-direction:column;justify-content:center;text-align:left}
+.ivi b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ivi.on{border-color:#ffd25a;box-shadow:0 0 0 2px #ffd25a99}
+.ivi .sl{position:absolute;top:-7px;right:-4px;background:#b5801f;color:#1a0f06;border-radius:9px;font:700 11px Cinzel,serif;padding:0 6px}
+.ivi .q{font-size:11px;opacity:.8}
+.ivpack{min-height:70px;display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;padding:6px;border:2px dashed #8a6a24aa;border-radius:6px;align-content:start}
+.invact{position:sticky;bottom:8px;background:#2a170d;color:var(--parch);border:2px solid var(--gold);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;box-shadow:0 6px 18px #000c}
+.invact p{margin:0}
+.ivtoast{background:#2a170d;color:var(--gold);border:2px solid var(--gold2);border-radius:8px;padding:8px 12px;text-align:center}
+.ivpick{display:flex;flex-direction:column;gap:10px}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -410,9 +437,9 @@ async function display(code,pv){
   let IT=[],SH={},sid=null,su1=null,su2=null,lo=null,dis=null,prevS=null,gk='',dk='';
   const renderShop=()=>{
     $('#shopt').textContent=SH.name||'';
-    {const gh=IT.map(i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${i.img?`<img src="${i.img}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${i.weight?`<p class="wgt">${esc(i.weight)}</p>`:''}${i.qty!=null?`<p class="qty">${i.qty>0?'×'+i.qty:'Sold out'}</p>`:''}</div>`).join('');if(gh!==gk){gk=gh;$('#shopg').innerHTML=gh}}
+    {const gh=IT.map(i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${i.img?`<img src="${i.img}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}<p class="wgt">${slotTxt(i)}</p>${i.qty!=null?`<p class="qty">${i.qty>0?'×'+i.qty:'Sold out'}</p>`:''}</div>`).join('');if(gh!==gk){gk=gh;$('#shopg').innerHTML=gh}}
     const oid=lo||(d.shopItemId&&d.shopItemId!==dis?d.shopItemId:null),it=IT.find(x=>x.id===oid);
-    {const dh=it?`<div class="sheet"><div class="sin">${it.img?`<div class="pic2"><img src="${it.img}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}${it.weight?`<div class="wt">Weight: ${esc(it.weight)}</div>`:''}${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`:'';if(dh!==dk){dk=dh;$('#shopd').innerHTML=dh}}
+    {const dh=it?`<div class="sheet"><div class="sin">${it.img?`<div class="pic2"><img src="${it.img}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}<div class="wt">Slots: ${slotTxt(it)}</div>${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`:'';if(dh!==dk){dk=dh;$('#shopd').innerHTML=dh}}
     $('#shopd').classList.toggle('on',!!it);
   };
   const watchShop=(id,rt)=>{
@@ -815,7 +842,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-05 ah';
+const VER='2026-11-05 ai';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -1114,6 +1141,15 @@ function viewMenu(){
 const INFX=[['','No weather',''],['clear','Clear sky','w'],['sunny','Sunny','w'],['hot','Hot (glare)','w'],['frost','Frosty','w'],['cloudy','Cloudy','w'],['overcast','Overcast','w'],['fog','Fog','w'],['drizzle','Drizzle','w'],['rain','Rain','w'],['downpour','Downpour','w'],['storm','Thunderstorm','w'],['lsnow','Light snow','w'],['snow','Snowfall','w'],['blizzard','Blizzard','w'],['drip','Drippy / wet','a'],['torch','Torchlit','a'],['magic','Magical','a'],['dark','Underdark','a'],['haunt','Haunted','a'],['water','Underwater','a'],['fire','Lava / fiery','a'],['moon','Moonlit','a'],['fly','Fireflies','a'],['fey','Feywild','a']];
 const MONBD=[['dark','Dark backdrop'],['light','Light backdrop'],['scene','Keep the scene']];
 const MONFX=[['','No effect'],['poison','Poison wafts'],['acid','Dripping acid'],['lightning','Lightning'],['frost','Frost and cold breath'],['claws','Claw slashes'],['sword','Sword slashes'],['arrows','Flying arrows'],['smoke','Dark smoke'],['webs','Webs and a crawling spider'],['vignette','Vignette (dark)'],['redvig','Vignette (red)']];
+// Inventory rules. Slots instead of weight: 0 = free (items under 1 lb), otherwise 1 to 3 (armor 1 to 4). Potions and similar stack 3 per slot.
+const KINDS=[['item','Item'],['armor','Armor'],['wearHead','Worn: head'],['wearBody','Worn: body'],['wearFeet','Worn: feet']];
+const stackOf=i=>i.stack!=null?!!i.stack:/potion|elixir|draught|tonic|salve|vial|flask/i.test(i.name||'');
+const slotsOf=i=>{if(i.slots!=null&&i.slots!=='')return Math.max(0,+i.slots||0);if(stackOf(i)&&!i.weight)return 1;const m=/([\d.,]+)\s*(?:lb|lbs|pound)/i.exec(i.weight||'');if(!m)return 0;const w=parseFloat(m[1].replace(',','.'));const n=w<1?0:w<=10?1:w<=25?2:3;return stackOf(i)?Math.max(1,n):n};   // a stack of up to 3 always takes at least one slot
+const slotTxt=i=>{const n=slotsOf(i);return(n?n+(n===1?' slot':' slots'):'Free')+(stackOf(i)?' (3 per slot)':'')};
+const invCap=c=>(parseInt(c.str)||10)+3+(c.ath?(parseInt(c.pb)||2):0);   // full Strength score + 3 + PB if proficient in Athletics
+const invUsed=inv=>Object.values(inv||{}).filter(Boolean).reduce((a,e)=>a+(+e.slots||0),0);
+const canPlace=(e,pos,c)=>{if(pos==='pack')return true;if(pos==='head')return e.kind==='wearHead';if(pos==='torso')return e.kind==='wearBody';if(pos==='feet')return e.kind==='wearFeet';if(pos==='armor')return e.kind==='armor';
+  if(e.kind&&e.kind!=='item')return false;if(/^b[1-6]$/.test(pos))return true;const m=/^p(\d+)$/.exec(pos);return!!m&&+m[1]<=(c.pouch||1)&&(+e.slots||0)<=1};
 const INTOD=[['','Day'],['dusk','Dusk'],['night','Night']];
 const AMBS=['drip','torch','magic','dark','haunt','water','fire','moon','fly','fey'];
 const todFor=L=>{const e=effWx(L);return(e.area==='none'||e.amb)?'day':todOf(L)};
@@ -1135,22 +1171,79 @@ function wxBoxHTML(cur,w,L,role,day,sel,area,open){
 }
 function player(code){
   app.onclick=null;
-  app.innerHTML='<div class="pv"><div class="pvh"><h1>Infini DnD</h1><div class="pvt"><button class="btn sm" data-t="quest">Quest</button><button class="btn sm" data-t="weather">Weather</button><button class="btn sm" data-t="shops">Shops</button><button class="btn sm alt" data-vm="1">Views</button></div></div><div id="pvb"></div><div id="pvd"></div></div>';
+  app.innerHTML='<div class="pv"><div class="pvh"><h1>Infini DnD</h1><div class="pvt"><button class="btn sm" data-t="quest">Quest</button><button class="btn sm" data-t="weather">Weather</button><button class="btn sm" data-t="shops">Shops</button><button class="btn sm" data-t="inv">Inventory</button><button class="btn sm alt" data-vm="1">Views</button></div></div><div id="pvb"></div><div id="pvd"></div></div>';
   let d={},tab=sessionStorage.getItem('pvtab')||'quest',Q=null,qid=null,qu=null,psel=null,open=null,fxSel=null,last='',lastD='';
   const SHP={},subs={};
-  const card=i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${i.img?`<img src="${i.img}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${i.weight?`<p class="wgt">${esc(i.weight)}</p>`:''}${i.qty!=null?`<p class="qty">${i.qty>0?'×'+i.qty:'Sold out'}</p>`:''}</div>`;
+  const card=i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${i.img?`<img src="${i.img}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}<p class="wgt">${slotTxt(i)}</p>${i.qty!=null?`<p class="qty">${i.qty>0?'×'+i.qty:'Sold out'}</p>`:''}</div>`;
+  // Inventory: one pool of slots (STR + 3 + PB). Every item has a place: worn (free), armor, 6 body positions, belt pouch, backpack.
+  let CH=[],cid=localStorage.getItem('char-'+code)||'',pick=false,esel=null,info=false,toast='',tt=0;
+  const me=()=>CH.find(x=>x.id===cid)||null;
+  const raw=e=>{const{id,...r}=e;return r};
+  const entries=c=>Object.entries(c.inv||{}).filter(([k,v])=>v).map(([k,v])=>({...v,id:k}));
+  const where=(e,c)=>e.pos&&e.pos!=='pack'&&canPlace(e,e.pos,c)?e.pos:'pack';
+  const say=m=>{toast=m;clearTimeout(tt);tt=setTimeout(()=>{toast='';render()},2400);render()};
+  const saveInv=(c,patch)=>{c.inv={...(c.inv||{}),...patch};setDoc(doc(db,'sessions',code,'chars',c.id),{inv:patch},{merge:true});render()};
+  const moveTo=(c,eid,pos)=>{
+    const es=entries(c),e=es.find(x=>x.id===eid);if(!e)return;const from=where(e,c);if(from===pos)return;
+    const occ=pos==='pack'?null:es.find(x=>x.id!==eid&&where(x,c)===pos),patch={[eid]:{...raw(e),pos}};
+    if(occ){if(!canPlace(occ,from,c)){say('That box is taken.');return}patch[occ.id]={...raw(occ),pos:from}}
+    saveInv(c,patch);
+  };
+  const takeItem=id=>{
+    const c=me();if(!c){say('Pick a character under Inventory first.');return}
+    const keys=d.pshops||[],k=keys.includes(psel)?psel:keys[0],it=((SHP[k]||{}).items||[]).find(x=>x.id===id);if(!it)return;
+    if(it.qty===0){say('Sold out.');return}
+    const rt=k.split(':')[0],ref=rt+':'+it.id,es=entries(c),st=stackOf(it)?es.find(x=>x.ref===ref&&x.stack&&x.qty<3):null;
+    if(st)saveInv(c,{[st.id]:{...raw(st),qty:st.qty+1}});
+    else saveInv(c,{[Math.random().toString(36).slice(2,9)]:{ref,name:it.name,desc:it.desc||'',rules:it.rules||'',slots:slotsOf(it),stack:stackOf(it),kind:it.kind||'item',qty:1,pos:'pack'}});
+    if(it.qty!=null)updateDoc(doc(db,'sessions',rt,'items',it.id),{qty:it.qty-1});
+    open=null;say('Added '+it.name+' to your backpack.');
+  };
+  const invHTML=()=>{
+    const c=me();
+    if(!CH.length)return'<div class="pvempty">No characters yet. Ask the DM to create one.</div>';
+    if(!c||pick)return'<div class="pvname">Who are you?</div><div class="ivpick">'+CH.map(x=>`<button class="btn" data-pick="${x.id}">${esc(x.name)} <small>STR ${x.str||10}</small></button>`).join('')+'</div>';
+    const es=entries(c),T=invCap(c),U=invUsed(c.inv),sel=es.find(x=>x.id===esel),over=U>T;
+    const item=e=>`<div class="ivi${e.id===esel?' on':''}" data-e="${e.id}"><b>${esc(e.name)}</b><span class="sl">${e.slots?e.slots:'free'}</span>${e.qty>1?`<span class="q">×${e.qty}</span>`:''}</div>`;
+    const box=(pos,label)=>{const e=es.find(x=>where(x,c)===pos),valid=sel&&canPlace(sel,pos,c)&&!(e&&e.id===sel.id)&&where(sel,c)!==pos;return`<div class="ivs${valid?' valid':''}" data-pos="${pos}">${e?item(e):`<span class="lbl">${label}</span>`}</div>`};
+    const pack=es.filter(x=>where(x,c)==='pack'),packValid=sel&&where(sel,c)!=='pack';
+    let h=`<div class="inv">${toast?`<div class="ivtoast">${esc(toast)}</div>`:''}<div class="invh"><b>${esc(c.name)}</b><button class="btn sm alt" data-switch="1">Switch</button></div>
+      <div class="ivcap"><div class="invbar${over?' over':''}"><i style="width:${Math.min(100,U/T*100)}%"></i></div><div class="ivnum${over?' over':''}">${U} / ${T} slots${over?' (over by '+(U-T)+')':''}</div><div class="ivsub">STR ${c.str||10} + 3${c.ath?' + PB '+(c.pb||2)+' (Athletics)':''}</div></div>
+      <div class="ivsec"><h4>Worn and armor</h4><div class="ivgrid">${box('head','Head')}${box('torso','Body')}${box('feet','Feet')}${box('armor','Armor')}</div></div>
+      <div class="ivsec"><h4>On the body</h4><div class="ivgrid">${[1,2,3,4,5,6].map(n=>box('b'+n,'Body '+n)).join('')}</div></div>
+      <div class="ivsec"><h4>Belt pouch</h4><div class="ivgrid">${Array.from({length:c.pouch||1},(_,i)=>box('p'+(i+1),'Pouch '+(i+1))).join('')}</div></div>
+      <div class="ivsec"><h4>Backpack</h4><div class="ivpack${packValid?' valid':''}" data-pos="pack">${pack.map(item).join('')||'<span class="lbl">Empty. Take items from a shop.</span>'}</div></div>`;
+    if(sel)h+=`<div class="invact"><b>${esc(sel.name)}</b><small>${esc(slotTxt(sel))}${sel.kind&&sel.kind!=='item'?', '+esc((KINDS.find(k=>k[0]===sel.kind)||[0,''])[1]):''}</small>${info&&sel.desc?`<p>${esc(sel.desc)}</p>`:''}${info&&sel.rules?`<p><b>Statblock:</b> ${esc(sel.rules)}</p>`:''}<div class="row"><button class="btn sm alt" data-ia="info">${info?'Hide info':'Info'}</button>${sel.qty>1?'<button class="btn sm alt" data-ia="one">Drop one</button>':''}<button class="btn sm alt" data-ia="drop">Drop</button><button class="btn sm alt" data-ia="clear">Done</button></div><small>Tap a highlighted box to move it there.</small></div>`;
+    return h+'</div>';
+  };
+  const invTap=e=>{
+    const c=me();if(!c)return;const es=entries(c),sel=es.find(x=>x.id===esel),ent=e.target.closest('[data-e]'),pos=e.target.closest('[data-pos]');
+    if(sel&&pos&&pos.dataset.pos!==where(sel,c)&&canPlace(sel,pos.dataset.pos,c)&&!(ent&&ent.dataset.e===sel.id)){moveTo(c,sel.id,pos.dataset.pos);esel=null;info=false;render();return}
+    if(ent){esel=esel===ent.dataset.e?null:ent.dataset.e;info=false;render();return}
+    if(sel&&pos)say("That item can't go there.");
+  };
+  const invAct=a=>{
+    const c=me();if(!c)return;const e=entries(c).find(x=>x.id===esel);if(!e)return;
+    if(a==='info'){info=!info;render();return}
+    if(a==='clear'){esel=null;info=false;render();return}
+    if(a==='one'){saveInv(c,{[e.id]:{...raw(e),qty:Math.max(1,e.qty-1)}});return}
+    if(a==='drop'&&confirm('Drop '+e.name+'?')){saveInv(c,{[e.id]:null});esel=null;info=false}
+  };
   const render=()=>{
     document.querySelectorAll('.pvt [data-t]').forEach(b=>b.classList.toggle('alt',b.dataset.t!==tab));
     const keys=d.pshops||[];let h='',sheet='';
     if(tab==='quest')h=Q?`<div class="qbig"><i class="pin"></i><div class="in"><h3>${esc(Q.title||'')}</h3><p>${esc(Q.text||'')}</p></div></div>`:'<div class="pvempty">No quest selected.</div>';
     else if(tab==='weather'){const ew=effWx(d);h=ew.on?wxBoxHTML(ew.wx,Math.min(3,ew.wind|0),d,'player',null,fxSel):'<div class="pvempty">No weather here.</div>'}
+    else if(tab==='inv')h=invHTML();
     else if(!keys.length)h='<div class="pvempty">No shops are open.</div>';
     else{
       const k=keys.includes(psel)?psel:keys[0],S=SHP[k]||{name:'',items:[]};
       h=(keys.length>1?'<div class="row" style="margin-bottom:10px">'+keys.map(x=>`<button class="btn sm ${x===k?'':'alt'}" data-s="${x}">${esc((SHP[x]||{}).name||'...')}</button>`).join('')+'</div>':'')+`<div class="pvname">${esc(S.name)}</div><div class="pvg">${S.items.map(card).join('')}</div>`;
       const it=S.items.find(x=>x.id===open);
-      if(it)sheet=`<div class="sheet"><div class="sin">${it.img?`<div class="pic2"><img src="${it.img}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}${it.weight?`<div class="wt">Weight: ${esc(it.weight)}</div>`:''}${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`;
+      if(it)sheet=`<div class="sheet"><div class="sin">${it.img?`<div class="pic2"><img src="${it.img}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}<div class="wt">Slots: ${slotTxt(it)}</div>${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`;
     }
+    if(sheet&&CH.length){const k2=keys.includes(psel)?psel:keys[0],it2=((SHP[k2]||{}).items||[]).find(x=>x.id===open);if(it2&&it2.qty!==0)sheet=sheet.replace(/<\/div><\/div>$/,'<div class="take"><button class="btn" data-take="'+it2.id+'">Take</button></div></div></div>')}
+    if(toast&&tab!=='inv')h='<div class="ivtoast">'+esc(toast)+'</div>'+h;
     const key=tab+'|'+h;if(key!==last){last=key;$('#pvb').innerHTML=h}
     if(sheet!==lastD){lastD=sheet;$('#pvd').innerHTML=sheet;$('#pvd').classList.toggle('on',!!sheet)}
   };
@@ -1161,8 +1254,14 @@ function player(code){
       subs[k]=[onSnapshot(doc(db,'sessions',rt,'shops',id),s=>{if(SHP[k])SHP[k].name=(s.data()||{}).name||'';render()}),
         onSnapshot(query(collection(db,'sessions',rt,'items'),where('shopId','==',id)),s=>{if(SHP[k])SHP[k].items=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>a.created-b.created);render()})]})};
   unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};syncQ();syncS();render()}));
+  unsubs.push(onSnapshot(collection(db,'sessions',code,'chars'),s=>{CH=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(a.created||0)-(b.created||0));if(cid&&!CH.some(x=>x.id===cid))cid='';if(!cid&&CH.length===1){cid=CH[0].id;localStorage.setItem('char-'+code,cid)}render()}));
   unsubs.push(()=>{qu&&qu();Object.values(subs).forEach(a=>a.forEach(u=>u()))});
   app.onclick=e=>{
+    const tk=e.target.closest('[data-take]');if(tk){takeItem(tk.dataset.take);return}
+    const pk=e.target.closest('[data-pick]');if(pk){cid=pk.dataset.pick;localStorage.setItem('char-'+code,cid);pick=false;esel=null;render();return}
+    if(e.target.closest('[data-switch]')){pick=true;esel=null;render();return}
+    const ia=e.target.closest('[data-ia]');if(ia){invAct(ia.dataset.ia);return}
+    if(tab==='inv'&&(e.target.closest('[data-e]')||e.target.closest('[data-pos]'))){invTap(e);return}
     const fb=e.target.closest('[data-fx]');if(fb){fxSel=fxSel===fb.dataset.fx?null:fb.dataset.fx;render();return}
     if(e.target.closest('[data-vm]')){viewMenu();return}
     const t=e.target.closest('[data-t]');if(t){tab=t.dataset.t;sessionStorage.setItem('pvtab',tab);render();return}
@@ -1266,6 +1365,10 @@ function dm(code){
   <div class="row"><button class="btn" id="mup" data-a="mplay" disabled>Play</button><button class="btn sm alt" id="mus" data-a="mstop" disabled>Stop</button><button class="btn sm" id="mloop" data-a="mloop">Loop</button><input id="muvol" type="range" min="0" max="100" value="70" title="Volume on this device" style="width:110px"></div>
   <div id="mue"></div>
   <div class="edit" style="margin-top:8px"><input id="mulink" placeholder="Spotify link or audio file for this background or map" style="width:100%" disabled><label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input id="autitle" type="checkbox" disabled> Show the name as a title card on the tablet</label></div></details>
+  <details class="panel edit" id="d-ch" open><summary><h2>Characters <span id="chn"></span></h2></summary>
+  <p class="note" style="margin:0 0 8px">Players pick one of these on their phone. Slots = full Strength + 3 + PB if proficient in Athletics.</p>
+  <div class="row"><input id="chname" placeholder="Name" style="flex:2 1 140px"><label>STR <input id="chstr" type="number" min="1" max="30" value="10" style="width:70px"></label><label>PB <input id="chpb" type="number" min="2" max="9" value="2" style="width:60px"></label><label><input id="chath" type="checkbox"> Athletics</label><button class="btn" data-a="chadd">Add character</button></div>
+  <div id="chl" style="margin-top:10px"></div></details>
   <details class="panel" id="d-wx" open><summary><h2>Weather <span class="eye" id="e-wx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
   <div id="wxres"></div>
   <div class="row" style="margin-top:10px"><button class="btn" id="wxds" data-a="wxd" data-id="s">Sun</button><button class="btn" id="wxdc" data-a="wxd" data-id="c">Cloud</button><button class="btn" id="wxdr" data-a="wxd" data-id="r">Rain</button><button class="btn" data-a="wxwr">Wind</button></div>
@@ -1289,7 +1392,7 @@ function dm(code){
   <p class="note edit" style="margin:0 0 8px">Use a shop for stores, loot or party inventory. Tap a card on the tablet to read it.</p>
   <div class="row edit"><input id="shn" placeholder="Shop or loot list name"><label><input id="shsh" type="checkbox" checked> Shared</label><button class="btn" data-a="shadd">Add shop</button></div>
   <div class="row" id="shl" style="margin:10px 0"></div><div class="row" id="shb"></div>
-  <div class="edit" id="shform" style="margin-top:10px"><div class="row"><input id="itn" placeholder="Item name" style="flex:2 1 160px"><input id="itc" placeholder="Cost, e.g. 50 gp" style="flex:1 1 110px"><input id="itw" placeholder="Weight" style="flex:1 1 90px"></div>
+  <div class="edit" id="shform" style="margin-top:10px"><div class="row"><input id="itn" placeholder="Item name" style="flex:2 1 160px"><input id="itc" placeholder="Cost, e.g. 50 gp" style="flex:1 1 110px"><input id="itw" type="hidden"><input id="its" type="number" min="0" max="4" placeholder="Slots (auto)" style="flex:1 1 100px"><select id="itk" style="flex:1 1 130px">${KINDS.map(k=>`<option value="${k[0]}">${k[1]}</option>`).join('')}</select><label style="display:flex;gap:6px;align-items:center"><input id="itst" type="checkbox"> Stacks 3 per slot</label></div>
   <textarea id="itd" rows="2" placeholder="Description" style="margin-top:8px"></textarea><textarea id="itr" rows="2" placeholder="Statblock" style="margin-top:8px"></textarea><textarea id="itx" rows="2" placeholder="DM notes (never shown to players)" style="margin-top:8px"></textarea>
   <div class="row" style="margin:8px 0"><input id="iti" type="file" accept="image/*"><button class="btn" id="itb" data-a="itsave">Add item</button><button class="btn alt" id="itcx" data-a="itcancel" style="display:none">Cancel</button></div><p class="note" id="itm"></p></div>
   <details class="edit" id="d-imp" style="margin-top:10px"><summary><h2 style="font-size:17px">Import items</h2></summary>
@@ -1317,7 +1420,7 @@ function dm(code){
     $('#cb').textContent='('+bg.length+')';$('#cn').textContent='('+np.length+')';$('#cq').textContent='('+qs.length+')';
     
     
-    shopDraw();wxDraw();ctlDraw();muDraw();pvDraw();inDraw();monDraw();
+    shopDraw();wxDraw();ctlDraw();muDraw();pvDraw();inDraw();monDraw();chDraw();
     const qb=(a,id,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#qs').innerHTML=qs.map(q=>`<div class="qrow ${q.posted?'on':''}"><div class="qt"><b>${esc(q.title||'Untitled')}${q.done?' (done)':''}</b><p>${esc(q.text||'')}</p></div><div class="row">${qb('qcur',q.id,live.curQuest===q.id?'Current':'Set current',live.curQuest===q.id?0:1)}${qb('qpin',q.id,q.posted?'Unpin':'Pin')}${qb('qdone',q.id,q.done?'Reopen':'Done',1)}${qb('qedit',q.id,'Edit',1,1)}${qb('qdel',q.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No quests yet.</p>';
   };
@@ -1436,6 +1539,13 @@ function dm(code){
   function pvAuto(){const v=curView();if(v!=='map')pvPl=false;if(v==='map'&&lastV!==null&&lastV!=='map'&&!pvOn){pvOn=true;pvSave()}lastV=v}
   // look of a monster: backdrop, effect, area look and weather (kept in its own small document). The first monster on screen sets the stage.
   const MF=doc(db,'sessions',code,'monfx','cfg');let MFD={},monSel=null;
+  // characters and what they carry
+  const CHC=collection(db,'sessions',code,'chars');let CHS=[];
+  function chDraw(){
+    const box=$('#chl');if(!box)return;$('#chn').textContent=CHS.length?'('+CHS.length+')':'';
+    box.innerHTML=CHS.map(c=>{const T=invCap(c),U=invUsed(c.inv),n=Object.values(c.inv||{}).filter(Boolean).length,inp=(k,w,v,mn,mx)=>`<input data-id="${c.id}" data-k="${k}" type="number" min="${mn}" max="${mx}" value="${v}" style="width:${w}px">`;
+      return`<div class="qrow"><div class="qt" style="flex:1 1 140px"><b>${esc(c.name)}</b><br><small${U>T?' style="color:#a1281a;font-weight:700"':''}>Slots ${U} / ${T}${U>T?' (over)':''}, ${n} items</small></div><div class="row"><label>STR ${inp('str',64,c.str||10,1,30)}</label><label>PB ${inp('pb',56,c.pb||2,2,9)}</label><label><input data-id="${c.id}" data-k="ath" type="checkbox"${c.ath?' checked':''}> Athletics</label><label>Pouch ${inp('pouch',56,c.pouch||1,1,8)}</label><button class="btn sm alt edit" data-a="chdel" data-id="${c.id}">Delete</button></div></div>`}).join('')||'<p class="note">No characters yet.</p>';
+  }
   function monDraw(){
     const box=$('#monfx');if(!box)return;
     const mons=imgs.filter(x=>x.type==='monster'),vis=(live.visibleNpcIds||[]).filter(id=>mons.some(x=>x.id===id));
@@ -1540,6 +1650,8 @@ function dm(code){
   unsubs.push(onSnapshot(ID,s=>{IC={slides:[],secs:6,music:'',open:'fog',...(s.exists()?s.data():{})};inDraw()}));
   unsubs.push(onSnapshot(MF,s=>{MFD=s.exists()?s.data():{};monDraw()}));
   unsubs.push(onSnapshot(UF,s=>{UD=s.exists()?s.data():{};draw()}));
+  unsubs.push(onSnapshot(CHC,s=>{CHS=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(a.created||0)-(b.created||0));chDraw()}));
+  $('#chl').onchange=e=>{const t=e.target;if(!t.dataset||!t.dataset.k)return;const v=t.type==='checkbox'?t.checked:Math.max(1,parseInt(t.value)||1);updateDoc(doc(db,'sessions',code,'chars',t.dataset.id),{[t.dataset.k]:v})};
   $('#monfx').onchange=e=>{const t=e.target,id=$('#monfx').dataset.id;if(!t.dataset||!t.dataset.k||!id)return;const cur={bd:'dark',fx:'',amb:'',wx:'',...(MFD[id]||{})};cur[t.dataset.k]=t.value;MFD={...MFD,[id]:cur};setDoc(MF,{[id]:cur},{merge:true})};
   $('#inopen').onchange=e=>saveI({open:e.target.value});
   $('#insecs').onchange=e=>saveI({secs:Math.min(20,Math.max(3,+e.target.value||6))});
@@ -1578,7 +1690,7 @@ function dm(code){
   }
   // the item form moves to sit right below the item being edited, and back to its place when done
   let shHome=null;
-  const clearForm=()=>{['#itn','#itc','#itw','#itd','#itr','#itx','#iti'].forEach(k=>{const e=$(k);if(e)e.value=''});$('#itb').textContent='Add item'};
+  const clearForm=()=>{['#itn','#itc','#itw','#itd','#itr','#itx','#iti','#its'].forEach(k=>{const e=$(k);if(e)e.value=''});$('#itk').value='item';$('#itst').checked=false;$('#its').placeholder='Slots (auto)';$('#itb').textContent='Add item'};
   function placeForm(){
     const f=$('#shform');if(!f)return;
     if(!shHome){shHome=document.createElement('div');shHome.className='note';shHome.style.margin='0';f.before(shHome)}
@@ -1595,7 +1707,7 @@ function dm(code){
     $('#csh').textContent='('+shops.length+')';
     $('#shl').innerHTML=shops.map(x=>`<button class="btn sm ${x.id===selShop?'':'alt'}" data-a="shsel" data-id="${x.id}">${esc(x.name)}${x._r==='_shared'?' <small>shared</small>':''}${(live.pshops||[]).includes((x._r||code)+':'+x.id)?EYE_SM:''} (${items.filter(i=>i.shopId===x.id).length})</button>`).join('')||'<span class="note">No shops yet.</span>';
     $('#shb').innerHTML=sel?bt('shpl',sel.id,(live.pshops||[]).includes((sel._r||code)+':'+sel.id)?'Hide from players':'Show to players',!(live.pshops||[]).includes((sel._r||code)+':'+sel.id))+bt('shren',sel.id,'Rename',1,1)+bt('shdel',sel.id,'Delete shop',1,1):'';
-    $('#shi').innerHTML=sel?items.filter(i=>i.shopId===sel.id).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''}" data-item="${i.id}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${i.img?`<img src="${i.img}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${i.weight?' / '+esc(i.weight):''}<p>${esc(i.desc||'')}</p>${i.qty!=null?`<p style="margin:2px 0;font-weight:700">Stock: ${i.qty}</p>`:''}${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row"><span class="edit" style="display:inline-flex;align-items:center;gap:6px">${bt('qtym',i.id,'−',1)}<b style="min-width:1.6em;text-align:center">${i.qty==null?'–':i.qty}</b>${bt('qtyp',i.id,'+',1)}</span>${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':'';
+    $('#shi').innerHTML=sel?items.filter(i=>i.shopId===sel.id).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''}" data-item="${i.id}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${i.img?`<img src="${i.img}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${' / '+esc(slotTxt(i))}${i.kind&&i.kind!=='item'?' / '+esc((KINDS.find(k=>k[0]===i.kind)||[0,''])[1]):''}<p>${esc(i.desc||'')}</p>${i.qty!=null?`<p style="margin:2px 0;font-weight:700">Stock: ${i.qty}</p>`:''}${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row"><span class="edit" style="display:inline-flex;align-items:center;gap:6px">${bt('qtym',i.id,'−',1)}<b style="min-width:1.6em;text-align:center">${i.qty==null?'–':i.qty}</b>${bt('qtyp',i.id,'+',1)}</span>${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':'';
     placeForm();
   }
   let shS={},itS={},ntS={},NT={};
@@ -1651,6 +1763,8 @@ function dm(code){
   const set=o=>setDoc(L,o,{merge:true});
   app.onclick=async e=>{
     const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,id=t.dataset.id;
+    if(a==='chadd'){const name=$('#chname').value.trim();if(!name)return;setDoc(doc(CHC),{name,str:parseInt($('#chstr').value)||10,pb:parseInt($('#chpb').value)||2,ath:$('#chath').checked,pouch:1,inv:{},created:Date.now()});$('#chname').value='';$('#chath').checked=false}
+    if(a==='chdel'&&confirm('Delete this character and what they carry?'))deleteDoc(doc(db,'sessions',code,'chars',id));
     if(a==='more'){EXPD[id]=!EXPD[id];localStorage.setItem('expd',JSON.stringify(EXPD));draw();return}
     if(a==='bg'||a==='map')useId(id);
     if(a==='bg'){if(live.backgroundId!==id&&curView()==='scene'){autoMusic(id);autoCard(id)}set({backgroundId:live.backgroundId===id?null:id,bgWx:wxOf(id),bgOff:false})}
@@ -1713,14 +1827,14 @@ function dm(code){
       if(!selShop){msg.className='note err';msg.textContent='Select or add a shop first.';return}
       if(!name){msg.className='note err';msg.textContent='Give the item a name.';return}
       try{msg.className='note';msg.textContent='Saving...';
-        const f=$('#iti').files[0],img=f?await shrink(f,480):null,body={name,cost:$('#itc').value.trim(),desc:$('#itd').value.trim(),rules:$('#itr').value.trim(),weight:$('#itw').value.trim(),...(img?{img}:{})};
+        const f=$('#iti').files[0],img=f?await shrink(f,480):null,body={name,cost:$('#itc').value.trim(),desc:$('#itd').value.trim(),rules:$('#itr').value.trim(),weight:$('#itw').value.trim(),slots:$('#its').value===''?null:Math.max(0,Math.min(4,parseInt($('#its').value)||0)),kind:$('#itk').value,stack:$('#itst').checked,...(img?{img}:{})};
         const rt=editIt?((items.find(x=>x.id===editIt)||{})._r||code):((shops.find(x=>x.id===selShop)||{})._r||code),nid=editIt||doc(collection(db,'sessions',rt,'items')).id;
         if(editIt)await updateDoc(doc(db,'sessions',rt,'items',nid),body);
         else await setDoc(doc(db,'sessions',rt,'items',nid),{shopId:selShop,img:'',created:Date.now(),...body});
         await setDoc(doc(db,'sessions',rt,'notes',nid),{text:$('#itx').value.trim()});
         editIt=null;clearForm();placeForm();msg.textContent='Saved.';
       }catch(err){msg.className='note err';msg.textContent='Could not save: '+err.message}}
-    if(a==='itedit'){const i=items.find(x=>x.id===id);if(i){editIt=id;$('#itn').value=i.name||'';$('#itc').value=i.cost||'';$('#itd').value=i.desc||'';$('#itr').value=i.rules||'';$('#itw').value=i.weight||'';$('#itx').value=NT[id]||'';$('#itb').textContent='Save item';placeForm();$('#itn').focus({preventScroll:true});$('#shform').scrollIntoView({block:'nearest'})}}
+    if(a==='itedit'){const i=items.find(x=>x.id===id);if(i){editIt=id;$('#itn').value=i.name||'';$('#itc').value=i.cost||'';$('#itd').value=i.desc||'';$('#itr').value=i.rules||'';$('#itw').value=i.weight||'';$('#its').value=i.slots!=null?i.slots:'';$('#its').placeholder='auto: '+slotsOf({weight:i.weight});$('#itk').value=i.kind||'item';$('#itst').checked=stackOf(i);$('#itx').value=NT[id]||'';$('#itb').textContent='Save item';placeForm();$('#itn').focus({preventScroll:true});$('#shform').scrollIntoView({block:'nearest'})}}
     if(a==='itcancel'){editIt=null;clearForm();placeForm();$('#itm').textContent=''}
     if(a==='itdel'&&confirm('Delete this item?')){if(editIt===id){editIt=null;clearForm();placeForm()}const rt=(items.find(x=>x.id===id)||{})._r||code;deleteDoc(doc(db,'sessions',rt,'items',id));deleteDoc(doc(db,'sessions',rt,'notes',id))}
     if(a==='imp'){
