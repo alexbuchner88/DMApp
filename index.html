@@ -486,6 +486,18 @@ body.pvflat::before{background:radial-gradient(ellipse at 50% -10%,#33261b 0,#1a
 .ivrat b{min-width:1.6em;text-align:center;font-size:15px}
 .ivrow1{display:flex;align-items:center;gap:8px}.ivname{flex:1 1 auto;min-width:0;overflow-wrap:anywhere;font-size:16px}.ivrow1>.ib,.ivrow1>.ivuse{flex:none}
 .ivrow2{display:flex;align-items:flex-end;gap:10px}.ivinfo2{flex:1;min-width:0}.ivinfo2 p{margin:4px 0 0}.ivrow2>.ib{margin-left:auto;flex:none}
+
+/* phone shop: equal shop buttons, 3 item columns */
+.pvshops{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:6px;margin-bottom:10px}
+.pvshops .btn{width:100%;min-width:0;height:40px;padding:0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;justify-content:center}
+@media(max-width:700px){
+  .pvg{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .pv .card{padding:5px;gap:4px;border-width:2px;border-radius:6px}
+  .pv .card h3{font-size:13px;overflow-wrap:anywhere;hyphens:auto}
+  .pv .card .cost{font-size:11px;padding:.15em .4em}
+  .pv .card .wgt,.pv .card .qty{font-size:11px}
+  .pv .card .ph{font-size:26px}
+}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -951,7 +963,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-05 as';
+const VER='2026-11-11 at';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -1429,7 +1441,7 @@ function player(code){
     if(!CH.length)return'<div class="pvempty">No characters yet. Ask the DM to create one.</div>';
     if(!c||pick)return'<div class="pvname">Who are you?</div><div class="ivpick">'+CH.map(x=>{const T=invCap(x),U=usedOf(x,entries(x)),e=Math.max(0,Math.min(6,parseInt(x.ex)||0));return`<button class="btn ivpc" data-pick="${x.id}"><b>${esc(x.name)}</b><span class="${U>T?'bad':''}" title="Slots">${ICN.cube}${slotFmt(U)} / ${T}</span><span title="Exhaustion">${ICN.tired}${e}</span><span title="Gold">${ICN.purse}${goldFmt(goldOf(x))}</span></button>`}).join('')+'</div>';
     const ex=Math.max(0,Math.min(6,parseInt(c.ex)||0)),es=entries(c),T=invCap(c),U=usedOf(c,es),sel=es.find(x=>x.id===esel),over=U>T,mal=speedMalus(U,T),wr={w:0,r:0,...(c.wr||{})},rm=rmaxOf(c),pn=pouchN(c),qn=quiverN(c),bp=parseInt(c.bp)||0,co={pp:0,gp:0,sp:0,...(c.coins||{})};
-    const item=e=>{const k=entryCost(e,e.epos),meta=(k?`<span>${ICN.cube}${slotFmt(k)}</span>`:'')+(e.max?`<span>${ICN.tally}${e.uses}/${e.max}</span>`:'');return`<div class="ivi${e.id===esel?' on':''}" data-e="${e.id}"><b>${esc(e.name)}</b>${meta?`<em class="ivm">${meta}</em>`:''}</div>`};
+    const item=e=>{const k=entryCost(e,e.epos),meta=(k?`<span class="tip">${ICN.cube}${slotFmt(k)}</span>`:'')+(e.max?`<span>${ICN.tally}${e.uses}/${e.max}</span>`:'');return`<div class="ivi${e.id===esel?' on':''}" data-e="${e.id}"><b>${esc(e.name)}</b>${meta?`<em class="ivm${e.max?'':' tip'}">${meta}</em>`:''}</div>`};
     const cell=(pos,label)=>{const e=es.find(x=>x.epos===pos),valid=sel&&canPlace(sel,pos,c)&&!(e&&e.id===sel.id)&&sel.epos!==pos&&(!e||canPlace(e,sel.epos,c)),cls=GEARIDS.includes(pos)?' carry':WORNIDS.includes(pos)?' worn':'',ic=ICN[PIC[pos]||(pos[0]==='p'?'pouch':'arrow')];return`<div class="ivs ${pos}${cls}${valid?' valid':''}" data-pos="${pos}" title="${label}">${e?item(e):`<span class="lbl">${ic}<em class="${WORDS.includes(pos)?'':'tip'}">${label}</em></span>`}</div>`};
     const win=dw==='gear'?`<div class="dollgrid gear">${GEAR.map(g=>cell(g[0],g[1])).join('')}</div>`:`<div class="dollgrid cl">${CLOTHES.map(g=>cell(g[0],g[1])).join('')}</div>`;
     const lay=packLayout(c,es),lay2=sel?packLayout(c,es,sel.id):null;let cells='';
@@ -1443,7 +1455,7 @@ function player(code){
       ${panel==='purse'?`<div class="ivsec ivupg"><h4>${ICN.purse}<span>Purse</span></h4>${crow('pp',ICN.cp,'Plat')}${crow('gp',ICN.cg,'Gold')}${crow('sp',ICN.cs,'Silver')}<div class="ivsub" style="color:var(--ink)">≈ ${(co.pp*10+co.gp+co.sp/10).toFixed(1)} gp<span class="tip">. 10 silver = 1 gold, 10 gold = 1 plat. Taking coins breaks bigger ones.</span></div>${N.purse?`<div class="ivnote">${esc(N.purse)}</div>`:''}<div class="row"><button class="ib" data-coin="tidy:0" title="Tidy up">${ICN.sparkle}<span>Tidy up</span></button><button class="ib" data-purse="1" title="Close">${ICN.x}<span>Close</span></button></div></div>`:''}
       <div class="doll"><div class="dolltabs"><button class="btn sm ibt ${dw==='gear'?'':'alt'}" data-dw="gear" title="Gear">${ICN.helmet}<span>Gear</span></button><button class="btn sm ibt ${dw==='clothes'?'':'alt'}" data-dw="clothes" title="Clothes">${ICN.shirt}<span>Clothes</span></button></div>${win}<div class="ivsub tip" style="color:var(--ink);margin-top:6px">${dw==='gear'?'Gear counts in full.':'Clothes are worn and count 1 less.'} Tap an empty place to add an item.</div></div>
       <div class="ivsec"><h4>${ICN.pouch}<span>Quick access</span></h4><div class="ivgrid">${qa('p',pn,'Pouch')}${qa('q',qn,'Quiver')}</div><div class="ivsub tip" style="color:var(--ink)">Belt pouch and quiver take ½ items only.</div></div>
-      <div class="ivsec"><h4>${ICN.bag}<span>Backpack</span></h4><div class="ivtog2"><button class="ivwb${wr.w?' on':''}" data-wr="w" title="Water, 1 slot">${ICN.drop}<span>Water</span></button><div class="ivrat" title="Rations, ½ slot each">${ICN.bread}<span>Rations</span><button data-wr="r-" title="One less">${ICN.minus}</button><b>${Math.min(wr.r,rm)}</b><button data-wr="r+" title="One more">${ICN.plus}</button></div></div><div class="ivsub tip" style="color:var(--ink);margin-bottom:6px">Water is 1 slot, each ration is ½ slot.</div><div class="ivpack${sel&&sel.epos!=='pack'?' valid':''}" data-pos="pack">${cells}</div><div class="ivfreeline${over?' over':''}">${ICN.cube}${over?'<span>Over the limit</span>':`<b>${slotFmt(freeN)}</b><span>free</span>`}<span class="tip">Tap a free space to add an item.</span></div></div>`;
+      <div class="ivsec"><h4>${ICN.bag}<span>Backpack</span></h4><div class="ivtog2"><button class="ivwb${wr.w?' on':''}" data-wr="w" title="Water, 1 slot">${ICN.drop}<span>Water</span></button><div class="ivrat" title="Rations, ½ slot each"><span>Rations</span><button data-wr="r-" title="One less">${ICN.minus}</button><b>${Math.min(wr.r,rm)}</b><button data-wr="r+" title="One more">${ICN.plus}</button></div></div><div class="ivsub tip" style="color:var(--ink);margin-bottom:6px">Water is 1 slot, each ration is ½ slot.</div><div class="ivpack${sel&&sel.epos!=='pack'?' valid':''}" data-pos="pack">${cells}</div><div class="ivfreeline${over?' over':''}">${ICN.cube}${over?'<span>Over the limit</span>':`<b>${slotFmt(freeN)}</b><span>free</span>`}<span class="tip">Tap a free space to add an item.</span></div></div>`;
     if(addAt)h+=`<div class="invact ivadd"><b class="ivat">${editing?ICN.pencil:ICN.plus}<span>${editing?'Edit Item':'Add Item'}</span></b>${N.add?`<div class="ivnote">${esc(N.add)}</div>`:''}<input data-af="t" placeholder="Title" value="${esc(dr.t||'')}"><div class="ivfld"><span class="ivfl">Size</span><div class="ivchips">${szl.map(o=>`<button class="chip${String(dr.s)===o[0]?' on':''}" data-chip="${o[0]}">${o[1]}</button>`).join('')}</div></div><div class="ivfld"><span class="ivfl">Uses</span><div class="ivuse"><button data-ustep="-1">${ICN.minus}</button><b>${parseInt(dr.u)||0}</b><button data-ustep="1">${ICN.plus}</button></div><span class="tip">0 for none</span></div><input data-af="n" placeholder="Notes" value="${esc(dr.n||'')}"><div class="row"><button class="ib ok" data-ia="addok">${ICN.check}<span>${editing?'Save':'Add'}</span></button><button class="ib" data-ia="addno">${ICN.x}<span>Cancel</span></button></div></div>`;
     else if(sel){const worn=WORNIDS.includes(sel.epos)&&slotsOf(sel);h+=`<div class="invact"><div class="ivrow1"><b class="ivname">${esc(sel.name)}</b>${sel.ref?'':`<button class="ib" data-ia="edit" title="Edit">${ICN.pencil}</button>`}${sel.max?`<span class="ivuse" title="Uses"><button class="ib${sel.uses?'':' bad'}" data-ia="${sel.uses?'u-':'drop'}" title="${sel.uses?'Use one':'Delete'}">${sel.uses?ICN.minus:ICN.trash}</button><b>${sel.uses}/${sel.max}</b><button class="ib" data-ia="u+" title="Add one back">${ICN.plus}</button></span>`:`<button class="ib bad" data-ia="drop" title="Delete">${ICN.trash}</button>`}<button class="ib${info?' on':''}" data-ia="info" title="Info"><i>i</i></button></div><div class="ivrow2">${info?`<div class="ivinfo2"><span class="ivmeta" title="Slots">${ICN.cube}${slotFmt(slotsOf(sel))}${worn?`<span class="ivwn" title="Worn, counts 1 less">${ICN.shirt}−1</span>`:''}</span>${sel.desc?`<p>${esc(sel.desc)}</p>`:''}${sel.rules?`<p><b>Statblock:</b> ${esc(sel.rules)}</p>`:''}</div>`:''}<button class="ib ok" data-ia="clear" title="Close">${ICN.check}</button></div></div>`}
     return h+'</div>';
@@ -1480,11 +1492,11 @@ function player(code){
     else if(!keys.length)h='<div class="pvempty">No shops are open.</div>';
     else{
       const k=keys.includes(psel)?psel:keys[0],S=SHP[k]||{name:'',items:[]};
-      h=(keys.length>1?'<div class="row" style="margin-bottom:10px">'+keys.map(x=>`<button class="btn sm ${x===k?'':'alt'}" data-s="${x}">${esc((SHP[x]||{}).name||'...')}</button>`).join('')+'</div>':'')+`<div class="pvname">${esc(S.name)}</div><div class="pvg">${S.items.map(card).join('')}</div>`;
+      h=(keys.length>1?'<div class="pvshops">'+keys.map(x=>`<button class="btn sm ${x===k?'':'alt'}" data-s="${x}">${esc((SHP[x]||{}).name||'...')}</button>`).join('')+'</div>':'')+`<div class="pvname">${esc(S.name)}</div><div class="pvg">${S.items.map(card).join('')}</div>`;
       const it=S.items.find(x=>x.id===open);
       if(it)sheet=`<div class="sheet"><div class="sin">${it.img?`<div class="pic2"><img src="${it.img}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}<div class="wt">${ICN.cube}${slotFmt(slotsOf(it))}${usesOf(it)?` &nbsp;${ICN.tally}${usesOf(it)} uses`:''}</div>${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`;
     }
-    if(sheet&&CH.length){const k2=keys.includes(psel)?psel:keys[0],it2=((SHP[k2]||{}).items||[]).find(x=>x.id===open);if(it2&&it2.qty!==0)sheet=sheet.replace(/<\/div><\/div>$/,'<div class="take"><button class="btn ibt" data-take="'+it2.id+'">'+ICN.bagplus+'<span>Take</span></button></div></div></div>')}
+    if(sheet&&CH.length){const k2=keys.includes(psel)?psel:keys[0],it2=((SHP[k2]||{}).items||[]).find(x=>x.id===open);if(it2&&it2.qty!==0)sheet=sheet.replace(/<\/div><\/div>$/,'<div class="take"><button class="btn" data-take="'+it2.id+'">Take</button></div></div></div>')}
     const key=tab+'|'+h;if(key!==last){last=key;$('#pvb').innerHTML=h}
     if(sheet!==lastD){lastD=sheet;$('#pvd').innerHTML=sheet;$('#pvd').classList.toggle('on',!!sheet)}
   };
