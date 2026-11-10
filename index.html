@@ -447,6 +447,27 @@ body.dmv select,body.dmv input:not([type=checkbox]):not([type=range]):not([type=
 .card .wgt .ic,.card .cost .ic,.card .qty .ic,.sheet .cost .ic,.sheet .wt .ic{width:1.1em;height:1.1em;vertical-align:-.2em}
 .sheet .take .btn .ic{width:1.3em;height:1.3em}
 .invact .ivacts{gap:6px}.invact .ib{min-width:38px;padding:0 8px}.invact .ivuse .ib{min-width:34px;padding:0}
+.pv.notips .tabb.alt .tl{display:inline}
+body.pvflat::before{background:radial-gradient(ellipse at 50% -10%,#33261b 0,#1a130d 50%,#0d0906 100%)}
+.setl{display:flex;flex-direction:column;gap:8px}
+.srow{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:0 14px;border:2px solid #8a6a24;border-radius:10px;background:#14100c;color:var(--gold);font:700 15px Cinzel,serif;cursor:pointer;text-align:left}
+.srow .ic{width:22px;height:22px}.srow .ii{font:italic 700 20px Georgia,serif;width:22px;text-align:center}
+.srow>span{flex:1}.srow em{font-style:normal;font-size:13px;color:var(--parch)}
+.srow .sw{padding:3px 12px;border-radius:12px;background:#3a2a18}.srow .sw.on{background:linear-gradient(#f0cc6a,#b5801f);color:#2a170d}
+.ivcap .invbar{margin-right:0}
+.ivstat{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px;margin-top:6px}
+.ivl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ivi{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:3px;padding:6px;border-radius:8px}
+.ivi b{text-align:center;font-size:12.5px}
+.ivm{display:flex;gap:8px;justify-content:center;font:600 11px Cinzel,serif;font-style:normal;color:#e0b24a}
+.ivm span{display:inline-flex;align-items:center;gap:3px}.ivm .ic{width:12px;height:12px}
+.ivtog{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 6px}
+.ivrl{flex:0 0 68px;font:700 13px Cinzel,serif;color:var(--ink)}
+.ivtog .ivw{flex:0 0 42px;min-width:0;min-height:38px}.ivh{font-size:12px;color:var(--ink);opacity:.8}
+.ivahead{display:flex;align-items:center;gap:10px}.ivahead>b{min-width:0;overflow-wrap:anywhere;font-size:16px}.ivusetop{margin-left:auto}
+.ivat{display:flex;align-items:center;gap:8px;font:700 16px Cinzel,serif}
+.ivfld{display:flex;align-items:center;gap:10px}.ivfl{flex:0 0 46px;font:700 13px Cinzel,serif;color:var(--parch)}
+.ivfld .ivchips{flex:1}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -464,7 +485,7 @@ if(CFG.projectId==="PASTE"){app.innerHTML='<div class="wrap"><h1>Infini DnD</h1>
 const db=getFirestore(initializeApp(CFG));
 
 function route(){
-  unsubs.forEach(u=>u());unsubs=[];document.body.classList.remove('dmv');
+  unsubs.forEach(u=>u());unsubs=[];document.body.classList.remove('dmv','pvflat');
   let [v,c,pm]=location.hash.slice(1).split('/');
   if(v==='last')v=localStorage.getItem('view')||'display';   // the installed app opens on the view this device used last
   const code=(c||localStorage.getItem('code')||'').toLowerCase();
@@ -912,7 +933,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-05 aq';
+const VER='2026-11-05 ar';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -1286,6 +1307,7 @@ const ICN={
  tally:sv('<path d="M6 5v14M10 5v14M14 5v14M18 5v14M3 16L21 8"/>'),
  sparkle:sv('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18 16l.8 2.2L21 19l-2.2.8L18 22l-.8-2.2L15 19l2.2-.8z"/>'),
  purse:sv('<path d="M9 3h6l-1.5 3h-3zM10.5 6C6 8 4 11 4 14.5A5.5 5.5 0 0 0 9.5 20h5a5.5 5.5 0 0 0 5.5-5.5C20 11 18 8 13.5 6"/><circle cx="12" cy="14" r="2.5"/>'),
+ cog:sv('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
  cp:coinIc('P','cp'),cg:coinIc('G','cg'),cs:coinIc('S','cs')
 };
 const INTOD=[['','Day'],['dusk','Dusk'],['night','Night']];
@@ -1309,7 +1331,7 @@ function wxBoxHTML(cur,w,L,role,day,sel,area,open){
 }
 function player(code){
   app.onclick=null;
-  app.innerHTML='<div class="pv"><div class="pvh"><h1>Infini DnD</h1><div class="pvt">'+[['quest','quest','Quest'],['weather','weather','Weather'],['shops','shop','Shops'],['inv','bag','Inventory']].map(t=>`<button class="btn sm tabb" data-t="${t[0]}" title="${t[2]}">${ICN[t[1]]}<span class="tl">${t[2]}</span></button>`).join('')+`<button class="btn sm alt tabb" data-vm="1" title="Views">${ICN.eye}<span class="tl">Views</span></button></div></div><div id="pvb"></div><div id="pvd"></div></div>`;
+  app.innerHTML='<div class="pv"><div class="pvh"><div class="pvt">'+[['quest','quest','Quest'],['weather','weather','Weather'],['shops','shop','Shops'],['inv','bag','Inventory'],['set','cog','Settings']].map(t=>`<button class="btn sm tabb" data-t="${t[0]}" title="${t[2]}">${ICN[t[1]]}<span class="tl">${t[2]}</span></button>`).join('')+`</div></div><div id="pvb"></div><div id="pvd"></div></div>`;
   let d={},tab=sessionStorage.getItem('pvtab')||'quest',Q=null,qid=null,qu=null,psel=null,open=null,fxSel=null,last='',lastD='';
   const SHP={},subs={};
   const card=i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${i.img?`<img src="${i.img}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${ICN.coin}${esc(i.cost)}</p>`:''}${slotsOf(i)||usesOf(i)?`<p class="wgt" title="Slots">${ICN.cube}${slotFmt(slotsOf(i))}${usesOf(i)?` &nbsp;${ICN.tally}${usesOf(i)}`:''}</p>`:''}${i.qty!=null?`<p class="qty">${i.qty>0?ICN.crate+'×'+i.qty:'Sold out'}</p>`:''}</div>`;
@@ -1376,32 +1398,37 @@ function player(code){
     else{if(!canPlace({slots:sz},addAt,c)){note('add','Only ½ items fit there.');return}saveInv(c,{[rid()]:{...base,pos:addAt}})}
     addAt='';render();
   };
-  const PIC={helm:'helmet',hl:'hand',armor:'armor',hr:'hand',hipl:'belt',sling:'strap',hipr:'belt',boots:'boot',hat:'hat',amulet:'amulet',cloak:'cloak',gloves:'glove',clothes:'shirt',shoes:'shoe',ringl:'ring',ringr:'ring'},WORDS=['hl','hr','hipl','hipr','sling','gloves','clothes'];   // places whose icon is not obvious keep their word
+  const PIC={helm:'helmet',hl:'hand',armor:'armor',hr:'hand',hipl:'belt',sling:'strap',hipr:'belt',boots:'boot',hat:'hat',amulet:'amulet',cloak:'cloak',gloves:'glove',clothes:'shirt',shoes:'shoe',ringl:'ring',ringr:'ring'},WORDS=['hipl','hipr','sling'];   // only these places keep their word when the hints are off
+  const step=(k,ic,lab,v)=>`<div class="ivstep"><span class="ivsl">${ic}<span>${lab}</span></span><button data-up="${k}-" title="Less">${ICN.minus}</button><b>${v}</b><button data-up="${k}+" title="More">${ICN.plus}</button></div>`;
+  const bagHTML=c=>{const T=invCap(c),ex=Math.max(0,Math.min(6,parseInt(c.ex)||0)),bp=parseInt(c.bp)||0;
+    return`<div class="ivsec ivupg ivcapbox"><h4>Carry capacity</h4><div class="ivsub" style="color:var(--ink)">STR ${c.str||10} + 3${c.ath?' + PB '+(c.pb||2):''}${bp?' + extra '+bp:''}${ex?' − exhaustion '+ex:''} = <b>${T} slots</b></div>${step('str',ICN.dumb,'Strength',c.str||10)}${step('pb',ICN.star,'Proficiency bonus',c.pb||2)}<div class="ivstep"><span class="ivsl">${ICN.run}<span>Athletics proficiency</span></span><button data-up="ath" class="tgl${c.ath?' on':''}" title="Athletics proficiency">${c.ath?ICN.check:ICN.x}</button></div>${step('bp',ICN.bagplus,'Extra slots',bp)}</div><div class="ivsec ivupg"><h4>Spaces</h4><div class="ivsub" style="color:var(--ink)">These add room in a bag, not slots.</div>${step('pouch',ICN.pouch,'Belt pouch',pouchN(c))}${step('quiver',ICN.arrow,'Quiver',quiverN(c))}${step('rmax',ICN.bread,'Ration spaces',rmaxOf(c))}</div>`};
+  const settingsHTML=()=>{
+    const c=me(),row=(ic,lab,attr,extra)=>`<button class="srow" ${attr}>${ic}<span>${lab}</span>${extra||''}</button>`;
+    return`<div class="ivsec setl"><h4>Settings</h4>${row('<i class="ii">i</i>','Hints','data-tips="1"',`<em class="sw${tips?' on':''}">${tips?'On':'Off'}</em>`)}${CH.length?row(ICN.swap,'Switch character','data-switch="1"',c?`<em>${esc(c.name)}</em>`:''):''}${c?row(ICN.bag,'Bag settings','data-bag="1"',`<em>${panel==='bag'?'▴':'▾'}</em>`):''}${row(ICN.eye,'Views','data-vm="1"')}</div>${c&&panel==='bag'?bagHTML(c):''}`;
+  };
   const invHTML=()=>{
     const c=me();
     if(!CH.length)return'<div class="pvempty">No characters yet. Ask the DM to create one.</div>';
     if(!c||pick)return'<div class="pvname">Who are you?</div><div class="ivpick">'+CH.map(x=>{const T=invCap(x),U=usedOf(x,entries(x)),e=Math.max(0,Math.min(6,parseInt(x.ex)||0));return`<button class="btn ivpc" data-pick="${x.id}"><b>${esc(x.name)}</b><span class="${U>T?'bad':''}" title="Slots">${ICN.cube}${slotFmt(U)} / ${T}</span><span title="Exhaustion">${ICN.tired}${e}</span><span title="Gold">${ICN.purse}${goldFmt(goldOf(x))}</span></button>`}).join('')+'</div>';
     const ex=Math.max(0,Math.min(6,parseInt(c.ex)||0)),es=entries(c),T=invCap(c),U=usedOf(c,es),sel=es.find(x=>x.id===esel),over=U>T,mal=speedMalus(U,T),wr={w:0,r:0,...(c.wr||{})},rm=rmaxOf(c),pn=pouchN(c),qn=quiverN(c),bp=parseInt(c.bp)||0,co={pp:0,gp:0,sp:0,...(c.coins||{})};
-    const item=e=>{const k=entryCost(e,e.epos);return`<div class="ivi${e.id===esel?' on':''}" data-e="${e.id}"><b>${esc(e.name)}</b>${k?`<span class="sl">${slotFmt(k)}</span>`:''}${e.max?`<span class="q">${e.uses}/${e.max}</span>`:''}</div>`};
+    const item=e=>{const k=entryCost(e,e.epos),meta=(k?`<span>${ICN.cube}${slotFmt(k)}</span>`:'')+(e.max?`<span>${ICN.tally}${e.uses}/${e.max}</span>`:'');return`<div class="ivi${e.id===esel?' on':''}" data-e="${e.id}"><b>${esc(e.name)}</b>${meta?`<em class="ivm">${meta}</em>`:''}</div>`};
     const cell=(pos,label)=>{const e=es.find(x=>x.epos===pos),valid=sel&&canPlace(sel,pos,c)&&!(e&&e.id===sel.id)&&sel.epos!==pos&&(!e||canPlace(e,sel.epos,c)),cls=GEARIDS.includes(pos)?' carry':WORNIDS.includes(pos)?' worn':'',ic=ICN[PIC[pos]||(pos[0]==='p'?'pouch':'arrow')];return`<div class="ivs ${pos}${cls}${valid?' valid':''}" data-pos="${pos}" title="${label}">${e?item(e):`<span class="lbl">${ic}<em class="${WORDS.includes(pos)?'':'tip'}">${label}</em></span>`}</div>`};
     const win=dw==='gear'?`<div class="dollgrid gear">${GEAR.map(g=>cell(g[0],g[1])).join('')}</div>`:`<div class="dollgrid cl">${CLOTHES.map(g=>cell(g[0],g[1])).join('')}</div>`;
     const lay=packLayout(c,es),lay2=sel?packLayout(c,es,sel.id):null;let cells='';
     lay.grid.forEach((x,i)=>{if(x==='x')return;if(x){cells+=`<div class="ivt w${cellsOf(x)}" style="grid-column:span ${cellsOf(x)}">${item(x)}</div>`;return}if(i<lay.limit){const valid=sel&&lay2.fits(i,cellsOf(sel));cells+=`<div class="ivfree${valid?' valid':''}" data-cell="${i}"></div>`}});
     const freeN=Math.max(0,T-U),qa=(p,n,l)=>Array.from({length:n},(_,i)=>cell(p+(i+1),l)).join('');
-    const step=(k,ic,lab,v)=>`<div class="ivstep"><span class="ivsl" title="${lab}">${ic}<span class="tip">${lab}</span></span><button data-up="${k}-" title="Less">${ICN.minus}</button><b>${v}</b><button data-up="${k}+" title="More">${ICN.plus}</button></div>`;
     const crow=(k,ic,lab)=>`<div class="ivcoin"><span class="ivsl" title="${lab}">${ic}<span class="tip">${lab}</span></span>${[-10,-1].map(n=>`<button data-coin="${k}:${n}">${n}</button>`).join('')}<b>${co[k]}</b>${[1,10].map(n=>`<button data-coin="${k}:${n}">+${n}</button>`).join('')}</div>`;
     const dr=addDraft,szl=[['0','0'],['0.5','½'],['1','1'],['2','2'],['3','3'],['4','4']],editing=addAt.startsWith('edit:');
-    let h=`<div class="inv${tips?'':' notips'}"><div class="invh"><b>${esc(c.name)}</b><span class="ivhb"><button class="ivinfo${tips?' on':''}" data-tips="1" title="Show or hide the hints">i</button><button class="ib" data-switch="1" title="Switch character">${ICN.swap}<span class="tip">Switch</span></button></span></div>
-      <div class="ivcap"><div class="ivcorner"><button class="ivico" data-bag="1" title="Bag settings">${ICN.bag}</button></div>
-        <div class="invbar${over?' over':''}"><i style="width:${Math.min(100,U/T*100)}%"></i></div><div class="ivnum${over?' over':''}" title="Slots">${ICN.cube}<span>${slotFmt(U)} / ${T}</span>${over?`<span class="ivover">+${slotFmt(U-T)}</span>`:''}<span class="tip ivsub"> slots</span></div>${mal?`<div class="ivspd" title="Speed">${ICN.boot}−${mal} ft</div>`:''}<div class="ivsub tip">STR ${c.str||10} + 3${c.ath?' + PB '+(c.pb||2)+' (Athletics)':''}${bp?' + extra '+bp:''}${ex?' − exhaustion '+ex:''}</div>
-        <div class="ivstat"><div class="ivex"><span class="ivexl" title="Exhaustion">${ICN.tired}<span class="tip">Exhaustion</span></span><button data-up="ex-" title="Less">${ICN.minus}</button><b>${ex}</b><button data-up="ex+" title="More">${ICN.plus}</button></div><button class="ivgold" data-purse="1" title="Purse">${ICN.purse}<span>${goldFmt(goldOf(c))} gp</span></button></div><div class="ivsub tip">Each level of exhaustion takes away 1 slot.</div></div>
-      ${panel==='bag'?`<div class="ivsec ivupg ivcapbox"><h4>Carry capacity</h4><div class="ivsub" style="color:var(--ink)">STR ${c.str||10} + 3${c.ath?' + PB '+(c.pb||2):''}${bp?' + extra '+bp:''}${ex?' − exhaustion '+ex:''} = <b>${T} slots</b></div>${step('str',ICN.dumb,'Strength',c.str||10)}${step('pb',ICN.star,'Proficiency bonus',c.pb||2)}<div class="ivstep"><span class="ivsl" title="Athletics proficiency">${ICN.run}<span class="tip">Athletics proficiency</span></span><button data-up="ath" class="tgl${c.ath?' on':''}" title="Athletics proficiency">${c.ath?ICN.check:ICN.x}</button></div>${step('bp',ICN.bagplus,'Extra slots',bp)}</div><div class="ivsec ivupg"><h4>Spaces</h4><div class="ivsub tip" style="color:var(--ink)">These add room in a bag, not slots.</div>${step('pouch',ICN.pouch,'Belt pouch',pn)}${step('quiver',ICN.arrow,'Quiver',qn)}${step('rmax',ICN.bread,'Rations',rm)}<button class="ib" data-bag="1" title="Close">${ICN.x}</button></div>`:''}
-      ${panel==='purse'?`<div class="ivsec ivupg"><h4>${ICN.purse}<span>Purse</span></h4>${crow('pp',ICN.cp,'Plat')}${crow('gp',ICN.cg,'Gold')}${crow('sp',ICN.cs,'Silver')}<div class="ivsub" style="color:var(--ink)">≈ ${(co.pp*10+co.gp+co.sp/10).toFixed(1)} gp<span class="tip">. 10 silver = 1 gold, 10 gold = 1 plat. Taking coins breaks bigger ones.</span></div>${N.purse?`<div class="ivnote">${esc(N.purse)}</div>`:''}<div class="row"><button class="ib" data-coin="tidy:0" title="Tidy up">${ICN.sparkle}<span class="tip">Tidy up</span></button><button class="ib" data-purse="1" title="Close">${ICN.x}</button></div></div>`:''}
-      <div class="doll"><div class="dolltabs"><button class="btn sm ibt ${dw==='gear'?'':'alt'}" data-dw="gear" title="Gear">${ICN.helmet}<span class="tip">Gear</span></button><button class="btn sm ibt ${dw==='clothes'?'':'alt'}" data-dw="clothes" title="Clothes">${ICN.shirt}<span class="tip">Clothes</span></button></div>${win}<div class="ivsub tip" style="color:var(--ink);margin-top:6px">${dw==='gear'?'Gear counts in full.':'Clothes are worn and count 1 less.'} Tap an empty place to add an item.</div></div>
-      <div class="ivsec"><h4>${ICN.pouch}<span class="tip">Quick access</span></h4><div class="ivgrid">${qa('p',pn,'Pouch')}${qa('q',qn,'Quiver')}</div><div class="ivsub tip" style="color:var(--ink)">Belt pouch and quiver take ½ items only.</div></div>
-      <div class="ivsec"><h4>${ICN.bag}<span class="tip">Backpack</span></h4><div class="ivwr" style="margin:0 0 6px"><button class="ivw${wr.w?' on':''}" data-wr="w" title="Water, 1 slot">${ICN.drop}</button>${Array.from({length:rm},(_,i)=>`<button class="ivw${wr.r>=i+1?' on':''}" data-wr="r${i+1}" title="Ration, ½ slot">${ICN.bread}</button>`).join('')}</div><div class="ivsub tip" style="color:var(--ink);margin-bottom:6px">${ICN.drop} is 1 slot, each ${ICN.bread} is ½ slot.</div><div class="ivpack${sel&&sel.epos!=='pack'?' valid':''}" data-pos="pack">${cells}</div><div class="ivfreeline${over?' over':''}">${ICN.cube}<b>${over?slotFmt(U-T):slotFmt(freeN)}</b><span>${over?'over':'free'}</span>${mal?`${ICN.boot}−${mal} ft`:''}<span class="tip">Tap a free space to add an item.</span></div></div>`;
-    if(addAt)h+=`<div class="invact ivadd"><b>${editing?ICN.pencil:ICN.plus}<span class="tip"> ${editing?'Edit item':'New item'}</span></b>${N.add?`<div class="ivnote">${esc(N.add)}</div>`:''}<input data-af="t" placeholder="Title" value="${esc(dr.t||'')}"><div class="ivchips" title="Size in slots">${ICN.cube}${szl.map(o=>`<button class="chip${String(dr.s)===o[0]?' on':''}" data-chip="${o[0]}">${o[1]}</button>`).join('')}</div><div class="ivuse" title="Uses">${ICN.tally}<button data-ustep="-1">${ICN.minus}</button><b>${parseInt(dr.u)||0}</b><button data-ustep="1">${ICN.plus}</button><span class="tip">uses, 0 for none</span></div><input data-af="n" placeholder="Notes" value="${esc(dr.n||'')}"><div class="row"><button class="ib ok" data-ia="addok" title="${editing?'Save':'Add'}">${ICN.check}</button><button class="ib" data-ia="addno" title="Cancel">${ICN.x}</button></div></div>`;
-    else if(sel)h+=`<div class="invact"><b>${esc(sel.name)}</b><small class="ivmeta" title="Slots">${ICN.cube}${slotFmt(slotsOf(sel))}${WORNIDS.includes(sel.epos)&&slotsOf(sel)?`<span class="ivwn" title="Worn, counts 1 less">${ICN.shirt}−1</span>`:''}${sel.max?`<span title="Uses">${ICN.tally}${sel.max}</span>`:''}</small>${info&&sel.desc?`<p>${esc(sel.desc)}</p>`:''}${info&&sel.rules?`<p><b>Statblock:</b> ${esc(sel.rules)}</p>`:''}<div class="ivacts"><button class="ib${info?' on':''}" data-ia="info" title="Info"><i>i</i></button>${sel.max?`<span class="ivuse" title="Uses"><button class="ib" data-ia="u-" title="Use one">${ICN.minus}</button><b>${sel.uses}/${sel.max}</b><button class="ib" data-ia="u+" title="Add one back">${ICN.plus}</button></span>`:''}${sel.ref?'':`<button class="ib" data-ia="edit" title="Edit">${ICN.pencil}</button>`}<button class="ib bad" data-ia="drop" title="Drop">${ICN.trash}</button><button class="ib ok" data-ia="clear" title="Done">${ICN.check}</button></div><small class="tip">Tap a highlighted place or a free space to move it there.</small></div>`;
+    let h=`<div class="inv${tips?'':' notips'}"><div class="invh"><b>${esc(c.name)}</b><button class="ivgold" data-purse="1" title="Purse">${ICN.purse}<span>${goldFmt(goldOf(c))} gp</span></button></div>
+      <div class="ivcap"><div class="invbar${over?' over':''}"><i style="width:${Math.min(100,U/T*100)}%"></i></div>
+        <div class="ivstat"><div class="ivl"><div class="ivnum${over?' over':''}" title="Slots">${ICN.cube}<span>${slotFmt(U)} / ${T}</span>${over?`<span class="ivover">+${slotFmt(U-T)}</span>`:''}<span class="tip ivsub"> slots</span></div>${mal?`<div class="ivspd" title="Speed">${ICN.boot}−${mal} ft</div>`:''}</div><div class="ivex"><span class="ivexl" title="Exhaustion">${ICN.tired}<span class="tip">Exhaustion</span></span><button data-up="ex-" title="Less">${ICN.minus}</button><b>${ex}</b><button data-up="ex+" title="More">${ICN.plus}</button></div></div>
+        <div class="ivsub tip">STR ${c.str||10} + 3${c.ath?' + PB '+(c.pb||2)+' (Athletics)':''}${bp?' + extra '+bp:''}${ex?' − exhaustion '+ex:''}. Each level of exhaustion takes away 1 slot.</div></div>
+      ${panel==='purse'?`<div class="ivsec ivupg"><h4>${ICN.purse}<span>Purse</span></h4>${crow('pp',ICN.cp,'Plat')}${crow('gp',ICN.cg,'Gold')}${crow('sp',ICN.cs,'Silver')}<div class="ivsub" style="color:var(--ink)">≈ ${(co.pp*10+co.gp+co.sp/10).toFixed(1)} gp<span class="tip">. 10 silver = 1 gold, 10 gold = 1 plat. Taking coins breaks bigger ones.</span></div>${N.purse?`<div class="ivnote">${esc(N.purse)}</div>`:''}<div class="row"><button class="ib" data-coin="tidy:0" title="Tidy up">${ICN.sparkle}<span>Tidy up</span></button><button class="ib" data-purse="1" title="Close">${ICN.x}<span>Close</span></button></div></div>`:''}
+      <div class="doll"><div class="dolltabs"><button class="btn sm ibt ${dw==='gear'?'':'alt'}" data-dw="gear" title="Gear">${ICN.helmet}<span>Gear</span></button><button class="btn sm ibt ${dw==='clothes'?'':'alt'}" data-dw="clothes" title="Clothes">${ICN.shirt}<span>Clothes</span></button></div>${win}<div class="ivsub tip" style="color:var(--ink);margin-top:6px">${dw==='gear'?'Gear counts in full.':'Clothes are worn and count 1 less.'} Tap an empty place to add an item.</div></div>
+      <div class="ivsec"><h4>${ICN.pouch}<span>Quick access</span></h4><div class="ivgrid">${qa('p',pn,'Pouch')}${qa('q',qn,'Quiver')}</div><div class="ivsub tip" style="color:var(--ink)">Belt pouch and quiver take ½ items only.</div></div>
+      <div class="ivsec"><h4>${ICN.bag}<span>Backpack</span></h4><div class="ivtog"><span class="ivrl">Water</span><button class="ivw${wr.w?' on':''}" data-wr="w" title="Water, 1 slot">${ICN.drop}</button><span class="ivh tip">1 slot</span></div><div class="ivtog"><span class="ivrl">Rations</span>${Array.from({length:rm},(_,i)=>`<button class="ivw${wr.r>=i+1?' on':''}" data-wr="r${i+1}" title="Ration, ½ slot">${ICN.bread}</button>`).join('')}<span class="ivh tip">½ slot each</span></div><div class="ivpack${sel&&sel.epos!=='pack'?' valid':''}" data-pos="pack">${cells}</div><div class="ivfreeline${over?' over':''}">${ICN.cube}<b>${over?slotFmt(U-T):slotFmt(freeN)}</b><span>${over?'over':'free'}</span><span class="tip">Tap a free space to add an item.</span></div></div>`;
+    if(addAt)h+=`<div class="invact ivadd"><b class="ivat">${editing?ICN.pencil:ICN.plus}<span>${editing?'Edit Item':'Add Item'}</span></b>${N.add?`<div class="ivnote">${esc(N.add)}</div>`:''}<input data-af="t" placeholder="Title" value="${esc(dr.t||'')}"><div class="ivfld"><span class="ivfl">Size</span><div class="ivchips">${szl.map(o=>`<button class="chip${String(dr.s)===o[0]?' on':''}" data-chip="${o[0]}">${o[1]}</button>`).join('')}</div></div><div class="ivfld"><span class="ivfl">Uses</span><div class="ivuse"><button data-ustep="-1">${ICN.minus}</button><b>${parseInt(dr.u)||0}</b><button data-ustep="1">${ICN.plus}</button></div><span class="tip">0 for none</span></div><input data-af="n" placeholder="Notes" value="${esc(dr.n||'')}"><div class="row"><button class="ib ok" data-ia="addok">${ICN.check}<span>${editing?'Save':'Add'}</span></button><button class="ib" data-ia="addno">${ICN.x}<span>Cancel</span></button></div></div>`;
+    else if(sel)h+=`<div class="invact"><div class="ivahead"><b>${esc(sel.name)}</b><span class="ivmeta" title="Slots">${ICN.cube}${slotFmt(slotsOf(sel))}${WORNIDS.includes(sel.epos)&&slotsOf(sel)?`<span class="ivwn" title="Worn, counts 1 less">${ICN.shirt}−1</span>`:''}</span>${sel.max?`<span class="ivuse ivusetop" title="Uses"><button class="ib" data-ia="u-" title="Use one">${ICN.minus}</button><b>${sel.uses}/${sel.max}</b><button class="ib" data-ia="u+" title="Add one back">${ICN.plus}</button></span>`:''}</div>${info&&sel.desc?`<p>${esc(sel.desc)}</p>`:''}${info&&sel.rules?`<p><b>Statblock:</b> ${esc(sel.rules)}</p>`:''}<div class="ivacts"><button class="ib${info?' on':''}" data-ia="info" title="Info"><i>i</i></button>${sel.ref?'':`<button class="ib" data-ia="edit" title="Edit">${ICN.pencil}</button>`}<button class="ib bad" data-ia="drop" title="Drop">${ICN.trash}</button><button class="ib ok" data-ia="clear" title="Done">${ICN.check}</button></div><small class="tip">Tap a highlighted place or a free space to move it there.</small></div>`;
     return h+'</div>';
   };
   const invTap=e=>{
@@ -1427,10 +1454,12 @@ function player(code){
   const render=()=>{
     document.querySelectorAll('.pvt [data-t]').forEach(b=>b.classList.toggle('alt',b.dataset.t!==tab));
     const pvEl=app.querySelector('.pv');if(pvEl)pvEl.classList.toggle('notips',!tips);
+    document.body.classList.toggle('pvflat',tab!=='quest'&&tab!=='weather');   // the wood board only stays behind the quest and the weather
     const keys=d.pshops||[];let h='',sheet='';
     if(tab==='quest')h=Q?`<div class="qbig"><i class="pin"></i><div class="in"><h3>${esc(Q.title||'')}</h3><p>${esc(Q.text||'')}</p></div></div>`:'<div class="pvempty">No quest selected.</div>';
     else if(tab==='weather'){const ew=effWx(d);h=ew.on?wxBoxHTML(ew.wx,Math.min(3,ew.wind|0),d,'player',null,fxSel):'<div class="pvempty">No weather here.</div>'}
     else if(tab==='inv')h=invHTML();
+    else if(tab==='set')h=settingsHTML();
     else if(!keys.length)h='<div class="pvempty">No shops are open.</div>';
     else{
       const k=keys.includes(psel)?psel:keys[0],S=SHP[k]||{name:'',items:[]};
@@ -1456,7 +1485,7 @@ function player(code){
   app.onclick=e=>{
     const tk=e.target.closest('[data-take]');if(tk){takeItem(tk.dataset.take);return}
     const pk=e.target.closest('[data-pick]');if(pk){cid=pk.dataset.pick;localStorage.setItem('char-'+code,cid);pick=false;esel=null;render();return}
-    if(e.target.closest('[data-switch]')){pick=true;esel=null;render();return}
+    if(e.target.closest('[data-switch]')){tab='inv';sessionStorage.setItem('pvtab',tab);pick=true;esel=null;render();return}
     const wb=e.target.closest('[data-wr]');if(wb){toggleWR(wb.dataset.wr);return}
     const ub=e.target.closest('[data-up]');if(ub){upgrade(ub.dataset.up);return}
     const cb=e.target.closest('[data-coin]');if(cb){const[t,n]=cb.dataset.coin.split(':');coinOp(t,+n);return}
