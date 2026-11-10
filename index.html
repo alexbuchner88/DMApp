@@ -391,9 +391,9 @@ body.dmv select,body.dmv input:not([type=checkbox]):not([type=range]):not([type=
 .dolltabs{display:flex;gap:6px;margin-bottom:8px}.dolltabs .btn{flex:1}
 .dollgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .dollgrid.gear{grid-template-areas:". helm ." "hl armor hr" "hipl sling hipr" ". boots ."}
-.dollgrid.cl{grid-template-areas:". hat ." "amulet cloak gloves" ". clothes ." ". shoes ."}
+.dollgrid.cl{grid-template-areas:". hat ." "amulet cloak gloves" "ringl clothes ringr" ". shoes ."}
 .dollgrid .helm{grid-area:helm}.dollgrid .hl{grid-area:hl}.dollgrid .armor{grid-area:armor}.dollgrid .hr{grid-area:hr}.dollgrid .hipl{grid-area:hipl}.dollgrid .sling{grid-area:sling}.dollgrid .hipr{grid-area:hipr}.dollgrid .boots{grid-area:boots}
-.dollgrid .hat{grid-area:hat}.dollgrid .amulet{grid-area:amulet}.dollgrid .cloak{grid-area:cloak}.dollgrid .gloves{grid-area:gloves}.dollgrid .clothes{grid-area:clothes}.dollgrid .shoes{grid-area:shoes}
+.dollgrid .hat{grid-area:hat}.dollgrid .amulet{grid-area:amulet}.dollgrid .cloak{grid-area:cloak}.dollgrid .gloves{grid-area:gloves}.dollgrid .clothes{grid-area:clothes}.dollgrid .shoes{grid-area:shoes}.dollgrid .ringl{grid-area:ringl}.dollgrid .ringr{grid-area:ringr}
 .ivcap{position:relative}
 .ivcap .invbar{margin-right:96px}
 .ivcorner{position:absolute;top:8px;right:8px;display:flex;gap:6px}
@@ -406,6 +406,12 @@ body.dmv select,body.dmv input:not([type=checkbox]):not([type=range]):not([type=
 .ivadd input,.ivadd select{width:100%;box-sizing:border-box;min-height:38px;border-radius:6px;border:2px solid var(--gold2);padding:4px 8px;font:14px sans-serif}
 .ivadd label{flex:1;font-size:12px;display:flex;flex-direction:column;gap:2px}
 .ivt.w1 .ivi{padding:4px 5px}.ivt.w1 .ivi b{font-size:10.5px}
+.ivgold{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:4px 10px;border:2px solid #8a6a24;border-radius:8px;background:#14100c;color:var(--gold);font:700 13px Cinzel,serif;cursor:pointer}
+.ivgold svg{width:20px;height:20px}
+.ivex{display:flex;align-items:center;gap:8px;margin-top:8px;color:var(--parch)}.ivex span{font:700 13px Cinzel,serif}.ivex b{min-width:1.6em;text-align:center}.ivex small{opacity:.75}
+.ivex button{min-width:38px;min-height:34px;border:2px solid #8a6a24;border-radius:8px;background:#14100c;color:var(--gold);font:700 16px Cinzel,serif;cursor:pointer}
+.ivcapbox{border-color:#b5801f;background:linear-gradient(#f6e7b0,#e3c870)}
+.ivnote{color:#a1281a;font-weight:700;margin:4px 0}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -871,7 +877,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-05 an';
+const VER='2026-11-05 ao';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -1181,15 +1187,15 @@ const slotsOf=i=>{if(i.slots!=null&&i.slots!=='')return Math.max(0,Math.round((+
 const usesOf=i=>Math.max(0,parseInt(i.uses)||0);
 const slotTxt=i=>slotFmt(slotsOf(i))+(usesOf(i)?' · '+usesOf(i)+' uses':'');
 const GEAR=[['helm','Helmet'],['hl','Hand'],['armor','Armor'],['hr','Hand'],['hipl','Hipgear'],['sling','Slinggear'],['hipr','Hipgear'],['boots','Boots']];
-const CLOTHES=[['hat','Hat'],['amulet','Amulet'],['cloak','Cloak'],['gloves','Gloves'],['clothes','Clothes'],['shoes','Shoes']];
-const GEARIDS=GEAR.map(g=>g[0]),WORNIDS=CLOTHES.map(g=>g[0]),PLACES=[...GEARIDS,...WORNIDS],HALFONLY=['sling'];
+const CLOTHES=[['hat','Hat'],['amulet','Amulet'],['cloak','Cloak'],['gloves','Gloves'],['clothes','Clothes'],['shoes','Shoes'],['ringl','Ring'],['ringr','Ring']];
+const GEARIDS=GEAR.map(g=>g[0]),WORNIDS=CLOTHES.map(g=>g[0]),PLACES=[...GEARIDS,...WORNIDS],HALFONLY=[];   // Slinggear takes anything: a shield on a strap, a bow. Only the belt pouch and the quiver are limited to ½ items.
 const LEGACY={head:'helm',torso:'clothes',hands:'gloves',feet:'boots',b1:'sling',b2:'hl',b3:'hr',b4:'hipl',b5:'hipr',b6:'sling',colL:'hl',colR:'hr'};   // places from the earlier layouts
 const normPos=p=>!p||p==='pack'?'pack':(PLACES.includes(p)||/^[pq]\d+$/.test(p))?p:(LEGACY[p]||'pack');
-const invCap=c=>(parseInt(c.str)||10)+3+(c.ath?(parseInt(c.pb)||2):0)+(parseInt(c.bp)||0);   // full Strength score + 3 + PB if proficient in Athletics, plus the backpack upgrade
+const invCap=c=>(parseInt(c.str)||10)+3+(c.ath?(parseInt(c.pb)||2):0)+(parseInt(c.bp)||0)-Math.max(0,Math.min(6,parseInt(c.ex)||0));   // full Strength score + 3 + PB if proficient in Athletics, plus extra slots, minus 1 per level of exhaustion
 const rmaxOf=c=>Math.max(1,Math.min(10,parseInt(c.rmax)||5));   // ration spaces, 5 to start with
 const wrCost=c=>((c&&c.wr&&c.wr.w)?1:0)+0.5*Math.min((c&&c.wr&&+c.wr.r)||0,c?rmaxOf(c):5);   // water 1 slot, every ration ½
 const entryCost=(e,pos)=>{const b=+e.slots||0;return WORNIDS.includes(pos)?Math.max(0,b-1):b};
-const pouchN=c=>parseInt(c.pouch)||1,quiverN=c=>parseInt(c.quiver)||0,speedMalus=(u,t)=>Math.floor(Math.max(0,u-t)/2)*5;   // every 2 slots over the limit cost 5 ft of speed
+const pouchN=c=>parseInt(c.pouch)||1,quiverN=c=>parseInt(c.quiver)||0,speedMalus=(u,t)=>{const o=Math.round(Math.max(0,u-t)*2)/2;return Math.ceil(o/2-1e-9)*5};   // as soon as you are over, -5 ft, and another -5 ft for every 2 slots after that
 const isHalf=e=>(+e.slots||0)<=0.5,cellsOf=e=>(+e.slots||0)<1?1:2;   // in the backpack ½ items are small blocks
 const canPlace=(e,pos,c)=>{if(pos==='pack'||PLACES.includes(pos))return!HALFONLY.includes(pos)||isHalf(e);const m=/^([pq])(\d+)$/.exec(pos);return!!m&&+m[2]<=(m[1]==='p'?pouchN(c):quiverN(c))&&isHalf(e)};
 // what a character carries follows the item as the DM edits it; the stored copy is only the fallback
@@ -1199,6 +1205,7 @@ const invUsedR=(inv,look,c)=>Object.values(inv||{}).filter(Boolean).reduce((a,e)
 const COINUP={sp:'gp',gp:'pp'};
 const coinEnsure=(co,t,n)=>{while(co[t]<n){const hi=COINUP[t];if(!hi)return false;if(co[hi]<=0&&!coinEnsure(co,hi,1))return false;co[hi]--;co[t]+=10}return true};
 const coinTake=(co,t,n)=>{if(!coinEnsure(co,t,n))return false;co[t]-=n;return true};
+const goldOf=c=>{const q=(c&&c.coins)||{};return(q.pp||0)*10+(q.gp||0)+(q.sp||0)/10},goldFmt=n=>Number.isInteger(n)?String(n):n.toFixed(1);
 const coinTidy=co=>{co.gp+=Math.floor(co.sp/10);co.sp%=10;co.pp+=Math.floor(co.gp/10);co.gp%=10;return co};
 const ICO={bag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7V6a4 4 0 0 1 8 0v1M6.5 7h11A1.5 1.5 0 0 1 19 8.5V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8.5A1.5 1.5 0 0 1 6.5 7zM9 15h6M9 11.5h6"/></svg>',purse:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l-1.5 3h-3zM10.5 6C6 8 4 11 4 14.5A5.5 5.5 0 0 0 9.5 20h5a5.5 5.5 0 0 0 5.5-5.5C20 11 18 8 13.5 6"/><circle cx="12" cy="14" r="2.5"/></svg>'};
 const INTOD=[['','Day'],['dusk','Dusk'],['night','Night']];
@@ -1227,7 +1234,7 @@ function player(code){
   const SHP={},subs={};
   const card=i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${i.img?`<img src="${i.img}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${slotsOf(i)||usesOf(i)?`<p class="wgt">Slots: ${slotTxt(i)}</p>`:''}${i.qty!=null?`<p class="qty">${i.qty>0?'×'+i.qty:'Sold out'}</p>`:''}</div>`;
   // Inventory for the phone: gear and clothes in two windows, quick access bags, the backpack as a grid with sized blocks, water and rations in the top bar, a purse. It tracks, it does not play for you.
-  let CH=[],cid=localStorage.getItem('char-'+code)||'',pick=false,esel=null,info=false,toast='',tt=0,dw=sessionStorage.getItem('pvdw')||'gear',panel='',addAt='',addDraft={t:'',s:'1',u:'',n:''};
+  let CH=[],cid=localStorage.getItem('char-'+code)||'',pick=false,esel=null,info=false,dw=sessionStorage.getItem('pvdw')||'gear',panel='',addAt='',addDraft={t:'',s:'1',u:'',n:''};
   const DEF={},dsub={},rid=()=>Math.random().toString(36).slice(2,9);
   const me=()=>CH.find(x=>x.id===cid)||null;
   const syncDefs=()=>{   // follow the items this character carries, so changes by the DM show up
@@ -1240,21 +1247,23 @@ function player(code){
     es.forEach(e=>{let p=normPos(e.pos);if(!canPlace(e,p,c)||(p!=='pack'&&used.has(p)))p='pack';if(p!=='pack')used.add(p);e.epos=p});return es;
   };
   const usedOf=(c,es)=>es.reduce((a,e)=>a+entryCost(e,e.epos),0)+wrCost(c);
-  const say=m=>{toast=m;clearTimeout(tt);tt=setTimeout(()=>{toast='';render()},2400);render()};
+  const N={},note=(k,m)=>{N[k]=m;render()};   // short messages live inside the box they belong to
+
   const saveInv=(c,patch)=>{c.inv={...(c.inv||{}),...patch};setDoc(doc(db,'sessions',code,'chars',c.id),{inv:patch},{merge:true});syncDefs();render()};
   const saveChar=(c,patch)=>{Object.assign(c,patch);setDoc(doc(db,'sessions',code,'chars',c.id),patch,{merge:true});render()};
   const toggleWR=k=>{const c=me();if(!c)return;const wr={w:0,r:0,...(c.wr||{})};if(k==='w')wr.w=wr.w?0:1;else{const n=+k.slice(1);wr.r=wr.r>=n?n-1:n}saveChar(c,{wr})};
   const upgrade=k=>{const c=me();if(!c)return;
-    const m=/^(bp|pouch|quiver|rmax)([+-])$/.exec(k);if(!m)return;const lim={bp:[0,12],pouch:[1,6],quiver:[0,6],rmax:[1,10]}[m[1]],cur=m[1]==='pouch'?pouchN(c):m[1]==='quiver'?quiverN(c):m[1]==='rmax'?rmaxOf(c):(parseInt(c.bp)||0),v=Math.max(lim[0],Math.min(lim[1],cur+(m[2]==='+'?1:-1))),patch={[m[1]]:v};
+    if(k==='ath'){saveChar(c,{ath:!c.ath});return}
+    const m=/^(bp|pouch|quiver|rmax|str|pb|ex)([+-])$/.exec(k);if(!m)return;const lim={bp:[0,12],pouch:[1,6],quiver:[0,6],rmax:[1,10],str:[1,30],pb:[2,9],ex:[0,6]}[m[1]],cur=m[1]==='pouch'?pouchN(c):m[1]==='quiver'?quiverN(c):m[1]==='rmax'?rmaxOf(c):m[1]==='str'?(parseInt(c.str)||10):m[1]==='pb'?(parseInt(c.pb)||2):m[1]==='ex'?(parseInt(c.ex)||0):(parseInt(c.bp)||0),v=Math.max(lim[0],Math.min(lim[1],cur+(m[2]==='+'?1:-1))),patch={[m[1]]:v};
     if(m[1]==='rmax'&&c.wr&&c.wr.r>v)patch.wr={...c.wr,r:v};saveChar(c,patch);
   };
   const coinOp=(t,n)=>{const c=me();if(!c)return;const co={pp:0,gp:0,sp:0,...(c.coins||{})};
-    if(t==='tidy')coinTidy(co);else if(n>0)co[t]+=n;else if(!coinTake(co,t,-n)){say('Not enough coins.');return}
+    if(t==='tidy')coinTidy(co);else if(n>0)co[t]+=n;else if(!coinTake(co,t,-n)){note('purse','Not enough coins.');return}
     saveChar(c,{coins:co});};
   const moveTo=(c,eid,pos)=>{
     const es=entries(c),e=es.find(x=>x.id===eid);if(!e||e.epos===pos)return;
     const occ=pos==='pack'?null:es.find(x=>x.id!==eid&&x.epos===pos),patch={[eid]:{...e._raw,pos,idx:null}};
-    if(occ){if(!canPlace(occ,e.epos,c)){say('That place is taken.');return}patch[occ.id]={...occ._raw,pos:e.epos,idx:null}}
+    if(occ){if(!canPlace(occ,e.epos,c))return;patch[occ.id]={...occ._raw,pos:e.epos,idx:null}}
     saveInv(c,patch);
   };
   // the backpack is a grid, 4 across: a ½ item is 1 cell, anything bigger is 2 cells (so 2 per row, or 4 small ones). Free cells = free slots x 2.
@@ -1267,31 +1276,31 @@ function player(code){
     return{grid,limit,fits};
   };
   const packTo=(c,es,sel,i)=>{
-    if(!packLayout(c,es,sel.id).fits(i,cellsOf(sel))){say('Not enough room there.');return}
+    if(!packLayout(c,es,sel.id).fits(i,cellsOf(sel)))return;
     saveInv(c,{[sel.id]:{...sel._raw,pos:'pack',idx:i}});esel=null;info=false;render();
   };
   const takeItem=id=>{
-    const c=me();if(!c){say('Pick a character under Inventory first.');return}
+    const c=me();if(!c){tab='inv';sessionStorage.setItem('pvtab',tab);pick=true;open=null;render();return}
     const keys=d.pshops||[],k=keys.includes(psel)?psel:keys[0],it=((SHP[k]||{}).items||[]).find(x=>x.id===id);if(!it)return;
-    if(it.qty===0){say('Sold out.');return}
+    if(it.qty===0)return;
     const rt=k.split(':')[0],mx=usesOf(it);
     saveInv(c,{[rid()]:{ref:rt+':'+it.id,name:it.name,desc:it.desc||'',rules:it.rules||'',slots:slotsOf(it),max:mx,uses:mx,qty:1,pos:'pack'}});
     if(it.qty!=null)updateDoc(doc(db,'sessions',rt,'items',it.id),{qty:it.qty-1});
-    open=null;say('Added '+it.name+' to your backpack.');
+    open=null;render();
   };
   const addOk=()=>{   // a simple form for loot and odds and ends
-    const c=me();if(!c||!addAt)return;const t=(addDraft.t||'').trim();if(!t){say('Give it a title.');return}
+    const c=me();if(!c||!addAt)return;const t=(addDraft.t||'').trim();if(!t){note('add','Give it a title.');return}
     const sz=Math.max(0,Math.min(4,Math.round((parseFloat(addDraft.s)||0)*2)/2)),mx=Math.max(0,Math.min(99,parseInt(addDraft.u)||0)),base={name:t,desc:(addDraft.n||'').trim(),slots:sz,max:mx,uses:mx,qty:1},es=entries(c);
     if(addAt.startsWith('edit:')){const id=addAt.slice(5),e=es.find(x=>x.id===id);if(!e)return;saveInv(c,{[id]:{...e._raw,...base,uses:Math.min(mx,e.uses!=null?e.uses:mx)}})}
-    else if(addAt.startsWith('cell:')){if(!packLayout(c,es).fits(+addAt.slice(5),sz<1?1:2)){say('Not enough room there.');return}saveInv(c,{[rid()]:{...base,pos:'pack',idx:+addAt.slice(5)}})}
-    else{if(!canPlace({slots:sz},addAt,c)){say('Only ½ items fit there.');return}saveInv(c,{[rid()]:{...base,pos:addAt}})}
+    else if(addAt.startsWith('cell:')){if(!packLayout(c,es).fits(+addAt.slice(5),sz<1?1:2)){note('add','Not enough room there.');return}saveInv(c,{[rid()]:{...base,pos:'pack',idx:+addAt.slice(5)}})}
+    else{if(!canPlace({slots:sz},addAt,c)){note('add','Only ½ items fit there.');return}saveInv(c,{[rid()]:{...base,pos:addAt}})}
     addAt='';render();
   };
   const invHTML=()=>{
     const c=me();
     if(!CH.length)return'<div class="pvempty">No characters yet. Ask the DM to create one.</div>';
     if(!c||pick)return'<div class="pvname">Who are you?</div><div class="ivpick">'+CH.map(x=>`<button class="btn" data-pick="${x.id}">${esc(x.name)} <small>STR ${x.str||10}</small></button>`).join('')+'</div>';
-    const es=entries(c),T=invCap(c),U=usedOf(c,es),sel=es.find(x=>x.id===esel),over=U>T,mal=speedMalus(U,T),wr={w:0,r:0,...(c.wr||{})},rm=rmaxOf(c),pn=pouchN(c),qn=quiverN(c),bp=parseInt(c.bp)||0,co={pp:0,gp:0,sp:0,...(c.coins||{})};
+    const ex=Math.max(0,Math.min(6,parseInt(c.ex)||0)),es=entries(c),T=invCap(c),U=usedOf(c,es),sel=es.find(x=>x.id===esel),over=U>T,mal=speedMalus(U,T),wr={w:0,r:0,...(c.wr||{})},rm=rmaxOf(c),pn=pouchN(c),qn=quiverN(c),bp=parseInt(c.bp)||0,co={pp:0,gp:0,sp:0,...(c.coins||{})};
     const item=e=>{const k=entryCost(e,e.epos);return`<div class="ivi${e.id===esel?' on':''}" data-e="${e.id}"><b>${esc(e.name)}</b>${k?`<span class="sl">${slotFmt(k)}</span>`:''}${e.max?`<span class="q">${e.uses}/${e.max}</span>`:''}</div>`};
     const cell=(pos,label)=>{const e=es.find(x=>x.epos===pos),valid=sel&&canPlace(sel,pos,c)&&!(e&&e.id===sel.id)&&sel.epos!==pos&&(!e||canPlace(e,sel.epos,c)),cls=GEARIDS.includes(pos)?' carry':WORNIDS.includes(pos)?' worn':'';return`<div class="ivs ${pos}${cls}${valid?' valid':''}" data-pos="${pos}">${e?item(e):`<span class="lbl">${label}</span>`}</div>`};
     const win=dw==='gear'?`<div class="dollgrid gear">${GEAR.map(g=>cell(g[0],g[1])).join('')}</div>`:`<div class="dollgrid cl">${CLOTHES.map(g=>cell(g[0],g[1])).join('')}</div>`;
@@ -1301,28 +1310,27 @@ function player(code){
     const step=(k,lab,v)=>`<div class="ivstep"><span>${lab}</span><button data-up="${k}-">−</button><b>${v}</b><button data-up="${k}+">+</button></div>`;
     const crow=(k,lab)=>`<div class="ivcoin"><span>${lab}</span>${[-10,-5,-1].map(n=>`<button data-coin="${k}:${n}">${n}</button>`).join('')}<b>${co[k]}</b>${[1,5,10].map(n=>`<button data-coin="${k}:${n}">+${n}</button>`).join('')}</div>`;
     const dr=addDraft,af=(k,ph,ty)=>`<input data-af="${k}" ${ty?'type="'+ty+'" ':''}placeholder="${ph}" value="${esc(dr[k]||'')}">`;
-    let h=`<div class="inv">${toast?`<div class="ivtoast">${esc(toast)}</div>`:''}<div class="invh"><b>${esc(c.name)}</b><button class="btn sm alt" data-switch="1">Switch</button></div>
-      <div class="ivcap"><div class="ivcorner"><button class="ivico" data-bag="1" title="Bag settings">${ICO.bag}</button><button class="ivico" data-purse="1" title="Purse">${ICO.purse}</button></div>
-        <div class="invbar${over?' over':''}"><i style="width:${Math.min(100,U/T*100)}%"></i></div><div class="ivnum${over?' over':''}">${slotFmt(U)} / ${T} slots${over?' (over by '+slotFmt(U-T)+')':''}</div>${mal?`<div class="ivspd">Speed -${mal} ft</div>`:''}<div class="ivsub">STR ${c.str||10} + 3${c.ath?' + PB '+(c.pb||2)+' (Athletics)':''}${bp?' + backpack '+bp:''}</div>
-        <div class="ivwr"><button class="ivw${wr.w?' on':''}" data-wr="w">Water</button>${Array.from({length:rm},(_,i)=>`<button class="ivw${wr.r>=i+1?' on':''}" data-wr="r${i+1}">Ration</button>`).join('')}</div><div class="ivsub">Water is 1 slot, every ration ½.</div></div>
-      ${panel==='bag'?`<div class="ivsec ivupg"><h4>Bag settings</h4>${step('bp','Backpack, extra slots',bp)}${step('pouch','Belt pouch, spaces',pn)}${step('quiver','Quiver, spaces',qn)}${step('rmax','Ration spaces',rm)}<button class="btn sm alt" data-bag="1">Close</button></div>`:''}
-      ${panel==='purse'?`<div class="ivsec ivupg"><h4>Purse</h4>${crow('pp','Platinum')}${crow('gp','Gold')}${crow('sp','Silver')}<div class="ivsub" style="color:var(--ink)">10 silver = 1 gold, 10 gold = 1 platinum. Taking coins breaks bigger ones. Total about ${(co.pp*10+co.gp+co.sp/10).toFixed(1)} gold.</div><div class="row"><button class="btn sm alt" data-coin="tidy:0">Tidy up</button><button class="btn sm alt" data-purse="1">Close</button></div></div>`:''}
-      <div class="doll"><div class="dolltabs"><button class="btn sm ${dw==='gear'?'':'alt'}" data-dw="gear">Gear</button><button class="btn sm ${dw==='clothes'?'':'alt'}" data-dw="clothes">Clothes</button></div>${win}<div class="ivsub" style="color:var(--ink);margin-top:6px">${dw==='gear'?'Gear counts in full. Slinggear takes ½ items only.':'Clothes are worn and count 1 less.'} Tap an empty place to add an item.</div></div>
+    let h=`<div class="inv"><div class="invh"><b>${esc(c.name)}</b><button class="btn sm alt" data-switch="1">Switch</button></div>
+      <div class="ivcap"><div class="ivcorner"><button class="ivico" data-bag="1" title="Bag settings">${ICO.bag}</button></div>
+        <div class="invbar${over?' over':''}"><i style="width:${Math.min(100,U/T*100)}%"></i></div><div class="ivnum${over?' over':''}">${slotFmt(U)} / ${T} slots${over?' (over by '+slotFmt(U-T)+')':''}</div>${mal?`<div class="ivspd">Speed -${mal} ft</div>`:''}<div class="ivsub">STR ${c.str||10} + 3${c.ath?' + PB '+(c.pb||2)+' (Athletics)':''}${bp?' + extra '+bp:''}${ex?' − exhaustion '+ex:''}</div>
+        <div class="ivwr"><button class="ivw${wr.w?' on':''}" data-wr="w">Water</button>${Array.from({length:rm},(_,i)=>`<button class="ivw${wr.r>=i+1?' on':''}" data-wr="r${i+1}">Ration</button>`).join('')}</div><div class="ivsub">Water is 1 slot, every ration ½.</div><div class="ivex"><span>Exhaustion</span><button data-up="ex-">−</button><b>${ex}</b><button data-up="ex+">+</button><small>each level: 1 slot less</small></div></div>
+      ${panel==='bag'?`<div class="ivsec ivupg ivcapbox"><h4>Carry capacity</h4><div class="ivsub" style="color:var(--ink)">STR ${c.str||10} + 3${c.ath?' + PB '+(c.pb||2):''}${bp?' + extra '+bp:''}${ex?' − exhaustion '+ex:''} = <b>${T} slots</b></div>${step('str','Strength',c.str||10)}${step('pb','Proficiency bonus',c.pb||2)}<div class="ivstep"><span>Athletics proficiency</span><button data-up="ath" class="${c.ath?'on':''}">${c.ath?'Yes':'No'}</button></div>${step('bp','Extra slots (changes the total)',bp)}</div><div class="ivsec ivupg"><h4>Spaces</h4><div class="ivsub" style="color:var(--ink)">These add room in a bag, not slots.</div>${step('pouch','Belt pouch, spaces',pn)}${step('quiver','Quiver, spaces',qn)}${step('rmax','Ration spaces',rm)}<button class="btn sm alt" data-bag="1">Close</button></div>`:''}
+      ${panel==='purse'?`<div class="ivsec ivupg"><h4>Purse</h4>${crow('pp','Platinum')}${crow('gp','Gold')}${crow('sp','Silver')}<div class="ivsub" style="color:var(--ink)">10 silver = 1 gold, 10 gold = 1 platinum. Taking coins breaks bigger ones. Total about ${(co.pp*10+co.gp+co.sp/10).toFixed(1)} gold.</div>${N.purse?`<div class="ivnote">${esc(N.purse)}</div>`:''}<div class="row"><button class="btn sm alt" data-coin="tidy:0">Tidy up</button><button class="btn sm alt" data-purse="1">Close</button></div></div>`:''}
+      <div class="doll"><div class="dolltabs"><button class="btn sm ${dw==='gear'?'':'alt'}" data-dw="gear">Gear</button><button class="btn sm ${dw==='clothes'?'':'alt'}" data-dw="clothes">Clothes</button><button class="ivgold" data-purse="1" title="Purse">${ICO.purse}<span>${goldFmt(goldOf(c))} gp</span></button></div>${win}<div class="ivsub" style="color:var(--ink);margin-top:6px">${dw==='gear'?'Gear counts in full.':'Clothes are worn and count 1 less.'} Tap an empty place to add an item.</div></div>
       <div class="ivsec"><h4>Quick access</h4><div class="ivgrid">${qa('p',pn,'Pouch')}${qa('q',qn,'Quiver')}</div><div class="ivsub" style="color:var(--ink)">Belt pouch and quiver take ½ items only.</div></div>
       <div class="ivsec"><h4>Backpack</h4><div class="ivpack${sel&&sel.epos!=='pack'?' valid':''}" data-pos="pack">${cells}</div><div class="ivsub" style="color:var(--ink)">${over?'No free slots, over by '+slotFmt(U-T)+(mal?', speed -'+mal+' ft':''):slotFmt(freeN)+' free slot'+(freeN===1?'':'s')+'. Tap a free space to add an item.'}</div></div>`;
-    if(addAt)h+=`<div class="invact ivadd"><b>${addAt.startsWith('edit:')?'Edit item':'New item'}</b>${af('t','Title')}<div class="row"><label>Size <select data-af="s">${[['0.5','½'],['1','1'],['2','2'],['3','3'],['4','4']].map(o=>`<option value="${o[0]}"${String(dr.s)===o[0]?' selected':''}>${o[1]}</option>`).join('')}</select></label><label>Uses ${af('u','0','number')}</label></div>${af('n','Notes')}<div class="row"><button class="btn sm" data-ia="addok">${addAt.startsWith('edit:')?'Save':'Add'}</button><button class="btn sm alt" data-ia="addno">Cancel</button></div></div>`;
+    if(addAt)h+=`<div class="invact ivadd"><b>${addAt.startsWith('edit:')?'Edit item':'New item'}</b>${N.add?`<div class="ivnote">${esc(N.add)}</div>`:''}${af('t','Title')}<div class="row"><label>Size <select data-af="s">${[['0','0'],['0.5','½'],['1','1'],['2','2'],['3','3'],['4','4']].map(o=>`<option value="${o[0]}"${String(dr.s)===o[0]?' selected':''}>${o[1]}</option>`).join('')}</select></label><label>Uses ${af('u','0','number')}</label></div>${af('n','Notes')}<div class="row"><button class="btn sm" data-ia="addok">${addAt.startsWith('edit:')?'Save':'Add'}</button><button class="btn sm alt" data-ia="addno">Cancel</button></div></div>`;
     else if(sel)h+=`<div class="invact"><b>${esc(sel.name)}</b><small>Slots: ${slotTxt(sel)}${WORNIDS.includes(sel.epos)&&slotsOf(sel)?', counts 1 less while worn':''}</small>${info&&sel.desc?`<p>${esc(sel.desc)}</p>`:''}${info&&sel.rules?`<p><b>Statblock:</b> ${esc(sel.rules)}</p>`:''}<div class="row"><button class="btn sm alt" data-ia="info">${info?'Hide info':'Info'}</button>${sel.max?`<button class="btn sm alt" data-ia="u-">Use −1</button><button class="btn sm alt" data-ia="u+">+1</button>`:''}${sel.ref?'':'<button class="btn sm alt" data-ia="edit">Edit</button>'}<button class="btn sm alt" data-ia="drop">Drop</button><button class="btn sm alt" data-ia="clear">Done</button></div><small>Tap a highlighted place or a free space to move it there.</small></div>`;
     return h+'</div>';
   };
   const invTap=e=>{
     const c=me();if(!c)return;const es=entries(c),sel=es.find(x=>x.id===esel),ent=e.target.closest('[data-e]'),pos=e.target.closest('[data-pos]'),cellEl=e.target.closest('[data-cell]');
     if(sel&&cellEl){packTo(c,es,sel,+cellEl.dataset.cell);return}
-    if(!sel&&cellEl&&!ent){addAt='cell:'+cellEl.dataset.cell;addDraft={t:'',s:'1',u:'',n:''};esel=null;render();return}
+    if(!sel&&cellEl&&!ent){addAt='cell:'+cellEl.dataset.cell;addDraft={t:'',s:'1',u:'',n:''};N.add='';esel=null;render();return}
     if(sel&&pos){const p=pos.dataset.pos;
       if(p!==sel.epos&&canPlace(sel,p,c)&&!(ent&&ent.dataset.e===sel.id)){moveTo(c,sel.id,p);esel=null;info=false;render();return}}
     if(ent){esel=esel===ent.dataset.e?null:ent.dataset.e;info=false;addAt='';render();return}
-    if(!sel&&pos&&pos.dataset.pos!=='pack'){const occ=es.find(x=>x.epos===pos.dataset.pos);if(occ){esel=occ.id;info=false;addAt='';render();return}addAt=pos.dataset.pos;addDraft={t:'',s:'1',u:'',n:''};render();return}   // an empty place: add an item by hand; an occupied one: select what is there
-    if(sel&&pos)say("That item can't go there.");
+    if(!sel&&pos&&pos.dataset.pos!=='pack'){const occ=es.find(x=>x.epos===pos.dataset.pos);if(occ){esel=occ.id;info=false;addAt='';render();return}addAt=pos.dataset.pos;addDraft={t:'',s:'1',u:'',n:''};N.add='';render();return}   // an empty place: add an item by hand; an occupied one: select what is there
   };
   const invAct=a=>{
     const c=me();if(!c)return;
@@ -1349,7 +1357,6 @@ function player(code){
       if(it)sheet=`<div class="sheet"><div class="sin">${it.img?`<div class="pic2"><img src="${it.img}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}<div class="wt">Slots: ${slotTxt(it)}</div>${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`;
     }
     if(sheet&&CH.length){const k2=keys.includes(psel)?psel:keys[0],it2=((SHP[k2]||{}).items||[]).find(x=>x.id===open);if(it2&&it2.qty!==0)sheet=sheet.replace(/<\/div><\/div>$/,'<div class="take"><button class="btn" data-take="'+it2.id+'">Take</button></div></div></div>')}
-    if(toast&&tab!=='inv')h='<div class="ivtoast">'+esc(toast)+'</div>'+h;
     const key=tab+'|'+h;if(key!==last){last=key;$('#pvb').innerHTML=h}
     if(sheet!==lastD){lastD=sheet;$('#pvd').innerHTML=sheet;$('#pvd').classList.toggle('on',!!sheet)}
   };
@@ -1372,8 +1379,8 @@ function player(code){
     const ub=e.target.closest('[data-up]');if(ub){upgrade(ub.dataset.up);return}
     const cb=e.target.closest('[data-coin]');if(cb){const[t,n]=cb.dataset.coin.split(':');coinOp(t,+n);return}
     const dwb=e.target.closest('[data-dw]');if(dwb){dw=dwb.dataset.dw;sessionStorage.setItem('pvdw',dw);esel=null;render();return}
-    if(e.target.closest('[data-bag]')){panel=panel==='bag'?'':'bag';render();return}
-    if(e.target.closest('[data-purse]')){panel=panel==='purse'?'':'purse';render();return}
+    if(e.target.closest('[data-bag]')){panel=panel==='bag'?'':'bag';N.purse='';render();return}
+    if(e.target.closest('[data-purse]')){panel=panel==='purse'?'':'purse';N.purse='';render();return}
     const ia=e.target.closest('[data-ia]');if(ia){invAct(ia.dataset.ia);return}
     if(tab==='inv'&&(e.target.closest('[data-e]')||e.target.closest('[data-pos]')||e.target.closest('[data-cell]'))){invTap(e);return}
     const fb=e.target.closest('[data-fx]');if(fb){fxSel=fxSel===fb.dataset.fx?null:fb.dataset.fx;render();return}
@@ -1659,7 +1666,7 @@ function dm(code){
   function chDraw(){
     const box=$('#chl');if(!box)return;$('#chn').textContent=CHS.length?'('+CHS.length+')':'';
     box.innerHTML=CHS.map(c=>{const T=invCap(c),U=invUsedR(c.inv,lookupDef,c),n=Object.values(c.inv||{}).filter(Boolean).length,inp=(k,w,v,mn,mx)=>`<input data-id="${c.id}" data-k="${k}" type="number" min="${mn}" max="${mx}" value="${v}" style="width:${w}px">`;
-      return`<div class="qrow"><div class="qt" style="flex:1 1 140px"><b>${esc(c.name)}</b><br><small${U>T?' style="color:#a1281a;font-weight:700"':''}>Slots ${slotFmt(U)} / ${T}${U>T?' (over, speed -'+speedMalus(U,T)+' ft)':''}, ${n} items, ${(()=>{const q=c.coins||{};return(q.pp||0)+' pp '+(q.gp||0)+' gp '+(q.sp||0)+' sp'})()}</small></div><div class="row"><label>STR ${inp('str',64,c.str||10,1,30)}</label><label>PB ${inp('pb',56,c.pb||2,2,9)}</label><label><input data-id="${c.id}" data-k="ath" type="checkbox"${c.ath?' checked':''}> Athletics</label><label>Pouch ${inp('pouch',56,c.pouch||1,1,8)}</label><label>Pack + ${inp('bp',56,c.bp||0,0,12)}</label><label>Quiver ${inp('quiver',56,c.quiver||0,0,6)}</label><label>Rations ${inp('rmax',56,c.rmax||5,1,10)}</label><button class="btn sm alt edit" data-a="chdel" data-id="${c.id}">Delete</button></div></div>`}).join('')||'<p class="note">No characters yet.</p>';
+      return`<div class="qrow"><div class="qt" style="flex:1 1 140px"><b>${esc(c.name)}</b><br><small${U>T?' style="color:#a1281a;font-weight:700"':''}>Slots ${slotFmt(U)} / ${T}${U>T?' (over, speed -'+speedMalus(U,T)+' ft)':''}, ${n} items, ${(()=>{const q=c.coins||{};return(q.pp||0)+' pp '+(q.gp||0)+' gp '+(q.sp||0)+' sp'})()}</small></div><div class="row"><label>STR ${inp('str',64,c.str||10,1,30)}</label><label>PB ${inp('pb',56,c.pb||2,2,9)}</label><label><input data-id="${c.id}" data-k="ath" type="checkbox"${c.ath?' checked':''}> Athletics</label><label>Pouch ${inp('pouch',56,c.pouch||1,1,8)}</label><label>Pack + ${inp('bp',56,c.bp||0,0,12)}</label><label>Quiver ${inp('quiver',56,c.quiver||0,0,6)}</label><label>Rations ${inp('rmax',56,c.rmax||5,1,10)}</label><label>Exh ${inp('ex',48,c.ex||0,0,6)}</label><button class="btn sm alt edit" data-a="chdel" data-id="${c.id}">Delete</button></div></div>`}).join('')||'<p class="note">No characters yet.</p>';
   }
   function monDraw(){
     const box=$('#monfx');if(!box)return;
@@ -1766,7 +1773,7 @@ function dm(code){
   unsubs.push(onSnapshot(MF,s=>{MFD=s.exists()?s.data():{};monDraw()}));
   unsubs.push(onSnapshot(UF,s=>{UD=s.exists()?s.data():{};draw()}));
   unsubs.push(onSnapshot(CHC,s=>{CHS=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(a.created||0)-(b.created||0));chDraw()}));
-  $('#chl').onchange=e=>{const t=e.target;if(!t.dataset||!t.dataset.k)return;const mn=(t.dataset.k==='bp'||t.dataset.k==='quiver')?0:1,v=t.type==='checkbox'?t.checked:Math.max(mn,parseInt(t.value)||mn);updateDoc(doc(db,'sessions',code,'chars',t.dataset.id),{[t.dataset.k]:v})};
+  $('#chl').onchange=e=>{const t=e.target;if(!t.dataset||!t.dataset.k)return;const mn=(t.dataset.k==='bp'||t.dataset.k==='quiver'||t.dataset.k==='ex')?0:1,v=t.type==='checkbox'?t.checked:Math.max(mn,parseInt(t.value)||mn);updateDoc(doc(db,'sessions',code,'chars',t.dataset.id),{[t.dataset.k]:v})};
   $('#monfx').onchange=e=>{const t=e.target,id=$('#monfx').dataset.id;if(!t.dataset||!t.dataset.k||!id)return;const cur={bd:'dark',fx:'',amb:'',wx:'',...(MFD[id]||{})};cur[t.dataset.k]=t.value;MFD={...MFD,[id]:cur};setDoc(MF,{[id]:cur},{merge:true})};
   $('#inopen').onchange=e=>saveI({open:e.target.value});
   $('#insecs').onchange=e=>saveI({secs:Math.min(20,Math.max(3,+e.target.value||6))});
