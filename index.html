@@ -366,8 +366,8 @@ body.dmv select,body.dmv input:not([type=checkbox]):not([type=range]):not([type=
 .ivgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
 .dollgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;grid-template-areas:". helm ." "sling amulet backpack" "cloak clothes gloves" "hl armor hr" "hipl pouch hipr" ". boots ."}
 .dollgrid .helm{grid-area:helm}.dollgrid .sling{grid-area:sling}.dollgrid .amulet{grid-area:amulet}.dollgrid .backpack{grid-area:backpack}.dollgrid .cloak{grid-area:cloak}.dollgrid .clothes{grid-area:clothes}.dollgrid .gloves{grid-area:gloves}.dollgrid .hl{grid-area:hl}.dollgrid .armor{grid-area:armor}.dollgrid .hr{grid-area:hr}.dollgrid .hipl{grid-area:hipl}.dollgrid .pouch{grid-area:pouch}.dollgrid .hipr{grid-area:hipr}.dollgrid .boots{grid-area:boots}
-.ivwr{display:flex;gap:8px}.ivw{flex:1;min-height:46px;border:2px solid #8a6a24;border-radius:8px;background:#f6edcf88;color:var(--ink);font:700 13px Cinzel,serif;cursor:pointer}.ivw.on{background:#2a170d;color:var(--gold);border-color:#ffd25a}
-.ivs{min-height:64px;border:2px dashed #8a6a24aa;border-radius:6px;padding:5px;display:flex;align-items:center;justify-content:center;text-align:center;background:#f6edcf99}
+.ivwr{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.ivcap .ivw{min-height:34px;font-size:12px;color:var(--ink)}.ivw{flex:1 1 20%;min-height:46px;border:2px solid #8a6a24;border-radius:8px;background:#f6edcf88;color:var(--ink);font:700 13px Cinzel,serif;cursor:pointer}.ivw.on{background:#2a170d;color:var(--gold);border-color:#ffd25a}
+.ivs{position:relative;min-height:64px;border:2px dashed #8a6a24aa;border-radius:6px;padding:5px;display:flex;align-items:center;justify-content:center;text-align:center;background:#f6edcf99}
 .ivs .lbl,.ivpack .lbl{font-size:12px;opacity:.55}
 .ivs.valid,.ivpack.valid{border-color:#2f7a2f;background:#dff0c8cc;animation:ivp 1.1s ease-in-out infinite alternate}
 @keyframes ivp{to{box-shadow:0 0 0 3px #2f7a2f55}}
@@ -384,6 +384,19 @@ body.dmv select,body.dmv input:not([type=checkbox]):not([type=range]):not([type=
 .invact p{margin:0}
 .ivtoast{background:#2a170d;color:var(--gold);border:2px solid var(--gold2);border-radius:8px;padding:8px 12px;text-align:center}
 .ivpick{display:flex;flex-direction:column;gap:10px}
+.ivs.worn{background:#cdb98a;border-style:solid;border-color:#a98a47}
+.ivs.worn::before{content:"−1";position:absolute;top:2px;left:6px;font:700 10px Cinzel,serif;color:#5b3d0a;opacity:.8}
+.ivs.carry{background:#fbf3d9;border-style:solid;border-color:#2a170d}
+.ivs.valid{background:#dff0c8cc!important;border-color:#2f7a2f!important}
+.ivic{display:flex;align-items:center;justify-content:center;gap:6px}
+.ivico{display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;border:2px solid #8a6a24;border-radius:10px;color:#4a300c;padding:6px 8px;font:700 12px Cinzel,serif;cursor:pointer}
+.ivico svg{width:26px;height:26px}
+.ivspd{color:#ff8a6a;font:700 14px Cinzel,serif}
+.ivcap .ivw{background:#14100c;color:var(--gold);border-color:#8a6a24}
+.ivcap .ivw.on{background:linear-gradient(#f0cc6a,#b5801f);color:#1a0f06;border-color:#ffd25a}
+.ivupg{border-color:#2a170d}
+.ivstep{display:flex;align-items:center;gap:8px;margin:4px 0}.ivstep span{flex:1}.ivstep b{min-width:2em;text-align:center}
+.ivstep button{min-width:40px;min-height:36px;border:2px solid #8a6a24;border-radius:8px;background:#f6edcf88;font:700 16px Cinzel,serif;cursor:pointer}.ivstep button.on{background:#2a170d;color:var(--gold)}
 </style></head>
 <body><div id="app"></div>
 <script type="module">
@@ -849,7 +862,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-05 al';
+const VER='2026-11-05 am';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -1155,18 +1168,19 @@ const slotsOf=i=>{if(i.slots!=null&&i.slots!=='')return Math.max(0,+i.slots||0);
   const m=/([\d.,]+)\s*(?:lb|lbs|pound)/i.exec(i.weight||'');if(!m)return 0;const w=parseFloat(m[1].replace(',','.'));
   const n=w<1?0:w<=10?1:w<=25?2:w<=40?3:4;return stackOf(i)?Math.max(1,n):n};   // a stack of up to 3 always takes at least one slot
 const slotTxt=i=>slotsOf(i)+(stackOf(i)?' (3 per slot)':'');
-const GEAR=[['helm','Helmet'],['sling','Slinggear'],['amulet','Amulet'],['backpack','Backpack'],['cloak','Cloak'],['clothes','Clothes'],['gloves','Gloves'],['hl','Hand'],['armor','Armor'],['hr','Hand'],['hipl','Hipgear'],['pouch','Beltpouch'],['hipr','Hipgear'],['boots','Boots']];
+const GEAR=[['helm','Helmet'],['sling','Slinggear'],['amulet','Amulet'],['cloak','Cloak'],['clothes','Clothes'],['gloves','Gloves'],['hl','Hand'],['armor','Armor'],['hr','Hand'],['hipl','Hipgear'],['hipr','Hipgear'],['boots','Boots']];   // the backpack and the pouch are not places, they are upgrades (the icons)
 const GEARIDS=GEAR.map(g=>g[0]),EQUIPPED=['hl','hr','armor','hipl','hipr'];
 const LEGACY={head:'helm',torso:'clothes',hands:'gloves',feet:'boots',b1:'sling',b2:'hl',b3:'hr',b4:'hipl',b5:'hipr',b6:'sling',colL:'hl',colR:'hr'};   // places from the earlier layouts
-const normPos=p=>!p||p==='pack'?'pack':(GEARIDS.includes(p)||/^p\d+$/.test(p))?p:(LEGACY[p]||'pack');
-const invCap=c=>(parseInt(c.str)||10)+3+(c.ath?(parseInt(c.pb)||2):0);   // full Strength score + 3 + PB if proficient in Athletics
-const wrCost=c=>((c&&c.wr&&c.wr.w)?1:0)+((c&&c.wr&&+c.wr.r>0)?1:0);   // 1 water = 1 slot, 1 to 3 rations = 1 slot
+const normPos=p=>!p||p==='pack'?'pack':(GEARIDS.includes(p)||/^[pq]\d+$/.test(p))?p:(LEGACY[p]||'pack');
+const invCap=c=>(parseInt(c.str)||10)+3+(c.ath?(parseInt(c.pb)||2):0)+(parseInt(c.bp)||0);   // full Strength score + 3 + PB if proficient in Athletics, plus the backpack upgrade
+const wrCost=c=>((c&&c.wr&&c.wr.w)?1:0)+Math.ceil(((c&&c.wr&&+c.wr.r)||0)/3);   // 1 water = 1 slot, every 3 rations = 1 slot
 const entryCost=(e,pos)=>{const b=+e.slots||0;return GEARIDS.includes(pos)&&!EQUIPPED.includes(pos)?Math.max(0,b-1):b};
-const pouchN=c=>c.pouch||1;
-const canPlace=(e,pos,c)=>pos==='pack'||GEARIDS.includes(pos)||(/^p(\d+)$/.test(pos)&&+pos.slice(1)<=pouchN(c)&&!!e.stack);   // the belt pouch takes stackable items only
+const pouchN=c=>parseInt(c.pouch)||1,quiverN=c=>parseInt(c.quiver)||0,speedMalus=(u,t)=>Math.floor(Math.max(0,u-t)/2)*5;   // every 2 slots over the limit cost 5 ft of speed
+const canPlace=(e,pos,c)=>pos==='pack'||GEARIDS.includes(pos)||(/^p(\d+)$/.test(pos)&&+pos.slice(1)<=pouchN(c)&&!!e.stack)||(/^q(\d+)$/.test(pos)&&+pos.slice(1)<=quiverN(c)&&!!e.stack);   // belt pouch and quiver are quick access bags: stackable items only
 // what a character carries follows the item as the DM edits it; the stored copy is only the fallback
 const resolveEntry=(e,def)=>def?{...e,name:def.name||e.name,desc:def.desc||'',rules:def.rules||'',img:def.img||'',slots:slotsOf(def),stack:stackOf(def)}:e;
 const invUsedR=(inv,look,c)=>Object.values(inv||{}).filter(Boolean).reduce((a,e)=>{const r=resolveEntry(e,look&&e.ref?look(e.ref):null),p=normPos(e.pos);return a+entryCost(r,canPlace(r,p,c||{})?p:'pack')},0)+wrCost(c);
+const ICO={bp:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7V6a4 4 0 0 1 8 0v1M6.5 7h11A1.5 1.5 0 0 1 19 8.5V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8.5A1.5 1.5 0 0 1 6.5 7zM9 15h6M9 11.5h6"/></svg>',pouch:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l1 3c3 2 4 5 4 8a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5c0-3 1-6 4-8l1-3zM8 8h8"/></svg>',quiver:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l6-5 4 4-5 6M7 10l7 7-4 4-6-6zM15 3l1.5 3M18 6l-3-1.5"/></svg>'};
 const INTOD=[['','Day'],['dusk','Dusk'],['night','Night']];
 const AMBS=['drip','torch','magic','dark','haunt','water','fire','moon','fly','fey'];
 const todFor=L=>{const e=effWx(L);return(e.area==='none'||e.amb)?'day':todOf(L)};
@@ -1192,8 +1206,8 @@ function player(code){
   let d={},tab=sessionStorage.getItem('pvtab')||'quest',Q=null,qid=null,qu=null,psel=null,open=null,fxSel=null,last='',lastD='';
   const SHP={},subs={};
   const card=i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${i.img?`<img src="${i.img}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${slotsOf(i)||stackOf(i)?`<p class="wgt">Slots: ${slotTxt(i)}</p>`:''}${i.qty!=null?`<p class="qty">${i.qty>0?'×'+i.qty:'Sold out'}</p>`:''}</div>`;
-  // Inventory: one pool of slots (STR + 3 + PB). One figure with 14 places, belt pouch spaces for stackable items, the backpack as a grid, and a water and rations box.
-  let CH=[],cid=localStorage.getItem('char-'+code)||'',pick=false,esel=null,info=false,toast='',tt=0;
+  // Inventory: one pool of slots (STR + 3 + PB). One figure with 12 places, quick access bags (belt pouch, quiver) for stackable items, the backpack as a grid, water and rations in the top bar.
+  let CH=[],cid=localStorage.getItem('char-'+code)||'',pick=false,esel=null,info=false,toast='',tt=0,upg=false;
   const DEF={},dsub={};
   const me=()=>CH.find(x=>x.id===cid)||null;
   const syncDefs=()=>{   // follow the items this character carries, so changes by the DM show up
@@ -1208,7 +1222,13 @@ function player(code){
   const usedOf=(c,es)=>es.reduce((a,e)=>a+entryCost(e,e.epos),0)+wrCost(c);
   const say=m=>{toast=m;clearTimeout(tt);tt=setTimeout(()=>{toast='';render()},2400);render()};
   const saveInv=(c,patch)=>{c.inv={...(c.inv||{}),...patch};setDoc(doc(db,'sessions',code,'chars',c.id),{inv:patch},{merge:true});syncDefs();render()};
-  const toggleWR=k=>{const c=me();if(!c)return;const wr={w:0,r:0,...(c.wr||{})};if(k==='w')wr.w=wr.w?0:1;else{const n=+k.slice(1);wr.r=wr.r>=n?n-1:n}c.wr=wr;setDoc(doc(db,'sessions',code,'chars',c.id),{wr},{merge:true});render()};
+  const saveChar=(c,patch)=>{Object.assign(c,patch);setDoc(doc(db,'sessions',code,'chars',c.id),patch,{merge:true});render()};
+  const toggleWR=k=>{const c=me();if(!c)return;const wr={w:0,r:0,...(c.wr||{})};if(k==='w')wr.w=wr.w?0:1;else{const n=+k.slice(1);wr.r=wr.r>=n?n-1:n}saveChar(c,{wr})};
+  const upgrade=k=>{const c=me();if(!c)return;
+    if(k==='rx'){saveChar(c,{rx:!c.rx,...(c.rx&&c.wr&&c.wr.r>3?{wr:{...c.wr,r:3}}:{})});return}
+    const m=/^(bp|pouch|quiver)([+-])$/.exec(k);if(!m)return;const lim={bp:[0,12],pouch:[1,6],quiver:[0,6]}[m[1]],cur=m[1]==='pouch'?pouchN(c):m[1]==='quiver'?quiverN(c):(parseInt(c.bp)||0);
+    saveChar(c,{[m[1]]:Math.max(lim[0],Math.min(lim[1],cur+(m[2]==='+'?1:-1)))});
+  };
   const moveTo=(c,eid,pos)=>{
     const es=entries(c),e=es.find(x=>x.id===eid);if(!e||e.epos===pos)return;
     const occ=pos==='pack'?null:es.find(x=>x.id!==eid&&x.epos===pos),patch={[eid]:{...e._raw,pos,idx:null}};
@@ -1241,20 +1261,23 @@ function player(code){
     const c=me();
     if(!CH.length)return'<div class="pvempty">No characters yet. Ask the DM to create one.</div>';
     if(!c||pick)return'<div class="pvname">Who are you?</div><div class="ivpick">'+CH.map(x=>`<button class="btn" data-pick="${x.id}">${esc(x.name)} <small>STR ${x.str||10}</small></button>`).join('')+'</div>';
-    const es=entries(c),T=invCap(c),U=usedOf(c,es),sel=es.find(x=>x.id===esel),over=U>T,wr={w:0,r:0,...(c.wr||{})};
+    const es=entries(c),T=invCap(c),U=usedOf(c,es),sel=es.find(x=>x.id===esel),over=U>T,mal=speedMalus(U,T),wr={w:0,r:0,...(c.wr||{})},bp=parseInt(c.bp)||0,pn=pouchN(c),qn=quiverN(c),maxR=c.rx?6:3;
     const item=e=>{const k=entryCost(e,e.epos);return`<div class="ivi${e.id===esel?' on':''}" data-e="${e.id}"><b>${esc(e.name)}</b>${k?`<span class="sl">${k}</span>`:''}${e.stack?`<span class="q">${e.qty}/3</span>`:''}</div>`};
-    const cell=(pos,label)=>{const e=es.find(x=>x.epos===pos),valid=sel&&canPlace(sel,pos,c)&&!(e&&e.id===sel.id)&&sel.epos!==pos&&(!e||canPlace(e,sel.epos,c));return`<div class="ivs ${pos}${valid?' valid':''}" data-pos="${pos}">${e?item(e):`<span class="lbl">${label}</span>`}</div>`};
-    const doll=`<div class="dollgrid">${GEAR.map(g=>cell(g[0],g[1])).join('')}</div>`;
+    const cell=(pos,label)=>{const e=es.find(x=>x.epos===pos),valid=sel&&canPlace(sel,pos,c)&&!(e&&e.id===sel.id)&&sel.epos!==pos&&(!e||canPlace(e,sel.epos,c)),cls=EQUIPPED.includes(pos)?' carry':GEARIDS.includes(pos)?' worn':'';return`<div class="ivs ${pos}${cls}${valid?' valid':''}" data-pos="${pos}">${e?item(e):`<span class="lbl">${label}</span>`}</div>`};
+    const icon=(svg,n,lab)=>`<button class="ivico" data-upg="1" title="${lab}">${svg}<span>${n}</span></button>`;
+    const doll=`<div class="dollgrid">${GEAR.map(g=>cell(g[0],g[1])).join('')}<div class="ivic backpack">${icon(ICO.bp,'+'+bp,'Backpack')}</div><div class="ivic pouch">${icon(ICO.pouch,pn,'Belt pouch')}${icon(ICO.quiver,qn,'Quiver')}</div></div>`;
     const lay=packLayout(c,es),lay2=sel?packLayout(c,es,sel.id):null;let cells='';
     lay.grid.forEach((x,i)=>{if(x){cells+=`<div class="ivt">${item(x)}</div>`;return}if(i<lay.limit){const valid=sel&&lay2.fits(i);cells+=`<div class="ivfree${valid?' valid':''}" data-cell="${i}"></div>`}});
-    const freeN=Math.max(0,T-U),pn=pouchN(c);
+    const freeN=Math.max(0,T-U),qa=(p,n,l)=>Array.from({length:n},(_,i)=>cell(p+(i+1),l)).join('');
+    const step=(k,lab,v)=>`<div class="ivstep"><span>${lab}</span><button data-up="${k}-">−</button><b>${v}</b><button data-up="${k}+">+</button></div>`;
     let h=`<div class="inv">${toast?`<div class="ivtoast">${esc(toast)}</div>`:''}<div class="invh"><b>${esc(c.name)}</b><button class="btn sm alt" data-switch="1">Switch</button></div>
-      <div class="ivcap"><div class="invbar${over?' over':''}"><i style="width:${Math.min(100,U/T*100)}%"></i></div><div class="ivnum${over?' over':''}">${U} / ${T} slots${over?' (over by '+(U-T)+')':''}</div><div class="ivsub">STR ${c.str||10} + 3${c.ath?' + PB '+(c.pb||2)+' (Athletics)':''}</div></div>
-      <div class="doll">${doll}<div class="ivsub" style="color:var(--ink);margin-top:6px">Hands, armor and hipgear count in full. Everything else you wear counts 1 less.</div></div>
-      <div class="ivsec"><h4>Water and rations</h4><div class="ivwr"><button class="ivw${wr.w?' on':''}" data-wr="w">Water</button>${[1,2,3].map(n=>`<button class="ivw${wr.r>=n?' on':''}" data-wr="r${n}">Ration</button>`).join('')}</div><div class="ivsub" style="color:var(--ink)">Water is 1 slot. 1 to 3 rations are 1 slot together. More rations go in the backpack.</div></div>
-      <div class="ivsec"><h4>Belt pouch</h4><div class="ivgrid">${Array.from({length:pn},(_,i)=>cell('p'+(i+1),'Stack')).join('')}</div><div class="ivsub" style="color:var(--ink)">Stackable items only, one stack per space.</div></div>
-      <div class="ivsec"><h4>Backpack</h4><div class="ivpack${sel&&sel.epos!=='pack'?' valid':''}" data-pos="pack">${cells}</div><div class="ivsub" style="color:var(--ink)">${over?'No free slots, over by '+(U-T):freeN+' free slot'+(freeN===1?'':'s')}</div></div>`;
-    if(sel)h+=`<div class="invact"><b>${esc(sel.name)}</b><small>Slots: ${slotTxt(sel)}${sel.epos!=='pack'&&!EQUIPPED.includes(sel.epos)&&GEARIDS.includes(sel.epos)&&slotsOf(sel)?', counts 1 less while worn':''}</small>${info&&sel.desc?`<p>${esc(sel.desc)}</p>`:''}${info&&sel.rules?`<p><b>Statblock:</b> ${esc(sel.rules)}</p>`:''}<div class="row"><button class="btn sm alt" data-ia="info">${info?'Hide info':'Info'}</button>${sel.qty>1?'<button class="btn sm alt" data-ia="one">Drop one</button>':''}<button class="btn sm alt" data-ia="drop">Drop</button><button class="btn sm alt" data-ia="clear">Done</button></div><small>Tap a highlighted place or a free space to move it there.</small></div>`;
+      <div class="ivcap"><div class="invbar${over?' over':''}"><i style="width:${Math.min(100,U/T*100)}%"></i></div><div class="ivnum${over?' over':''}">${U} / ${T} slots${over?' (over by '+(U-T)+')':''}</div>${mal?`<div class="ivspd">Speed -${mal} ft</div>`:''}<div class="ivsub">STR ${c.str||10} + 3${c.ath?' + PB '+(c.pb||2)+' (Athletics)':''}${bp?' + backpack '+bp:''}</div>
+        <div class="ivwr"><button class="ivw${wr.w?' on':''}" data-wr="w">Water</button>${Array.from({length:maxR},(_,i)=>`<button class="ivw${wr.r>=i+1?' on':''}" data-wr="r${i+1}">Ration</button>`).join('')}</div></div>
+      <div class="doll">${doll}<div class="ivsub" style="color:var(--ink);margin-top:6px">Dark places are worn and count 1 less. Light places are carried and count in full. Tap a bag icon to upgrade.</div></div>
+      ${upg?`<div class="ivsec ivupg"><h4>Upgrades</h4>${step('bp','Backpack, extra slots',bp)}${step('pouch','Belt pouch, spaces',pn)}${step('quiver','Quiver, spaces',qn)}<div class="ivstep"><span>Room for 6 rations</span><button data-up="rx" class="${c.rx?'on':''}">${c.rx?'On':'Off'}</button></div><button class="btn sm alt" data-upg="1">Close</button></div>`:''}
+      <div class="ivsec"><h4>Quick access</h4><div class="ivgrid">${qa('p',pn,'Pouch')}${qa('q',qn,'Quiver')}</div><div class="ivsub" style="color:var(--ink)">Belt pouch and quiver take stackable items only, one stack per space.</div></div>
+      <div class="ivsec"><h4>Backpack</h4><div class="ivpack${sel&&sel.epos!=='pack'?' valid':''}" data-pos="pack">${cells}</div><div class="ivsub" style="color:var(--ink)">${over?'No free slots, over by '+(U-T)+(mal?', speed -'+mal+' ft':''):freeN+' free slot'+(freeN===1?'':'s')}</div></div>`;
+    if(sel)h+=`<div class="invact"><b>${esc(sel.name)}</b><small>Slots: ${slotTxt(sel)}${GEARIDS.includes(sel.epos)&&!EQUIPPED.includes(sel.epos)&&slotsOf(sel)?', counts 1 less while worn':''}</small>${info&&sel.desc?`<p>${esc(sel.desc)}</p>`:''}${info&&sel.rules?`<p><b>Statblock:</b> ${esc(sel.rules)}</p>`:''}<div class="row"><button class="btn sm alt" data-ia="info">${info?'Hide info':'Info'}</button>${sel.qty>1?'<button class="btn sm alt" data-ia="one">Drop one</button>':''}<button class="btn sm alt" data-ia="drop">Drop</button><button class="btn sm alt" data-ia="clear">Done</button></div><small>Tap a highlighted place or a free space to move it there.</small></div>`;
     return h+'</div>';
   };
   const invTap=e=>{
@@ -1305,6 +1328,8 @@ function player(code){
     const pk=e.target.closest('[data-pick]');if(pk){cid=pk.dataset.pick;localStorage.setItem('char-'+code,cid);pick=false;esel=null;render();return}
     if(e.target.closest('[data-switch]')){pick=true;esel=null;render();return}
     const wb=e.target.closest('[data-wr]');if(wb){toggleWR(wb.dataset.wr);return}
+    const ub=e.target.closest('[data-up]');if(ub){upgrade(ub.dataset.up);return}
+    if(e.target.closest('[data-upg]')){upg=!upg;render();return}
     const ia=e.target.closest('[data-ia]');if(ia){invAct(ia.dataset.ia);return}
     if(tab==='inv'&&(e.target.closest('[data-e]')||e.target.closest('[data-pos]')||e.target.closest('[data-cell]'))){invTap(e);return}
     const fb=e.target.closest('[data-fx]');if(fb){fxSel=fxSel===fb.dataset.fx?null:fb.dataset.fx;render();return}
@@ -1590,7 +1615,7 @@ function dm(code){
   function chDraw(){
     const box=$('#chl');if(!box)return;$('#chn').textContent=CHS.length?'('+CHS.length+')':'';
     box.innerHTML=CHS.map(c=>{const T=invCap(c),U=invUsedR(c.inv,lookupDef,c),n=Object.values(c.inv||{}).filter(Boolean).length,inp=(k,w,v,mn,mx)=>`<input data-id="${c.id}" data-k="${k}" type="number" min="${mn}" max="${mx}" value="${v}" style="width:${w}px">`;
-      return`<div class="qrow"><div class="qt" style="flex:1 1 140px"><b>${esc(c.name)}</b><br><small${U>T?' style="color:#a1281a;font-weight:700"':''}>Slots ${U} / ${T}${U>T?' (over)':''}, ${n} items</small></div><div class="row"><label>STR ${inp('str',64,c.str||10,1,30)}</label><label>PB ${inp('pb',56,c.pb||2,2,9)}</label><label><input data-id="${c.id}" data-k="ath" type="checkbox"${c.ath?' checked':''}> Athletics</label><label>Pouch ${inp('pouch',56,c.pouch||1,1,8)}</label><button class="btn sm alt edit" data-a="chdel" data-id="${c.id}">Delete</button></div></div>`}).join('')||'<p class="note">No characters yet.</p>';
+      return`<div class="qrow"><div class="qt" style="flex:1 1 140px"><b>${esc(c.name)}</b><br><small${U>T?' style="color:#a1281a;font-weight:700"':''}>Slots ${U} / ${T}${U>T?' (over, speed -'+speedMalus(U,T)+' ft)':''}, ${n} items</small></div><div class="row"><label>STR ${inp('str',64,c.str||10,1,30)}</label><label>PB ${inp('pb',56,c.pb||2,2,9)}</label><label><input data-id="${c.id}" data-k="ath" type="checkbox"${c.ath?' checked':''}> Athletics</label><label>Pouch ${inp('pouch',56,c.pouch||1,1,8)}</label><label>Pack + ${inp('bp',56,c.bp||0,0,12)}</label><label>Quiver ${inp('quiver',56,c.quiver||0,0,6)}</label><label><input data-id="${c.id}" data-k="rx" type="checkbox"${c.rx?' checked':''}> 6 rations</label><button class="btn sm alt edit" data-a="chdel" data-id="${c.id}">Delete</button></div></div>`}).join('')||'<p class="note">No characters yet.</p>';
   }
   function monDraw(){
     const box=$('#monfx');if(!box)return;
@@ -1697,7 +1722,7 @@ function dm(code){
   unsubs.push(onSnapshot(MF,s=>{MFD=s.exists()?s.data():{};monDraw()}));
   unsubs.push(onSnapshot(UF,s=>{UD=s.exists()?s.data():{};draw()}));
   unsubs.push(onSnapshot(CHC,s=>{CHS=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(a.created||0)-(b.created||0));chDraw()}));
-  $('#chl').onchange=e=>{const t=e.target;if(!t.dataset||!t.dataset.k)return;const v=t.type==='checkbox'?t.checked:Math.max(1,parseInt(t.value)||1);updateDoc(doc(db,'sessions',code,'chars',t.dataset.id),{[t.dataset.k]:v})};
+  $('#chl').onchange=e=>{const t=e.target;if(!t.dataset||!t.dataset.k)return;const mn=(t.dataset.k==='bp'||t.dataset.k==='quiver')?0:1,v=t.type==='checkbox'?t.checked:Math.max(mn,parseInt(t.value)||mn);updateDoc(doc(db,'sessions',code,'chars',t.dataset.id),{[t.dataset.k]:v})};
   $('#monfx').onchange=e=>{const t=e.target,id=$('#monfx').dataset.id;if(!t.dataset||!t.dataset.k||!id)return;const cur={bd:'dark',fx:'',amb:'',wx:'',...(MFD[id]||{})};cur[t.dataset.k]=t.value;MFD={...MFD,[id]:cur};setDoc(MF,{[id]:cur},{merge:true})};
   $('#inopen').onchange=e=>saveI({open:e.target.value});
   $('#insecs').onchange=e=>saveI({secs:Math.min(20,Math.max(3,+e.target.value||6))});
