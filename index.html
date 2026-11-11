@@ -59,7 +59,7 @@ async function display(code,pv){
   if(!pv){let vt=0;const vz=$('#vz');vz.addEventListener('pointerdown',()=>{vt=setTimeout(viewMenu,1200)});['pointerup','pointercancel','pointerleave'].forEach(n=>vz.addEventListener(n,()=>clearTimeout(vt)))}
   if(pv)$('#stage').classList.add('prev');else try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(e){}
   const cache=new Map();
-  const get=async id=>{if(!id)return{};if(!cache.has(id)){const s=await getDoc(doc(db,'sessions',code,'images',id));cache.set(id,s.exists()?s.data():{})}return cache.get(id)};
+  const get=async id=>{if(!id)return{};if(!cache.has(id))cache.set(id,(await imgDoc(code,id))||{});return cache.get(id)};
   let d={},qs=[],seq=0;
   const cv=$('#mapc'),RM=makeRenderer(cv);let MO=null,MS={},tg=null,cur=null,raf=0,curId=null,TL=[],npcKey='',papKey='',bgCur='',bgFlip=false,bgT=0;
   const stepM=()=>{raf=0;if(!MO||!tg)return;const T=clampV(tg,MO,MS,cv.width,cv.height);if(!cur)cur={...T};const k=.25;cur.x+=(T.x-cur.x)*k;cur.y+=(T.y-cur.y)*k;cur.ft+=(T.ft-cur.ft)*k;RM(MO,MS,cur,1,mkToks(TL,MS),todFor(d));
@@ -446,6 +446,11 @@ async function display(code,pv){
 const mapCache=new Map();
 function loadMap(code,id){
   if(!mapCache.has(id))mapCache.set(id,(async()=>{
+    if(isLib(id)){   // library maps are one file, drawn straight from the image
+      const e=await imgDoc(code,id);if(!e)return null;const im=new Image();im.src=e.data;await im.decode();
+      const w=im.naturalWidth,h=im.naturalHeight;if(Math.max(w,h)>4096)console.warn('Library map '+id+' is '+w+'x'+h+' px. Over 4096 px can fail on tablets.');
+      return{meta:{...e,w,h},canvas:im};
+    }
     const m=(await getDoc(doc(db,'sessions',code,'images',id))).data();if(!m)return null;
     const c=document.createElement('canvas');c.width=m.w;c.height=m.h;
     const x=c.getContext('2d'),tw=Math.ceil(m.w/m.cols),th=Math.ceil(m.h/m.rows);
@@ -1065,6 +1070,14 @@ function player(code){
 }
 let AUJ=null;
 const AUP=typeof fetch==='function'?fetch('audio.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('missing');return r.json()}).then(j=>{AUJ=j;return j}).catch(()=>null):Promise.resolve(null);
+// Image library: files in images/, listed by hand in images.json. Inside the app their ids get a lib: prefix, so they never collide with uploaded (Firestore) images.
+const LIB=new Map(),isLib=id=>typeof id==='string'&&id.startsWith('lib:');
+const LIBP=typeof fetch==='function'?fetch('images.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('missing');return r.json()}).then(j=>{
+  (j.images||[]).forEach(e=>{if(e&&e.id&&e.type&&e.file)LIB.set('lib:'+e.id,{id:'lib:'+e.id,type:e.type,name:e.name||e.id,data:encodeURI(e.file),tags:e.tags||[],lib:true,created:0})});return LIB}).catch(()=>LIB):Promise.resolve(LIB);
+async function imgDoc(code,id){   // one image's record, from the library file list or from Firestore
+  if(isLib(id)){await LIBP;const e=LIB.get(id);return e?{...e}:null}
+  const s=await getDoc(doc(db,'sessions',code,'images',id));return s.exists()?s.data():null;
+}
 function makeMixer(){
   let ctx=null,on=false;const ch={};
   const A=()=>AUJ||{},fade=()=>A().fadeSeconds||2,trim=()=>A().loopTrim??1,xf=()=>A().loopFade??1,url=f=>(A().folder||'audio/')+f;
@@ -1145,7 +1158,7 @@ function dm(code){
   <details class="panel edit" id="d-up" open><summary><h2>Add to the library</h2></summary><div class="row">
   <select id="type"><option value="background">Background</option><option value="npc">NPC portrait</option><option value="monster">Monster token</option><option value="map">Map</option><option value="overlay">Overlay (transparent center)</option></select>
   <input id="nm" placeholder="Name (optional)"><input id="file" type="file" accept="image/*" multiple>
-  <button class="btn" data-a="up">Add image</button></div><p class="note" id="msg">Several files at once keep their file names. Rename any image later with the pencil on its tile.</p></details>
+  <button class="btn" data-a="up">Add image</button><button class="btn sm alt" data-a="expall" title="Download all uploaded images of this type">Export all</button></div><p class="note" id="msg">Several files at once keep their file names. Rename any image later with the pencil on its tile.</p></details>
   <details class="panel edit" id="d-in" open><summary><h2>Intro <span id="inn"></span><span class="eye" id="e-in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
   <div class="row"><button class="btn" id="inplay" data-a="inplay" disabled>Play intro</button><button class="btn sm alt" data-a="instop">Stop</button></div>
   <div id="inl" style="margin-top:8px"></div>
@@ -1200,7 +1213,7 @@ function dm(code){
   const UF=doc(db,'sessions',code,'usage','last');let UD={};
   const useId=id=>{UD={...UD,[id]:Date.now()};setDoc(UF,{[id]:UD[id]},{merge:true})};
   const draw=()=>{
-    const tile=(i,on,a)=>`<div class="tile ${on?'on':''} ${a==='npc'?'npc':''} ${i.type==='monster'?'mon':''}" tabindex="0" data-a="${a}" data-id="${i.id}"><img src="${i.data}" alt=""><span>${esc(i.name)}</span><i class="edit" data-a="ren" data-id="${i.id}" title="Rename">✎</i>${i.type==='monster'?`<u class="edit" data-a="monset" data-id="${i.id}" title="Look and effects">✦</u>`:''}<b class="edit" data-a="del" data-id="${i.id}" title="Delete">×</b></div>`;
+    const tile=(i,on,a)=>`<div class="tile ${on?'on':''} ${a==='npc'?'npc':''} ${i.type==='monster'?'mon':''}" tabindex="0" data-a="${a}" data-id="${i.id}"><img src="${i.data}" alt=""${i.lib?' loading="lazy"':''}><span>${i.lib?'':'<em class="cl" title="Uploaded, this session only">☁︎</em>'}${esc(i.name)}</span>${i.lib?'':`<i class="edit" data-a="ren" data-id="${i.id}" title="Rename">✎</i>`}${i.type==='monster'?`<u class="edit" data-a="monset" data-id="${i.id}" title="Look and effects">✦</u>`:''}${i.lib?'':`<s class="edit" data-a="exp1" data-id="${i.id}" title="Export">⤓</s><b class="edit" data-a="del" data-id="${i.id}" title="Delete">×</b>`}</div>`;
     const bg=imgs.filter(i=>i.type==='background'),np=imgs.filter(i=>i.type==='npc'),mo=imgs.filter(i=>i.type==='monster'),mp=imgs.filter(i=>i.type==='map');
     const ud=i=>UD[i.id]||0,onN=i=>(live.visibleNpcIds||[]).includes(i.id);
     bg.sort((a,b)=>((live.backgroundId===b.id)-(live.backgroundId===a.id))||ud(b)-ud(a));np.sort((a,b)=>(onN(b)-onN(a))||ud(b)-ud(a));mo.sort((a,b)=>(onN(b)-onN(a))||ud(b)-ud(a));mp.sort((a,b)=>((live.mapId===b.id)-(live.mapId===a.id))||ud(b)-ud(a));
@@ -1450,14 +1463,14 @@ function dm(code){
   $('#insecs').onchange=e=>saveI({secs:Math.min(20,Math.max(3,+e.target.value||6))});
   $('#inmus').onchange=e=>{const v=e.target.value.trim();saveI({music:v});if(mtype(v)==='spotify'){SP.link=v;spShow(v,false)}inMusicNote()};
   $('#inl').onchange=e=>{const t=e.target;if(t.dataset&&t.dataset.a==='intx')saveI({slides:IC.slides.map((x,i)=>i===+t.dataset.id?{...x,t:t.value.trim()}:x)});if(t.dataset&&t.dataset.a==='intod')saveI({slides:IC.slides.map((x,i)=>i===+t.dataset.id?{...x,d:t.value}:x)});if(t.dataset&&t.dataset.a==='inbg')saveI({slides:IC.slides.map((x,i)=>i===+t.dataset.id?{...x,b:t.value}:x)});if(t.dataset&&t.dataset.a==='inwx')saveI({slides:IC.slides.map((x,i)=>i===+t.dataset.id?{...x,w:t.value}:x)})};
-  $('#autitle').onchange=async e=>{const aid=areaId();if(!aid)return;await updateDoc(doc(IM,aid),{titleCard:e.target.checked,title:''})};
-  $('#mulink').onchange=async e=>{const aid=areaId();if(!aid)return;await updateDoc(doc(IM,aid),{music:e.target.value.trim()})};
+  $('#autitle').onchange=async e=>{const aid=areaId();if(!aid)return;await imSet(aid,{titleCard:e.target.checked,title:''})};
+  $('#mulink').onchange=async e=>{const aid=areaId();if(!aid)return;await imSet(aid,{music:e.target.value.trim()})};
   $('#muvol').oninput=e=>{if(MU.out)MU.out.gain.setTargetAtTime(+e.target.value/100,MU.ctx.currentTime,.05)};
   addEventListener('resize',pvFit);unsubs.push(()=>removeEventListener('resize',pvFit));
   $('#d-mu').addEventListener('toggle',placeHost);addEventListener('scroll',placeHost,true);addEventListener('resize',placeHost);unsubs.push(()=>{removeEventListener('scroll',placeHost,true);removeEventListener('resize',placeHost)});
   let sv0=0;const sendVol=v=>set({sndVol:v});$('#sndvol').oninput=e=>{const n=Date.now();if(n-sv0>250){sv0=n;sendVol(+e.target.value/100)}};$('#sndvol').onchange=e=>sendVol(+e.target.value/100);
   unsubs.push(()=>{if(MU.el)MU.el.pause()});
-  $('#wxarea').onchange=async e=>{const v=curView(),aid=areaId(),val=e.target.value;if(!aid)return;await updateDoc(doc(IM,aid),{wx:val});await set(v==='map'?{mapWx:val}:{bgWx:val})};
+  $('#wxarea').onchange=async e=>{const v=curView(),aid=areaId(),val=e.target.value;if(!aid)return;await imSet(aid,{wx:val});await set(v==='map'?{mapWx:val}:{bgWx:val})};
   $('#wxsel').onchange=async e=>{const P=G.presets.find(p=>p.id===e.target.value);if(P){await saveG({cur:P.id,bag:{...P.d},day:0});await set({cold:!!P.cold,season:seasonP(P)});wxDraw();syncPre(true)}};
   $('#pc').onchange=e=>{updPre({cold:e.target.checked});set({cold:e.target.checked,season:seasonP(curPre())})};
   $('#ph').onchange=e=>{updPre({hot:e.target.checked});set({season:seasonP(curPre())})};
@@ -1551,9 +1564,25 @@ function dm(code){
   $('#mrev').onchange=e=>saveM({rev:e.target.checked});
   addEventListener('resize',drawMap);unsubs.push(()=>removeEventListener('resize',drawMap));
   unsubs.push(onSnapshot(L,s=>{live=s.data()||{};mw.set(live.mapId||null);if(!ptr.size&&!tmr&&live.mapView)view={...live.mapView};pvAuto();draw();drawMap()}));
-  unsubs.push(onSnapshot(IM,s=>{imgs=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.created-b.created);draw()}));
+  // uploaded images plus the library; area settings of library images (music, weather, title card) live in libmeta, since images.json is edited by hand only
+  let upl=[],LMD={};const LMC=collection(db,'sessions',code,'libmeta');
+  const mergeImgs=()=>{imgs=[...[...LIB.values()].map(e=>({...e,...(LMD[e.id]||{})})),...upl];draw()};
+  unsubs.push(onSnapshot(IM,s=>{upl=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.created-b.created);mergeImgs()}));
+  unsubs.push(onSnapshot(LMC,s=>{LMD={};s.docs.forEach(d=>{const x=d.data()||{};LMD[d.id]={music:x.music,titleCard:x.titleCard,title:x.title,wx:x.wx}});mergeImgs()}));
+  LIBP.then(mergeImgs);
   unsubs.push(onSnapshot(QC,s=>{qs=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.created-b.created);draw()}));
   const set=o=>setDoc(L,o,{merge:true});
+  const imSet=(id,o)=>isLib(id)?setDoc(doc(LMC,id),o,{merge:true}):updateDoc(doc(IM,id),o);
+  // Export an uploaded image as a .webp file, so it can be moved into the library (images/ and images.json)
+  const fname=im=>im.type+'-'+(String(im.name||'image').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-').slice(0,60)||'image')+'.webp';
+  const cvBlob=c=>new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('Could not encode.')),'image/webp',.9));
+  const exportImg=async im=>{
+    let blob;
+    if(im.type==='map'){const o=await loadMap(code,im.id);if(!o)throw new Error('Map not found.');const c=document.createElement('canvas');c.width=o.meta.w;c.height=o.meta.h;c.getContext('2d').drawImage(o.canvas,0,0);blob=await cvBlob(c)}
+    else if(/^data:image\/webp/.test(im.data||''))blob=await(await fetch(im.data)).blob();
+    else{const bm=await createImageBitmap(await(await fetch(im.data)).blob()),c=document.createElement('canvas');c.width=bm.width;c.height=bm.height;c.getContext('2d').drawImage(bm,0,0);blob=await cvBlob(c)}
+    const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=fname(im);document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000);
+  };
   app.onclick=async e=>{
     const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,id=t.dataset.id;
     if(a==='chadd'){const name=$('#chname').value.trim();if(!name)return;setDoc(doc(CHC),{name,str:parseInt($('#chstr').value)||10,pb:parseInt($('#chpb').value)||2,ath:$('#chath').checked,pouch:1,inv:{},created:Date.now()});$('#chname').value='';$('#chath').checked=false}
@@ -1677,8 +1706,13 @@ function dm(code){
     if(a==='mreset'&&MO){MS.lights=lights();MS.ex='';MS.lights.forEach(addEx);dirty=true;flush();drawMap()}
     if(a==='board')set({showBoard:!live.showBoard,...(!live.showBoard?{showMap:false,showShop:false}:{})});
     if(a==='home'){location.hash='';}
-    if(a==='ren'){const cur=imgs.find(x=>x.id===id),nn=prompt('New name',cur?cur.name:'');if(nn&&nn.trim())updateDoc(doc(IM,id),{name:nn.trim()})}
-    if(a==='del'&&confirm('Delete this image from the library?')){
+    if(a==='exp1'){const im=imgs.find(x=>x.id===id);if(im&&!im.lib)exportImg(im).catch(err=>alert('Export failed: '+err.message))}
+    if(a==='expall'){const type=$('#type').value,msg=$('#msg'),list=upl.filter(x=>x.type===type);msg.className='note';
+      if(!list.length){msg.textContent='No uploaded images of this type.';return}
+      for(let k=0;k<list.length;k++){msg.textContent='Exporting '+(k+1)+' of '+list.length+'...';try{await exportImg(list[k])}catch(err){msg.className='note err';msg.textContent='Could not export '+list[k].name+': '+err.message;return}await new Promise(r=>setTimeout(r,400))}
+      msg.textContent='Exported '+list.length+' images.'}
+    if(a==='ren'&&!isLib(id)){const cur=imgs.find(x=>x.id===id),nn=prompt('New name',cur?cur.name:'');if(nn&&nn.trim())updateDoc(doc(IM,id),{name:nn.trim()})}
+    if(a==='del'&&!isLib(id)&&confirm('Delete this image from the library?')){
       const im=imgs.find(x=>x.id===id);
       if(im&&im.type==='map'){for(let k=0;k<im.cols*im.rows;k++)await deleteDoc(doc(db,'sessions',code,'images',id,'tiles',String(k)));await deleteDoc(doc(db,'sessions',code,'maps',id));mapCache.delete(id)}
       await set({visibleNpcIds:arrayRemove(id),...(live.backgroundId===id?{backgroundId:null}:{}),...(live.mapId===id?{mapId:null,showMap:false}:{})});

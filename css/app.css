@@ -509,3 +509,5 @@ body.pvflat::before{background:radial-gradient(ellipse at 50% -10%,#33261b 0,#1a
   .pv .card .wgt,.pv .card .qty{font-size:11px}
   .pv .card .ph{font-size:26px}
 }
+.tile s{position:absolute;top:4px;right:38px;width:30px;height:30px;line-height:28px;text-align:center;text-decoration:none;border-radius:50%;background:#2a170dd9;color:var(--gold);border:1px solid var(--gold2)}
+.tile em.cl{font-style:normal;color:var(--gold);margin-right:5px;opacity:.85}

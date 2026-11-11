@@ -1,0 +1,4 @@
+{
+  "notes": "Image library. Files live in images/<folder>/. id must be unique and never change once used (the app stores it as lib:<id>). type: background, map, npc, monster, overlay. tags are optional and only used for filtering. Sizes (WebP, quality about 0.8): backgrounds and overlays 2560 px long side, maps up to 4096 px long side, NPCs and monsters 600 to 800 px.",
+  "images": []
+}
