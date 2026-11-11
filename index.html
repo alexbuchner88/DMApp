@@ -852,6 +852,8 @@ const ICN={
  pencil:sv('<path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19z"/><path d="M14 7l3 3"/>'),
  trash:sv('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>'),
  check:sv('<path d="M5 12.5l4.5 4.5L19 7"/>'),
+ grid:sv('<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/>'),
+ list:sv('<path d="M4 6h16M4 12h16M4 18h16"/>'),
  x:sv('<path d="M6 6l12 12M18 6L6 18"/>'),
  dumb:sv('<path d="M3 9.5v5M6 7v10M18 7v10M21 9.5v5M6 12h12"/>'),
  star:sv('<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>'),
@@ -900,7 +902,7 @@ function player(code){
   const SHP={},subs={};
   const card=i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${itImg(i)?`<img src="${itImg(i)}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${slotsOf(i)||usesOf(i)?`<p class="wgt" title="Slots">${ICN.cube}${slotFmt(slotsOf(i))}${usesOf(i)?` &nbsp;${ICN.tally}${usesOf(i)}`:''}</p>`:''}${i.qty!=null?`<p class="qty">${i.qty>0?ICN.crate+'×'+i.qty:'Sold out'}</p>`:''}</div>`;
   // Inventory for the phone: gear and clothes in two windows, quick access bags, the backpack as a grid with sized blocks, water and rations in the top bar, a purse. It tracks, it does not play for you.
-  let CH=[],cid=localStorage.getItem('char-'+code)||'',pick=false,esel=null,info=localStorage.getItem('pvinfo')==='1',tips=localStorage.getItem('pvtips')!=='0',dw=sessionStorage.getItem('pvdw')||'gear',panel='',addAt='',addDraft={t:'',s:'1',u:'',n:''};
+  let CH=[],cid=localStorage.getItem('char-'+code)||'',pick=false,esel=null,info=localStorage.getItem('pvinfo')==='1',tips=localStorage.getItem('pvtips')!=='0',icv=localStorage.getItem('pvicv')==='1',dw=sessionStorage.getItem('pvdw')||'gear',panel='',addAt='',addDraft={t:'',s:'1',u:'',n:''};
   const DEF={},dsub={},rid=()=>Math.random().toString(36).slice(2,9);
   const me=()=>CH.find(x=>x.id===cid)||null;
   const syncDefs=()=>{   // follow the items this character carries, so changes by the DM show up
@@ -975,7 +977,9 @@ function player(code){
     if(!CH.length)return'<div class="pvempty">No characters yet. Ask the DM to create one.</div>';
     if(!c||pick)return'<div class="pvname">Who are you?</div><div class="ivpick">'+CH.map(x=>{const T=invCap(x),U=usedOf(x,entries(x)),e=Math.max(0,Math.min(6,parseInt(x.ex)||0));return`<button class="btn ivpc" data-pick="${x.id}"><b>${esc(x.name)}</b><span class="${U>T?'bad':''}" title="Slots">${ICN.cube}${slotFmt(U)} / ${T}</span><span title="Exhaustion">${ICN.tired}${e}</span><span title="Gold">${ICN.purse}${goldFmt(goldOf(x))}</span></button>`}).join('')+'</div>';
     const ex=Math.max(0,Math.min(6,parseInt(c.ex)||0)),es=entries(c),T=invCap(c),U=usedOf(c,es),sel=es.find(x=>x.id===esel),over=U>T,mal=speedMalus(U,T),wr={w:0,r:0,...(c.wr||{})},rm=rmaxOf(c),pn=pouchN(c),qn=quiverN(c),bp=parseInt(c.bp)||0,co={pp:0,gp:0,sp:0,...(c.coins||{})};
-    const item=e=>{const k=entryCost(e,e.epos),meta=(k?`<span class="tip">${ICN.cube}${slotFmt(k)}</span>`:'')+(e.max?`<span>${ICN.tally}${e.uses}/${e.max}</span>`:'');return`<div class="ivi${e.id===esel?' on':''}" data-e="${e.id}"><b>${esc(e.name)}</b>${meta?`<em class="ivm${e.max?'':' tip'}">${meta}</em>`:''}</div>`};
+    const item=e=>{const k=entryCost(e,e.epos),meta=(k?`<span class="tip">${ICN.cube}${slotFmt(k)}</span>`:'')+(e.max?`<span>${ICN.tally}${e.uses}/${e.max}</span>`:'');const im=icv&&itImg(e);   // icon view: the item's picture (own upload, or the icon from items/ that matches its name, also for items added by hand); text if there is none
+      if(im)return`<div class="ivi ivic${e.id===esel?' on':''}" data-e="${e.id}" title="${esc(e.name)}"><img src="${im}" alt="${esc(e.name)}">${e.max?`<em class="ivu">${e.uses}/${e.max}</em>`:''}</div>`;
+      return`<div class="ivi${e.id===esel?' on':''}" data-e="${e.id}"><b>${esc(e.name)}</b>${meta?`<em class="ivm${e.max?'':' tip'}">${meta}</em>`:''}</div>`};
     const cell=(pos,label)=>{const e=es.find(x=>x.epos===pos),valid=sel&&canPlace(sel,pos,c)&&!(e&&e.id===sel.id)&&sel.epos!==pos&&(!e||canPlace(e,sel.epos,c)),cls=GEARIDS.includes(pos)?' carry':WORNIDS.includes(pos)?' worn':'',ic=ICN[PIC[pos]||(pos[0]==='p'?'pouch':'arrow')];return`<div class="ivs ${pos}${cls}${valid?' valid':''}" data-pos="${pos}" title="${label}">${e?item(e):`<span class="lbl">${ic}<em class="${WORDS.includes(pos)?'':'tip'}">${label}</em></span>`}</div>`};
     const win=dw==='gear'?`<div class="dollgrid gear">${GEAR.map(g=>cell(g[0],g[1])).join('')}</div>`:`<div class="dollgrid cl">${CLOTHES.map(g=>cell(g[0],g[1])).join('')}</div>`;
     const lay=packLayout(c,es),lay2=sel?packLayout(c,es,sel.id):null;let cells='';
@@ -983,7 +987,7 @@ function player(code){
     const freeN=Math.max(0,T-U),qa=(p,n,l)=>Array.from({length:n},(_,i)=>cell(p+(i+1),l)).join('');
     const crow=(k,ic,lab)=>`<div class="ivcoin"><span class="ivsl" title="${lab}">${ic}<span>${lab}</span></span>${[-10,-1].map(n=>`<button data-coin="${k}:${n}">${n}</button>`).join('')}<b>${co[k]}</b>${[1,10].map(n=>`<button data-coin="${k}:${n}">+${n}</button>`).join('')}</div>`;
     const dr=addDraft,szl=[['0','0'],['0.5','½'],['1','1'],['2','2'],['3','3'],['4','4']],editing=addAt.startsWith('edit:');
-    let h=`<div class="inv${tips?'':' notips'}"><div class="invh"><b>${esc(c.name)}</b><button class="ivgold${panel==='purse'?' on':''}" data-purse="1" title="Purse">${ICN.purse}<span>${goldFmt(goldOf(c))} gp</span></button></div>
+    let h=`<div class="inv${tips?'':' notips'}"><div class="invh"><b>${esc(c.name)}</b><button class="ivvt" data-icv="1" title="${icv?'Text view':'Icon view'}">${icv?ICN.list:ICN.grid}</button><button class="ivgold${panel==='purse'?' on':''}" data-purse="1" title="Purse">${ICN.purse}<span>${goldFmt(goldOf(c))} gp</span></button></div>
       <div class="ivcap"><div class="ivrow0"><div class="invbar${over?' over':''}" title="Slots"><i style="width:${Math.min(100,U/T*100)}%"></i><span class="ivbt"><span class="ivbn">${ICN.cube}${slotFmt(U)} / ${T}</span>${mal?`<span class="ivbs" title="Speed">${ICN.boot}−${mal} ft</span>`:''}</span></div><div class="ivex"><span class="ivexl" title="Exhaustion">${ICN.tired}</span><button data-up="ex-" title="Less">${ICN.minus}</button><b>${ex}</b><button data-up="ex+" title="More">${ICN.plus}</button></div></div>
         <div class="ivsub tip">Bar: slots used / total. STR ${c.str||10} + 3${c.ath?' + PB '+(c.pb||2)+' (Athletics)':''}${bp?' + extra '+bp:''}${ex?' − exhaustion '+ex:''}. Each level of exhaustion (the face) takes away 1 slot.</div></div>
       ${panel==='purse'?`<div class="ivsec ivupg"><h4>${ICN.purse}<span>Purse</span></h4>${crow('pp',ICN.cp,'Plat')}${crow('gp',ICN.cg,'Gold')}${crow('sp',ICN.cs,'Silver')}<div class="ivsub" style="color:var(--ink)">≈ ${(co.pp*10+co.gp+co.sp/10).toFixed(1)} gp<span class="tip">. 10 silver = 1 gold, 10 gold = 1 plat. Taking coins breaks bigger ones.</span></div>${N.purse?`<div class="ivnote">${esc(N.purse)}</div>`:''}<div class="row"><button class="ib" data-coin="tidy:0" title="Tidy up">${ICN.sparkle}<span>Tidy up</span></button><button class="ib" data-purse="1" title="Close">${ICN.x}<span>Close</span></button></div></div>`:''}
@@ -1056,6 +1060,7 @@ function player(code){
     const dwb=e.target.closest('[data-dw]');if(dwb){dw=dwb.dataset.dw;sessionStorage.setItem('pvdw',dw);esel=null;render();return}
     if(e.target.closest('[data-tips]')){tips=!tips;localStorage.setItem('pvtips',tips?'1':'0');render();return}
     if(e.target.closest('[data-bag]')){panel=panel==='bag'?'':'bag';N.purse='';render();return}
+    if(e.target.closest('[data-icv]')){icv=!icv;localStorage.setItem('pvicv',icv?'1':'0');render();return}
     if(e.target.closest('[data-purse]')){panel=panel==='purse'?'':'purse';N.purse='';render();return}
     const chp=e.target.closest('[data-chip]');if(chp){addDraft.s=chp.dataset.chip;render();return}
     const ust=e.target.closest('[data-ustep]');if(ust){addDraft.u=String(Math.max(0,Math.min(99,(parseInt(addDraft.u)||0)+(+ust.dataset.ustep))));render();return}
