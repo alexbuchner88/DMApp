@@ -1076,8 +1076,10 @@ const AUP=typeof fetch==='function'?fetch('audio.json',{cache:'no-cache'}).then(
 const ICK=n=>String(n||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,''),ICO=new Map();
 const ICOP=typeof fetch==='function'?fetch('items.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('missing');return r.json()}).then(j=>{
   const fs=(j.files||[]).map(f=>[f.split('/').pop().replace(/\.[^.]+$/,''),encodeURI(f)]),add=(n,u)=>{const k=ICK(n);if(k&&!ICO.has(k))ICO.set(k,u)};
-  fs.forEach(([n,u])=>add(n,u));fs.forEach(([n,u])=>add(n.replace(/\s*\([^)]*\)\s*/g,' '),u));return ICO}).catch(()=>ICO):Promise.resolve(ICO);   // "Acid" also finds "Acid (vial)"
-const itImg=i=>{if(!i)return'';if(i.img)return i.img;const n=String(i.name||'');return ICO.get(ICK(n))||ICO.get(ICK(n.replace(/\s*\([^)]*\)\s*/g,' ')))||''};
+  fs.forEach(([n,u])=>add(n,u));fs.forEach(([n,u])=>add(n.replace(/\s*\([^)]*\)\s*/g,' '),u));fs.forEach(([n,u])=>add(n.split(' - ')[0],u));return ICO}).catch(()=>ICO):Promise.resolve(ICO);   // "Acid" also finds "Acid (vial)", "Potion" finds "Potion - Black"
+// No exact match: fall back to a generic icon from one word. "Potion of Speed" uses Potion (the word before "of"), "Winter Cloak" uses Cloak (the last word), then the other end is tried.
+const itImg=i=>{if(!i)return'';if(i.img)return i.img;const n=String(i.name||''),b=n.replace(/\s*\([^)]*\)\s*/g,' ').trim(),w=b.split(/[\s,]+/).filter(Boolean),f=w[0],l=w[w.length-1];
+  const ws=/\bof\b/i.test(b)?[f,l]:[l,f];return ICO.get(ICK(n))||ICO.get(ICK(b))||ws.map(x=>ICO.get(ICK(x))).find(Boolean)||''};
 // Image library: files in images/, listed by hand in images.json. Inside the app their ids get a lib: prefix, so they never collide with uploaded (Firestore) images.
 const LIB=new Map(),isLib=id=>typeof id==='string'&&id.startsWith('lib:');
 const LIBP=typeof fetch==='function'?fetch('images.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('missing');return r.json()}).then(j=>{
