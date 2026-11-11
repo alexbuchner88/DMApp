@@ -1,5 +1,5 @@
-const C='infini-dnd-v6';
-self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(['./','./index.html','./css/app.css','./images.json','./icon-192.png'])))});
+const C='infini-dnd-v7';
+self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(['./','./index.html','./css/app.css','./images.json','./items.json','./icon-192.png'])))});
 self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch',e=>{
   const r=e.request;

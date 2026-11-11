@@ -71,11 +71,12 @@ async function display(code,pv){
   let IT=[],SH={},sid=null,su1=null,su2=null,lo=null,dis=null,prevS=null,gk='',dk='';
   const renderShop=()=>{
     $('#shopt').textContent=SH.name||'';
-    {const gh=IT.map(i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${i.img?`<img src="${i.img}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${slotsOf(i)||usesOf(i)?`<p class="wgt">Slots: ${slotTxt(i)}</p>`:''}${i.qty!=null?`<p class="qty">${i.qty>0?'×'+i.qty:'Sold out'}</p>`:''}</div>`).join('');if(gh!==gk){gk=gh;$('#shopg').innerHTML=gh}}
+    {const gh=IT.map(i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${itImg(i)?`<img src="${itImg(i)}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${slotsOf(i)||usesOf(i)?`<p class="wgt">Slots: ${slotTxt(i)}</p>`:''}${i.qty!=null?`<p class="qty">${i.qty>0?'×'+i.qty:'Sold out'}</p>`:''}</div>`).join('');if(gh!==gk){gk=gh;$('#shopg').innerHTML=gh}}
     const oid=lo||(d.shopItemId&&d.shopItemId!==dis?d.shopItemId:null),it=IT.find(x=>x.id===oid);
-    {const dh=it?`<div class="sheet"><div class="sin">${it.img?`<div class="pic2"><img src="${it.img}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}<div class="wt">Slots: ${slotTxt(it)}</div>${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`:'';if(dh!==dk){dk=dh;$('#shopd').innerHTML=dh}}
+    {const dh=it?`<div class="sheet"><div class="sin">${itImg(it)?`<div class="pic2"><img src="${itImg(it)}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}<div class="wt">Slots: ${slotTxt(it)}</div>${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`:'';if(dh!==dk){dk=dh;$('#shopd').innerHTML=dh}}
     $('#shopd').classList.toggle('on',!!it);
   };
+  if(!ICO.size)ICOP.then(()=>{try{renderShop()}catch(e){}});   // item icons arrive after the first draw
   const watchShop=(id,rt)=>{
     if(id===sid)return;su1&&su1();su2&&su2();su1=su2=null;sid=id;IT=[];SH={};lo=null;renderShop();if(!id)return;
     su1=onSnapshot(doc(db,'sessions',rt,'shops',id),s=>{SH=s.data()||{};renderShop()});
@@ -806,7 +807,7 @@ const pouchN=c=>parseInt(c.pouch)||1,quiverN=c=>parseInt(c.quiver)||0,speedMalus
 const isHalf=e=>(+e.slots||0)<=0.5,cellsOf=e=>(+e.slots||0)<1?1:2;   // in the backpack ½ items are small blocks
 const canPlace=(e,pos,c)=>{if(pos==='pack'||PLACES.includes(pos))return!HALFONLY.includes(pos)||isHalf(e);const m=/^([pq])(\d+)$/.exec(pos);return!!m&&+m[2]<=(m[1]==='p'?pouchN(c):quiverN(c))&&isHalf(e)};
 // what a character carries follows the item as the DM edits it; the stored copy is only the fallback
-const resolveEntry=(e,def)=>{const mx=Math.max(0,parseInt(def?def.uses:e.max)||0);return{...e,...(def?{name:def.name||e.name,desc:def.desc||'',rules:def.rules||'',img:def.img||'',slots:slotsOf(def)}:{}),max:mx,uses:mx?Math.min(mx,e.uses!=null?+e.uses:mx):0}};
+const resolveEntry=(e,def)=>{const mx=Math.max(0,parseInt(def?def.uses:e.max)||0);return{...e,...(def?{name:def.name||e.name,desc:def.desc||'',rules:def.rules||'',img:itImg(def),slots:slotsOf(def)}:{}),max:mx,uses:mx?Math.min(mx,e.uses!=null?+e.uses:mx):0}};
 const invUsedR=(inv,look,c)=>Object.values(inv||{}).filter(Boolean).reduce((a,e)=>{const r=resolveEntry(e,look&&e.ref?look(e.ref):null),p=normPos(e.pos);return a+entryCost(r,canPlace(r,p,c||{})?p:'pack')},0)+wrCost(c);
 // coins: 10 silver = 1 gold, 10 gold = 1 platinum. Taking coins breaks bigger coins when needed.
 const COINUP={sp:'gp',gp:'pp'};
@@ -897,7 +898,7 @@ function player(code){
   app.innerHTML='<div class="pv"><div class="pvh"><div class="pvt">'+[['quest','quest','Quest'],['weather','weather','Weather'],['shops','shop','Shops'],['inv','bag','Inventory'],['set','cog','Settings']].map(t=>`<button class="btn sm tabb" data-t="${t[0]}" title="${t[2]}">${ICN[t[1]]}<span class="tl">${t[2]}</span></button>`).join('')+`</div></div><div id="pvb"></div><div id="pvd"></div></div>`;
   let d={},tab=sessionStorage.getItem('pvtab')||'quest',Q=null,qid=null,qu=null,psel=null,open=null,fxSel=null,last='',lastD='';
   const SHP={},subs={};
-  const card=i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${i.img?`<img src="${i.img}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${slotsOf(i)||usesOf(i)?`<p class="wgt" title="Slots">${ICN.cube}${slotFmt(slotsOf(i))}${usesOf(i)?` &nbsp;${ICN.tally}${usesOf(i)}`:''}</p>`:''}${i.qty!=null?`<p class="qty">${i.qty>0?ICN.crate+'×'+i.qty:'Sold out'}</p>`:''}</div>`;
+  const card=i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${itImg(i)?`<img src="${itImg(i)}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${slotsOf(i)||usesOf(i)?`<p class="wgt" title="Slots">${ICN.cube}${slotFmt(slotsOf(i))}${usesOf(i)?` &nbsp;${ICN.tally}${usesOf(i)}`:''}</p>`:''}${i.qty!=null?`<p class="qty">${i.qty>0?ICN.crate+'×'+i.qty:'Sold out'}</p>`:''}</div>`;
   // Inventory for the phone: gear and clothes in two windows, quick access bags, the backpack as a grid with sized blocks, water and rations in the top bar, a purse. It tracks, it does not play for you.
   let CH=[],cid=localStorage.getItem('char-'+code)||'',pick=false,esel=null,info=localStorage.getItem('pvinfo')==='1',tips=localStorage.getItem('pvtips')!=='0',dw=sessionStorage.getItem('pvdw')||'gear',panel='',addAt='',addDraft={t:'',s:'1',u:'',n:''};
   const DEF={},dsub={},rid=()=>Math.random().toString(36).slice(2,9);
@@ -1027,12 +1028,13 @@ function player(code){
       const k=keys.includes(psel)?psel:keys[0],S=SHP[k]||{name:'',items:[]};
       h=(keys.length>1?'<div class="pvshops">'+keys.map(x=>`<button class="btn sm ${x===k?'':'alt'}" data-s="${x}">${esc((SHP[x]||{}).name||'...')}</button>`).join('')+'</div>':'')+`<div class="pvname">${esc(S.name)}</div><div class="pvg">${S.items.map(card).join('')}</div>`;
       const it=S.items.find(x=>x.id===open);
-      if(it)sheet=`<div class="sheet"><div class="sin">${it.img?`<div class="pic2"><img src="${it.img}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}<div class="wt">${ICN.cube}${slotFmt(slotsOf(it))}${usesOf(it)?` &nbsp;${ICN.tally}${usesOf(it)} uses`:''}</div>${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`;
+      if(it)sheet=`<div class="sheet"><div class="sin">${itImg(it)?`<div class="pic2"><img src="${itImg(it)}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}<div class="wt">${ICN.cube}${slotFmt(slotsOf(it))}${usesOf(it)?` &nbsp;${ICN.tally}${usesOf(it)} uses`:''}</div>${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`;
     }
     if(sheet&&CH.length){const k2=keys.includes(psel)?psel:keys[0],it2=((SHP[k2]||{}).items||[]).find(x=>x.id===open);if(it2&&it2.qty!==0)sheet=sheet.replace(/<\/div><\/div>$/,'<div class="take"><button class="btn" data-take="'+it2.id+'">Take</button></div></div></div>')}
     const key=tab+'|'+h;if(key!==last){last=key;$('#pvb').innerHTML=h}
     if(sheet!==lastD){lastD=sheet;$('#pvd').innerHTML=sheet;$('#pvd').classList.toggle('on',!!sheet)}
   };
+  if(!ICO.size)ICOP.then(()=>{try{render()}catch(e){}});   // item icons arrive after the first draw
   const syncQ=()=>{const id=d.curQuest||null;if(id===qid)return;qu&&qu();qu=null;qid=id;Q=null;render();if(id)qu=onSnapshot(doc(db,'sessions',code,'quests',id),s=>{Q=s.exists()?s.data():null;render()})};
   const syncS=()=>{const keys=d.pshops||[];
     Object.keys(subs).forEach(k=>{if(!keys.includes(k)){subs[k].forEach(u=>u());delete subs[k];delete SHP[k]}});
@@ -1070,6 +1072,12 @@ function player(code){
 }
 let AUJ=null;
 const AUP=typeof fetch==='function'?fetch('audio.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('missing');return r.json()}).then(j=>{AUJ=j;return j}).catch(()=>null):Promise.resolve(null);
+// Item icons: files in items/ (any subfolder), listed in items.json. A shop item without its own image uses the icon whose file name matches its name.
+const ICK=n=>String(n||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,''),ICO=new Map();
+const ICOP=typeof fetch==='function'?fetch('items.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('missing');return r.json()}).then(j=>{
+  const fs=(j.files||[]).map(f=>[f.split('/').pop().replace(/\.[^.]+$/,''),encodeURI(f)]),add=(n,u)=>{const k=ICK(n);if(k&&!ICO.has(k))ICO.set(k,u)};
+  fs.forEach(([n,u])=>add(n,u));fs.forEach(([n,u])=>add(n.replace(/\s*\([^)]*\)\s*/g,' '),u));return ICO}).catch(()=>ICO):Promise.resolve(ICO);   // "Acid" also finds "Acid (vial)"
+const itImg=i=>{if(!i)return'';if(i.img)return i.img;const n=String(i.name||'');return ICO.get(ICK(n))||ICO.get(ICK(n.replace(/\s*\([^)]*\)\s*/g,' ')))||''};
 // Image library: files in images/, listed by hand in images.json. Inside the app their ids get a lib: prefix, so they never collide with uploaded (Firestore) images.
 const LIB=new Map(),isLib=id=>typeof id==='string'&&id.startsWith('lib:');
 const LIBP=typeof fetch==='function'?fetch('images.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('missing');return r.json()}).then(j=>{
@@ -1229,6 +1237,7 @@ function dm(code){
     const qb=(a,id,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#qs').innerHTML=qs.map(q=>`<div class="qrow ${q.posted?'on':''}"><div class="qt"><b>${esc(q.title||'Untitled')}${q.done?' (done)':''}</b><p>${esc(q.text||'')}</p></div><div class="row">${qb('qcur',q.id,live.curQuest===q.id?'Current':'Set current',live.curQuest===q.id?0:1)}${qb('qpin',q.id,q.posted?'Unpin':'Pin')}${qb('qdone',q.id,q.done?'Reopen':'Done',1)}${qb('qedit',q.id,'Edit',1,1)}${qb('qdel',q.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No quests yet.</p>';
   };
+  if(!ICO.size)ICOP.then(()=>{try{draw()}catch(e){}});   // item icons arrive after the first draw
   let MI=false;const MU={cur:null,file:'',loop:localStorage.getItem('muloop')!=='0',ctx:null,out:null,seq:0,get el(){return this.cur?this.cur.el:null}};
   const SP={ctrl:null,uri:'',type:'',link:'',playing:false,pos:0,dur:0,was:false,loading:false,auto:false,api:null,script:null,h:152};
   const FADE_OUT=1.5,FADE_IN=2;
@@ -1513,7 +1522,7 @@ function dm(code){
     $('#csh').textContent='('+shops.length+')';
     $('#shl').innerHTML=shops.map(x=>`<button class="btn sm ${x.id===selShop?'':'alt'}" data-a="shsel" data-id="${x.id}">${esc(x.name)}${x._r==='_shared'?' <small>shared</small>':''}${(live.pshops||[]).includes((x._r||code)+':'+x.id)?EYE_SM:''} (${items.filter(i=>i.shopId===x.id).length})</button>`).join('')||'<span class="note">No shops yet.</span>';
     $('#shb').innerHTML=sel?bt('shpl',sel.id,(live.pshops||[]).includes((sel._r||code)+':'+sel.id)?'Hide from players':'Show to players',!(live.pshops||[]).includes((sel._r||code)+':'+sel.id))+bt('shren',sel.id,'Rename',1,1)+bt('shdel',sel.id,'Delete shop',1,1):'';
-    $('#shi').innerHTML=sel?items.filter(i=>i.shopId===sel.id).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''}" data-item="${i.id}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${i.img?`<img src="${i.img}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${' / Slots '+esc(slotTxt(i))}<p>${esc(i.desc||'')}</p>${i.qty!=null?`<p style="margin:2px 0;font-weight:700">Stock: ${i.qty}</p>`:''}${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row"><span class="edit" style="display:inline-flex;align-items:center;gap:6px">${bt('qtym',i.id,'−',1)}<b style="min-width:1.6em;text-align:center">${i.qty==null?'–':i.qty}</b>${bt('qtyp',i.id,'+',1)}</span>${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':'';
+    $('#shi').innerHTML=sel?items.filter(i=>i.shopId===sel.id).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''}" data-item="${i.id}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${itImg(i)?`<img src="${itImg(i)}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${' / Slots '+esc(slotTxt(i))}<p>${esc(i.desc||'')}</p>${i.qty!=null?`<p style="margin:2px 0;font-weight:700">Stock: ${i.qty}</p>`:''}${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row"><span class="edit" style="display:inline-flex;align-items:center;gap:6px">${bt('qtym',i.id,'−',1)}<b style="min-width:1.6em;text-align:center">${i.qty==null?'–':i.qty}</b>${bt('qtyp',i.id,'+',1)}</span>${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':'';
     placeForm();
   }
   let shS={},itS={},ntS={},NT={};
