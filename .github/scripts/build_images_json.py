@@ -27,7 +27,7 @@ def nice_name(path):
     return name.title() if name == name.lower() else name
 
 
-def renames(before, after):
+def renames(before=None, after=None):
     """{old_path: new_path} for files renamed or moved under images/ between two commits."""
     if not before or not after or set(before) == {'0'}:
         return {}
