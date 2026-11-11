@@ -462,14 +462,17 @@ body.dmv select,body.dmv input:not([type=checkbox]):not([type=range]):not([type=
 .pwc{display:flex;align-items:center;gap:8px;margin:6px 2px -2px;font:700 14px Cinzel,serif;letter-spacing:.06em;text-transform:uppercase;color:var(--parch);opacity:.8}
 .pwc svg{width:18px;height:18px}
 .pwg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.pwt{display:flex;flex-direction:column;gap:4px;padding:10px 11px;border-radius:10px;background:#ffffff10;border:1px solid #ffffff22;border-left:4px solid #ffffff55;color:var(--parch);min-width:0}
-.pwt .pwi svg{width:26px;height:26px}
-.pwt b{font:700 16px/1.15 Cinzel,serif;overflow-wrap:anywhere}
-.pwt p{margin:0;font:15px/1.3 Almendra,serif;opacity:.9;overflow-wrap:anywhere}
-.pwt.buff{border-left-color:#7fb069;background:#7fb06918}.pwt.buff .pwi,.pwt.buff b{color:#bfe8ab}
-.pwt.nerf{border-left-color:#c4624a;background:#c4624a18}.pwt.nerf .pwi,.pwt.nerf b{color:#f4b9a9}
-.pwt.neutral .pwi,.pwt.neutral b{color:var(--gold)}
-@media (max-width:360px){.pwt{padding:8px}.pwt b{font-size:14px}.pwt p{font-size:13px}}
+.pwt{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:10px 11px;border-radius:10px;background:#ffffff10;border:1px solid #ffffff22;border-left:4px solid #ffffff55;color:var(--parch);min-width:0;text-align:left;cursor:pointer;font:inherit}
+.pwt.on{grid-column:1/-1;box-shadow:0 0 0 1px currentColor}
+.pwt .pws{display:flex;align-items:center;gap:7px;font:16px/1.15 Almendra,serif;opacity:.9;min-width:0}
+.pwt .pws svg{width:24px;height:24px;flex:none}
+.pwt .pws span{overflow-wrap:anywhere}
+.pwt b{font:700 16px/1.2 Cinzel,serif;overflow-wrap:anywhere}
+.pwt p{margin:2px 0 0;padding-top:6px;border-top:1px solid #ffffff22;width:100%;font:16px/1.35 Almendra,serif;color:var(--parch)}
+.pwt.buff{border-left-color:#7fb069;background:#7fb06918}.pwt.buff .pws svg,.pwt.buff b{color:#bfe8ab}
+.pwt.nerf{border-left-color:#c4624a;background:#c4624a18}.pwt.nerf .pws svg,.pwt.nerf b{color:#f4b9a9}
+.pwt.neutral .pws svg,.pwt.neutral b{color:var(--gold)}
+@media (max-width:360px){.pwt{padding:8px}.pwt b{font-size:14px}.pwt .pws{font-size:14px}}
 body.pvflat::before{background:radial-gradient(ellipse at 50% -10%,#33261b 0,#1a130d 50%,#0d0906 100%)}
 .setl{display:flex;flex-direction:column;gap:8px}
 .srow{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:0 14px;border:2px solid #8a6a24;border-radius:10px;background:#14100c;color:var(--gold);font:700 15px Cinzel,serif;cursor:pointer;text-align:left}
@@ -1385,14 +1388,14 @@ function wxBoxHTML(cur,w,L,role,day,sel,area,open){
   return`<div class="rbox"><div class="rh">${head}</div>${an}${stats}${list}${rules}</div>`;
 }
 // Player weather: a header with the weather and travel speed, then every effect as a readable tile, two per row.
-function wxPlayerHTML(cur,w,L){
+function wxPlayerHTML(cur,w,L,sel){
   const cd=!!L.cold,season=L.season||(cd?'winter':'normal'),x=WXS.find(y=>y.id===cur)||WXS[0],ic=Array.isArray(x.i)?x.i[cd?1:0]:x.i,inf=wxInfo(cur,w,season);
   const head=`<div class="pwh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div><b>${esc(wname(cur,season,cd))}</b><small>Wind: ${WINDS[w]}</small></div></div>`;
   if(!inf)return`<div class="pwx">${head}</div>`;
   const [pc,mi]=inf.travel.split(' (');
   const travel=`<div class="pwtr"><span>${ico('run')}Travel</span><b>${esc(pc)}</b><small>${esc((mi||'').replace(')',''))}</small></div>`;
   const cats=WXJ.categories||DEFCATS,known=cats.map(c=>c.key);
-  const tile=e=>{const f=WXJ.effects[e];return`<div class="pwt ${f.tone||'neutral'}"><div class="pwi">${ico(f.icon)}</div><b>${esc(f.short||'')}</b><p>${esc(f.text)}</p></div>`};
+  const tile=e=>{const f=WXJ.effects[e],on=e===sel;return`<button class="pwt ${f.tone||'neutral'}${on?' on':''}" data-fx="${e}"><span class="pws">${ico(f.icon)}<span>${esc(f.situation||f.short||'')}</span></span><b>${esc(f.effect||f.short||f.text)}</b>${on?`<p>${esc(f.text)}</p>`:''}</button>`};
   const body=cats.map(c=>{const l=inf.eff.filter(e=>{const k=WXJ.effects[e].cat;return(known.includes(k)?k:known[known.length-1])===c.key});return l.length?`<h4 class="pwc">${ico(c.icon)}${esc(c.name)}</h4><div class="pwg">${l.map(tile).join('')}</div>`:''}).join('');
   return`<div class="pwx">${head}${travel}${body||'<div class="pvempty">No effects.</div>'}</div>`;
 }
@@ -1523,7 +1526,7 @@ function player(code){
     document.body.classList.toggle('pvflat',tab!=='quest');   // the wood board only stays behind the quest
     const keys=d.pshops||[];let h='',sheet='';
     if(tab==='quest')h=Q?`<div class="qbig"><i class="pin"></i><div class="in"><h3>${esc(Q.title||'')}</h3><p>${esc(Q.text||'')}</p></div></div>`:'<div class="pvempty">No quest selected.</div>';
-    else if(tab==='weather'){const ew=effWx(d);h=ew.on?wxPlayerHTML(ew.wx,Math.min(3,ew.wind|0),d):'<div class="pvempty">No weather here.</div>'}
+    else if(tab==='weather'){const ew=effWx(d);h=ew.on?wxPlayerHTML(ew.wx,Math.min(3,ew.wind|0),d,fxSel):'<div class="pvempty">No weather here.</div>'}
     else if(tab==='inv')h=invHTML();
     else if(tab==='set')h=settingsHTML();
     else if(!keys.length)h='<div class="pvempty">No shops are open.</div>';
