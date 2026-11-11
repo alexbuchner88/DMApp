@@ -1,0 +1,4 @@
+{
+  "notes": "Image library. Filled automatically by a GitHub Action when files in images/<folder>/ are pushed to main: type from the folder, name and id from the file name. Renaming or moving a file keeps its id. You can still edit name and add tags here by hand; the Action keeps them. Never change an id once used (the app stores it as lib:<id>). Sizes (WebP, quality about 0.8): backgrounds and overlays 2560 px long side, maps up to 4096 px long side, NPCs and monsters 600 to 800 px.",
+  "images": []
+}

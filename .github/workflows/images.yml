@@ -1,0 +1,35 @@
+name: Update images.json and items.json
+
+on:
+  push:
+    branches: [main]
+    paths: ['images/**', 'items/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: images-json
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Rebuild images.json
+        run: python3 .github/scripts/build_images_json.py "${{ github.event.before }}" "${{ github.sha }}"
+      - name: Rebuild items.json
+        run: python3 .github/scripts/build_items_json.py
+      - name: Commit if changed
+        run: |
+          if git diff --quiet images.json items.json; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898341+github-actions[bot]@users.noreply.github.com"
+          git add images.json items.json
+          git commit -m "Update images.json and items.json"
+          git pull --rebase origin main
+          git push origin HEAD:main
