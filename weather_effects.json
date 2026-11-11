@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "notes": "Weather effects for the DM app. D&D 2024. Wind adds to the long rest DC: Calm 0, Breeze +2, Gust +5, Storm +10. Wind also changes the exposure DC: cold +1/+2/+4, heat -1/-2/-4 (exposureMod). Lookup: state (with season override) + wind. Travel and restDC are always shown; effect lines are optional reminders. Each effect has a category, an icon name, a tone (buff, nerf or neutral), a short label for the chip and the full text.",
+  "notes": "Weather effects for the DM app. D&D 2024. Wind adds to the long rest DC: Calm 0, Breeze +2, Gust +5, Storm +10. Wind also changes the exposure DC: cold +1/+2/+4, heat -1/-2/-4 (exposureMod). Lookup: state (with season override) + wind. Travel and restDC are always shown; effect lines are optional reminders. Categories: senses, damage, environment (terrain, climbing, flying, fire and cloud spells), combat, survival. Each effect has a category, an icon name, a tone (buff, nerf or neutral), a short label for the chip and the full text.",
   "travel": {"milesPerDay": {"slow": 18, "normal": 24, "fast": 30}, "minPercent": 25, "display": "Show percent and Normal pace miles/day, e.g. '75% (18 mi/day)'"},
   "exposureMinDC": 5,
   "states": {
@@ -15,13 +15,13 @@
     "cloud1": { "name": "Cloudy", "travel": 100, "restDC": 5, "exposure": null, "effects": ["clearSight"] },
     "cloud2": { "name": "Overcast", "travel": 100, "restDC": 5, "exposure": null, "effects": [] },
     "cloud3": { "name": "Fog", "travel": 75, "restDC": 10, "exposure": null, "effects": ["lightly15", "heavily30", "stealthAdv"],
-      "seasons": { "winter": {"name": "Icy", "effects": ["lightly15", "heavily30", "stealthAdv", "icyGround"]} } },
-    "rain1": { "name": "Drizzle", "travel": 100, "restDC": 10, "exposure": null, "effects": ["lightly60"],
+      "seasons": { "winter": {"name": "Icy", "effects": ["lightly15", "heavily30", "stealthAdv", "icyGround", "dexSaveDis"]} } },
+    "rain1": { "name": "Drizzle", "travel": 100, "restDC": 10, "exposure": null, "effects": ["lightly60", "climbCheck"],
       "seasons": { "winter": {"name": "Light Snow"} } },
-    "rain2": { "name": "Rain", "travel": 75, "restDC": 15, "exposure": null, "effects": ["lightly30", "heavily60", "flamesOut", "fireDown", "lightningUp", "stealthAdv", "hearingDisadv", "conSaveDown2"],
-      "seasons": { "winter": {"name": "Snowfall", "effects": ["lightly30", "heavily60", "flamesOut", "coldUp", "stealthAdv", "deepSnow", "conSaveDown2"]} } },
-    "rain3": { "name": "Downpour", "travel": 50, "restDC": 20, "exposure": null, "effects": ["lightly15", "heavily30", "flamesOut", "fireHalf", "lightningUp", "lightningAoe", "flyHalf", "muddyGround", "stealthAdv", "hearingDisadv", "conSaveDis"],
-      "seasons": { "winter": {"name": "Blizzard", "exposure": {"dc": 15, "type": "cold"}, "effects": ["lightly0", "heavily30", "flamesOut", "coldUp", "deepSnow", "stealthAdv", "conSaveDis"]} } }
+    "rain2": { "name": "Rain", "travel": 75, "restDC": 15, "exposure": null, "effects": ["lightly30", "heavily60", "flamesOut", "fireDown", "lightningUp", "stealthAdv", "hearingDisadv", "conSaveDown2", "climbDis"],
+      "seasons": { "winter": {"name": "Snowfall", "effects": ["lightly30", "heavily60", "flamesOut", "coldUp", "stealthAdv", "deepSnow", "conSaveDown2", "climbDis"]} } },
+    "rain3": { "name": "Downpour", "travel": 50, "restDC": 20, "exposure": null, "effects": ["lightly15", "heavily30", "flamesOut", "fireHalf", "lightningUp", "lightningAoe", "flyHalf", "muddyGround", "stealthAdv", "hearingDisadv", "conSaveDis", "climbDis"],
+      "seasons": { "winter": {"name": "Blizzard", "exposure": {"dc": 15, "type": "cold"}, "effects": ["lightly0", "heavily30", "flamesOut", "coldUp", "deepSnow", "stealthAdv", "conSaveDis", "climbDis"]} } }
   },
   "wind": {
     "calm": {"name": "Calm", "travelMod": 0, "restDCMod": 0, "exposureMod": {"cold": 0, "heat": 0}, "effects": []},
@@ -32,7 +32,7 @@
   "categories": [
     {"key": "senses", "name": "Senses", "icon": "eye"},
     {"key": "damage", "name": "Damage", "icon": "flame"},
-    {"key": "movement", "name": "Movement", "icon": "mountain"},
+    {"key": "environment", "name": "Environment", "icon": "mountain"},
     {"key": "combat", "name": "Combat", "icon": "bow"},
     {"key": "survival", "name": "Survival", "icon": "thermo"}
   ],
@@ -52,20 +52,23 @@
     "coldUp": {"cat": "damage", "icon": "snow", "tone": "buff", "short": "Cold +2", "text": "Cold damage +2"},
     "lightningUp": {"cat": "damage", "icon": "bolt", "tone": "buff", "short": "Lightning +2", "text": "Lightning damage +2"},
     "lightningAoe": {"cat": "damage", "icon": "bolt", "tone": "buff", "short": "Lightning +5 ft AOE", "text": "Lightning damage also hits creatures adjacent to the target (+5 ft AOE)"},
-    "muddyGround": {"cat": "movement", "icon": "mountain", "tone": "nerf", "short": "Mud", "text": "Unpaved ground outdoors is Difficult Terrain"},
-    "deepSnow": {"cat": "movement", "icon": "mountain", "tone": "nerf", "short": "Deep snow", "text": "Snow-covered ground outdoors is Difficult Terrain"},
-    "icyGround": {"cat": "movement", "icon": "mountain", "tone": "nerf", "short": "Ice: Dex DC 10", "text": "Dashing on ice: DC 10 Dex (Acrobatics) or fall Prone"},
-    "flyDifficult": {"cat": "movement", "icon": "wing", "tone": "nerf", "short": "Flying hard", "text": "Flying counts as Difficult Terrain"},
-    "flyHalf": {"cat": "movement", "icon": "wing", "tone": "nerf", "short": "Fly speed ½", "text": "Fly speed is halved"},
-    "flyMustLand": {"cat": "movement", "icon": "wing", "tone": "nerf", "short": "Flyers land", "text": "Flyers without Hover must end their turn on the ground or fall"},
-    "flamesOut": {"cat": "combat", "icon": "flameOff", "tone": "neutral", "short": "No open flame", "text": "Unprotected flames go out; fire can't ignite objects"},
+    "muddyGround": {"cat": "environment", "icon": "mountain", "tone": "nerf", "short": "Mud", "text": "Unpaved ground outdoors is Difficult Terrain"},
+    "deepSnow": {"cat": "environment", "icon": "mountain", "tone": "nerf", "short": "Deep snow", "text": "Snow-covered ground outdoors is Difficult Terrain"},
+    "icyGround": {"cat": "environment", "icon": "mountain", "tone": "nerf", "short": "Ice: Dex DC 10", "text": "Dashing on ice: DC 10 Dex (Acrobatics) or fall Prone"},
+    "flyDifficult": {"cat": "environment", "icon": "wing", "tone": "nerf", "short": "Flying hard", "text": "Flying counts as Difficult Terrain"},
+    "flyHalf": {"cat": "environment", "icon": "wing", "tone": "nerf", "short": "Fly speed ½", "text": "Fly speed is halved"},
+    "flyMustLand": {"cat": "environment", "icon": "wing", "tone": "nerf", "short": "Flyers land", "text": "Flyers without Hover must end their turn on the ground or fall"},
+    "climbCheck": {"cat": "environment", "icon": "climb", "tone": "nerf", "short": "Climb: Athletics", "text": "Climbing requires a Strength (Athletics) check"},
+    "climbDis": {"cat": "environment", "icon": "climb", "tone": "nerf", "short": "Climb dis.", "text": "Climbing: Strength (Athletics) checks are made with Disadvantage"},
+    "dexSaveDis": {"cat": "combat", "icon": "dex", "tone": "nerf", "short": "Dex saves dis.", "text": "Dexterity saves are made with Disadvantage"},
+    "flamesOut": {"cat": "environment", "icon": "flameOff", "tone": "neutral", "short": "No open flame", "text": "Unprotected flames go out; fire can't ignite objects"},
     "rangeHalved": {"cat": "combat", "icon": "bow", "tone": "nerf", "short": "Range ½", "text": "Ranged weapon and Spell attack range halved"},
     "rangedDisadv": {"cat": "combat", "icon": "bow", "tone": "nerf", "short": "Ranged dis.", "text": "Disadvantage on ranged Weapon and Spell attacks"},
     "conSaveDown2": {"cat": "combat", "icon": "heart", "tone": "nerf", "short": "Con saves -2", "text": "Constitution saves against spell effects -2"},
     "concentrationDis": {"cat": "combat", "icon": "heart", "tone": "nerf", "short": "Concentration dis.", "text": "Disadvantage on Concentration checks"},
     "conSaveDis": {"cat": "combat", "icon": "heart", "tone": "nerf", "short": "Con saves dis.", "text": "Disadvantage on Constitution saves (including to keep Concentration)"},
-    "cloudDrift": {"cat": "combat", "icon": "cloud", "tone": "neutral", "short": "Clouds drift", "text": "Cloud spells drift 10 ft downwind each round"},
-    "cloudDisperse": {"cat": "combat", "icon": "cloud", "tone": "neutral", "short": "Clouds fade", "text": "Cloud spells disperse at the end of the caster's next turn"}
+    "cloudDrift": {"cat": "environment", "icon": "cloud", "tone": "neutral", "short": "Clouds drift", "text": "Cloud spells drift 10 ft downwind each round"},
+    "cloudDisperse": {"cat": "environment", "icon": "cloud", "tone": "neutral", "short": "Clouds fade", "text": "Cloud spells disperse at the end of the caster's next turn"}
   },
   "rules": {
     "combine": "Season override replaces fields of the base state. Travel = state.travel + wind.travelMod, min 25. Rest DC = state.restDC + wind.restDCMod. Effect list = state effects + wind effects, no duplicates.",
