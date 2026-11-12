@@ -39,11 +39,11 @@ Upgrades and addons are 0 slots (they become part of the weapon or armor).
 | ~ | Explorer's Pavilion | 3 | | none | Sleeps 4; rest DC −7 instead of −5 | **Rule change.** "Counts as sheltered" reads like a building (no roll), which fully cancels weather. Now it's a better tent |
 | ~ | Sailcloth Tarp | 1 | | none | Shelter for 6 (−5 rest DC); no help in Gust or Storm | **Rule change.** A 1 gp tarp for 6 made tents pointless. Now it blows away in strong wind |
 | ✕ | Folding Stretcher | | | | | **Cut:** rarely used, and the tarp already works as a stretcher |
-| ? | Red Cloak | 1 | | none | | No cost or rules, so it looks like a story prop. **Cut** unless it's a plot hook |
+| ✕ | Red Cloak | | | | | Cut. Story item; you'll re-add it when needed |
 
-## Smith (20 → 31)
+## Smith (20 → 33)
 
-New standard armor, D&D 2024 rules and prices. The names are the library names, so the icons match (the library uses "Armour").
+New standard armor, D&D 2024 rules and prices. Shields are in their own section below. The names are the library names, so the icons match (the library uses "Armour").
 
 | | Item | Slots | Uses | Type | useText | Change / reason |
 |---|---|---|---|---|---|---|
@@ -56,15 +56,8 @@ New standard armor, D&D 2024 rules and prices. The names are the library names, 
 | + | Chain Mail | 3 | | Passive | AC 16; Str 13; Stealth Disadv | 75 gp |
 | + | Splint Armour | 3 | | Passive | AC 17; Str 15; Stealth Disadv | 200 gp |
 | + | Plate Armour | 3 | | Passive | AC 18; Str 15; Stealth Disadv | 1,500 gp |
-| + | Shield | 2 | | Passive | +2 AC | 10 gp |
 | ~ | Brigandine | 3 | | Passive | AC 14 + Dex (max 2); quiet | **3 slots.** It was a Breastplate at half price. Now it's the cheap but heavy choice; the cost and quiet stay |
 | ~ | Reinforced Fitting (upgrade) | 0 | | Passive | Medium armor: Str instead of Dex for AC (max 2) | Renamed from Strong Medium Armor. Its rule was in the description field. **Trade-off:** the armor takes 1 more slot. 50 → 100 gp |
-| ~ | Buckler | 1 | | Reaction | +1 AC; Reaction: +1 more vs a melee attack | Light variant of Shield (2) |
-| = | Spiked Shield | 2 | | Passive | +2 AC; a successful Shove deals 1d4 Piercing | Grappler/tank |
-| = | Polished Steel Shield | 2 | | Bonus Action | Bright Light: 15 ft, DC 12 Con or Disadv on next attack | |
-| ~ | Tower Shield | 4 | | Bonus Action | +2 AC; plant for Half Cover (you + 1 ally) | 3 → 4 slots, per your guide |
-| ~ | Havel's Shield | 4 | | Passive | +3 AC; Str 17; Speed −5 ft; Stealth Disadv | Spelling fixed. **Trade-off added:** it takes the same slots as the Tower Shield but gives +3 AC |
-| = | Pavise | 3 | | Action | Set up: Three-Quarters Cover from one side | Archer |
 | = | Parrying Dagger | ½ | | Passive | Off hand: +1 AC vs melee | Rogue/duelist |
 | = | Chain Net | 2 | | Action | Throw 10 ft, Dex save or Restrained; hard to cut | Steel, so heavier than the other nets |
 | = | Bolas | ½ | | Action | Throw 30 ft, Dex save or Speed 0 | |
@@ -78,6 +71,52 @@ New standard armor, D&D 2024 rules and prices. The names are the library names, 
 | = | Steel Gorget (addon) | 0 | | Reaction | A crit becomes a normal hit, 1/Long Rest | Tank |
 | ~ | Spiked Armour (addon) | 0 | | Passive | Grappling: 1d4 Piercing each turn | Renamed from Armor Spikes to get the library icon |
 | + | Focus Bracer | ½ | | Passive | Your focus works while that hand holds a weapon | **Caster** (casters had nothing). 25 gp. Somatic components still need a free hand |
+
+## Shields (Smith; replaces Shield, Buckler, Spiked, Polished Steel, Tower, Havel's, Pavise)
+
+Rule of thumb: **agile** shields are light and use Reactions. **Static** shields are heavy and give passive bonuses. No shield gets both.
+Slots: 1 buckler, 2 normal shield, 3 heavy shield (Havel's stays the one 4).
+
+| | Item | Slots | Type | AC | Str / Stealth | Properties | Cost | Note |
+|---|---|---|---|---|---|---|---|---|
+| + | Buckler (bossed) | 1 | Reaction | +1 | | Bash, Riposte | 3 gp | Agile duelist |
+| ~ | Buckler (strapped) | 1 | Reaction | +1 | | Strapped, Block | 10 gp | Replaces the old Buckler. Caster/off-hand |
+| + | Madu | 1 | Action | +1 | | Weapon 1d6 Piercing, Finesse, Light, Graze. Counts as a bossed buckler | 12 gp | Dual-wield rogue/monk |
+| + | Round Shield (strapped) | 2 | Reaction | +2 | | Strapped, Interpose | 4 gp | Protector of the party |
+| + | Heater Shield | 2 | Reaction | +2 | | Bash, Block | 15 gp | The standard shield. Replaces plain Shield |
+| + | Kite Shield | 2 | Passive | +2 | Str 11 | Wall | 10 gp | Static, front line |
+| ~ | Tower Shield | 3 | Bonus Action | +2 | Str 13, Stealth Disadv | Wall, Cover | 5 gp | 4 → 3 slots |
+| ~ | Pavise | 3 | Bonus Action | – | Str 15, Stealth Disadv | Cover (Three-Quarters) | 12 gp | Archer. Not a worn shield, no AC while carried |
+| ~ | Havel's Shield | 4 | Passive | +3 | Str 17, Stealth Disadv, Speed −5 ft | – | 150 gp | The only +3 |
+| ✕ | Center-Boss Round Shield | | | | | | | Cut: a cheap +3 with no drawback beats everything |
+| ✕ | Punch Buckler | | | | | | | Cut: same niche as the Madu |
+| ✕ | Spiked Shield | | | | | | | Cut: covered by Bash |
+| ✕ | Polished Steel Shield | | | | | | | Cut: a third mechanic shields don't need |
+| ✕ | Shield (plain) | | | | | | | Cut: Heater Shield is the standard |
+
+**Properties (11 → 7):**
+- **Bash:** a melee attack with the shield, 1d4 + Str Bludgeoning, Mastery Push. (Fixed die and one mastery, instead of AC-based damage and a choice of five.)
+- **Block:** Reaction when you're attacked: +1 AC against that attack. (Flat +1, so no shield reaches +4.)
+- **Riposte:** Reaction when a melee attack against you misses: make an Opportunity Attack against the attacker.
+- **Interpose:** Reaction when a creature within 5 ft of you is attacked: +2 AC for it against that attack.
+- **Strapped:** the hand stays free to hold a focus, torch or potion, but not a weapon. (Free-Handed is merged into this.)
+- **Wall:** up to two allies within 5 ft of you get +1 AC. (The chain-cover clause is dropped.)
+- **Cover:** Bonus Action to plant it. You and one ally behind it have Half Cover (Pavise: Three-Quarters) from the front. Your Speed is 0 until you pick it up (Bonus Action).
+- Dropped: **Hook** (contested check, extra micromanagement), **Mounted** and **Free-Handed** (merged into Strapped), **Light** (only matters for the Madu, which is a weapon anyway).
+- Shield Sling stays: it lets you don or doff any shield as a Bonus Action.
+
+## Shop categories (new)
+
+Each item gets a `cat`. Inside a shop, category chips appear above the items (All + only the categories that shop has), in both the DM view and on the tablet. No new shops needed.
+
+| Category | Contents |
+|---|---|
+| Armor | Armor, shields, armor addons |
+| Weapons | Weapons, ammo, weapon upgrades, Focus Bracer |
+| Combat | Bombs, nets, bolas, caltrops, traps, oils, grease, smoke |
+| Healing | Potions, healer items, antitoxin, salves |
+| Travel | Weather clothing, tents, bedrolls, ropes, climbing gear, food |
+| Tools | Thieves' tools, manacles, spyglass, lamp, bags, disguise, incense, everything else |
 
 ## Potion (20 → 25)
 
@@ -174,7 +213,7 @@ New standard armor, D&D 2024 rules and prices. The names are the library names, 
 
 - **Archer:** Broadhead and Whistling Arrows, Pavise, Grappling Bolt, Silver Wash. OK.
 - **Rogue:** Thieves' Tools (fine), Lockpick Wire, Smuggler's Coat, Shadowweave Cloak, Throwing Knives, Smoke Bomb, Flash Powder, Parrying Dagger. Good.
-- **Tank:** 10 armors, 6 shields, Gorget, Reinforced Fitting, Shield Sling. Good.
+- **Tank:** 9 armors, 9 shields, Gorget, Reinforced Fitting, Shield Sling. Good.
 - **Grappler:** 5 nets, Bolas, Spiked Shield, Spiked Armour, Hooked Polearm, Bear's Brew, Manacles. Good.
 - **Ranger/survival:** traps, Ghillie Cloak, camo tent, Tripwire Bell Kit, food, weather gear. Good.
 - **Healer:** was potions only. Adds Healer's Kit, Antitoxin and **Field Bandage** (Bonus Action).
