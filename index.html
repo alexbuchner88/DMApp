@@ -962,7 +962,7 @@ function player(code){
     const m=new Map();Object.values(SHP).forEach(S=>(S.items||[]).forEach(it=>{const k=ICK(it.name);if(k&&!m.has(k))m.set(k,{n:it.name,k,it})}));
     ICL.forEach(x=>{if(!m.has(x.k))m.set(x.k,x)});return[...m.values()]};
   const sugHTML=()=>{const dr=addDraft;sugL=dr.pk&&ICK(dr.pk)===ICK(dr.t)?[]:sugFind(dr.t,sugAll(),5);
-    return sugL.map((x,i)=>{const im=itImg({name:x.n}),sz=x.it?slotsOf(x.it):null;return`<button class="ivsg" data-sug="${i}">${im?`<img src="${im}" alt="">`:'<span class="ph">✦</span>'}<span>${esc(x.n)}</span>${sz!=null?`<em>${ICN.cube}${slotFmt(sz)}</em>`:''}</button>`}).join('')};
+    return sugL.map((x,i)=>{const im=itImg({name:x.n}),z=x.it?null:icSize(x),sz=x.it?slotsOf(x.it):z?z.s:null;return`<button class="ivsg" data-sug="${i}">${im?`<img src="${im}" alt="">`:'<span class="ph">✦</span>'}<span>${esc(x.n)}</span>${sz!=null?`<em>${ICN.cube}${slotFmt(sz)}</em>`:''}</button>`}).join('')};
   const tIco=()=>{const im=itImg({name:addDraft.t});return im?`<img src="${im}" alt="">`:''};
   const closeAdd=()=>{addAt='';addDraft={t:'',s:'1',u:'',n:''};sugL=[];render()};
   const addOk=()=>{   // a simple form for loot and odds and ends
@@ -1084,7 +1084,8 @@ function player(code){
     if(e.target.closest('[data-icv]')){icv=!icv;localStorage.setItem('pvicv',icv?'1':'0');render();return}
     if(e.target.closest('[data-purse]')){panel=panel==='purse'?'':'purse';N.purse='';render();return}
     const sg=e.target.closest('[data-sug]');if(sg){const x=sugL[+sg.dataset.sug];if(!x)return;addDraft.t=x.n;addDraft.pk=x.n;
-      if(x.it){const mx=usesOf(x.it);addDraft.s=String(slotsOf(x.it));addDraft.u=mx?String(mx):'';if(!(addDraft.n||'').trim()&&x.it.desc)addDraft.n=x.it.desc}render();return}   // the exact name brings the matching icon; a shop item also brings its size and uses
+      if(x.it){const mx=usesOf(x.it);addDraft.s=String(slotsOf(x.it));addDraft.u=mx?String(mx):'';if(!(addDraft.n||'').trim()&&x.it.desc)addDraft.n=x.it.desc}
+      else{const z=icSize(x);if(z){addDraft.s=String(z.s);addDraft.u=z.u?String(z.u):''}}render();return}   // the exact name brings the matching icon; a shop item, or item_sizes.json, also brings size and uses
     const chp=e.target.closest('[data-chip]');if(chp){addDraft.s=chp.dataset.chip;render();return}
     const ust=e.target.closest('[data-ustep]');if(ust){addDraft.u=String(Math.max(0,Math.min(99,(parseInt(addDraft.u)||0)+(+ust.dataset.ustep))));render();return}
     const ia=e.target.closest('[data-ia]');if(ia){invAct(ia.dataset.ia);return}
@@ -1104,23 +1105,30 @@ const AUP=typeof fetch==='function'?fetch('audio.json',{cache:'no-cache'}).then(
 const ICK=n=>String(n||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,''),ICO=new Map(),ICL=[];
 const ICOP=typeof fetch==='function'?fetch('items.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('missing');return r.json()}).then(j=>{
   const fs=(j.files||[]).map(f=>[f.split('/').pop().replace(/\.[^.]+$/,''),encodeURI(f)]),add=(n,u)=>{const k=ICK(n);if(k&&!ICO.has(k))ICO.set(k,u)};
-  fs.forEach(([n,u])=>{const k=ICK(n);if(k&&!ICL.some(x=>x.k===k))ICL.push({n,k})});   // names for the add-item suggestions
+  fs.forEach(([n,u])=>{const k=ICK(n);if(k&&!ICL.some(x=>x.k===k))ICL.push({n,k,f:decodeURI(u).split('/').slice(1,-1).join('/')})});   // names (and folders, for the sizes) for the add-item suggestions
   fs.forEach(([n,u])=>add(n,u));fs.forEach(([n,u])=>add(n.replace(/\s*\([^)]*\)\s*/g,' '),u));fs.forEach(([n,u])=>add(n.split(' - ')[0],u));return ICO}).catch(()=>ICO):Promise.resolve(ICO);   // "Acid" also finds "Acid (vial)", "Potion" finds "Potion - Black"
 // No exact match: fall back to a generic icon from one word. "Potion of Speed" uses Potion (the word before "of"), "Winter Cloak" uses Cloak (the last word), then the other end is tried.
 const itImg=i=>{if(!i)return'';if(i.img)return i.img;const n=String(i.name||''),b=n.replace(/\s*\([^)]*\)\s*/g,' ').trim(),w=b.split(/[\s,]+/).filter(Boolean),f=w[0],l=w[w.length-1];
   const ws=/\bof\b/i.test(b)?[f,l]:[l,f];return ICO.get(ICK(n))||ICO.get(ICK(b))||ws.map(x=>ICO.get(ICK(x))).find(Boolean)||''};
+// Sizes and uses for icon items, from item_sizes.json (edited by hand): a default per folder of items/, plus the items that differ.
+let SZJ=null;const SZM=new Map();
+const SZP=typeof fetch==='function'?fetch('item_sizes.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('missing');return r.json()}).then(j=>{SZJ=j;
+  Object.values(j.folders||{}).forEach(m=>Object.entries(m).forEach(([n,v])=>{if(n!=='_default')SZM.set(ICK(n),v)}));return j}).catch(()=>null):Promise.resolve(null);
+const icSize=x=>{if(!SZJ||!x)return null;const F=SZJ.folders||{};let s=SZM.has(x.k)?SZM.get(x.k):undefined;   // {s,u} or null when the file gives no size
+  if(s===undefined)for(let f=x.f||'';f;f=f.includes('/')?f.slice(0,f.lastIndexOf('/')):''){if(F[f]&&'_default' in F[f]){s=F[f]._default;break}}
+  const u=Object.entries(SZJ.uses||{}).find(([n])=>ICK(n)===x.k);return s==null?null:{s,u:u?u[1]:0}};
 // Add-item suggestions: forgiving name search, so a loose or misspelled title still finds the item (and with it its icon).
 const sugW=n=>String(n||'').toLowerCase().replace(/&/g,'and').split(/[^a-z0-9]+/).filter(Boolean);
 const sugD=(a,b,m)=>{if(Math.abs(a.length-b.length)>m)return m+1;let p2=null,p=Array.from({length:b.length+1},(_,j)=>j);   // edit distance (swaps count 1), stops early past m
   for(let i=1;i<=a.length;i++){const c=[i];let lo=i;for(let j=1;j<=b.length;j++){let v=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));if(p2&&i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1])v=Math.min(v,p2[j-2]+1);c.push(v);lo=Math.min(lo,v)}if(lo>m)return m+1;p2=p;p=c}return p[b.length]};
-const sugT=(t,w)=>{if(w.startsWith(t))return 10;if(t.length>=3&&w.includes(t))return 6;if(t.length<3)return 0;const m=t.length<=4?1:2;   // one search word against one name word
+const sugT=(t,w)=>{if(w.startsWith(t))return 10;if(t.length>=3&&w.includes(t))return 6;if(t.length<3)return 0;const m=t.length<=5?1:2;   // one search word against one name word
   for(let L=t.length-1;L<=t.length+1;L++)if(L>0&&L<=w.length&&sugD(t,w.slice(0,L),m)<=m)return 4;if(sugD(t,w,m)<=m)return 3;
   if(t.length>=4)for(let i=1;i+t.length-1<=w.length;i++)for(let L=t.length-1;L<=t.length+1;L++)if(i+L<=w.length&&sugD(t,w.slice(i,i+L),m)<=m)return 2;return 0};   // also inside a word: "swrd" finds Longsword
 function sugFind(q,list,max){
   const qk=ICK(q),qt=sugW(q);if(qk.length<2)return[];const out=[];
   for(const c of list){const k=c.k||ICK(c.n);let sc=k===qk?100:k.startsWith(qk)?60:k.includes(qk)?40:0;
-    if(!sc&&qk.length>=5){const m=qk.length<=8?1:2;for(let L=qk.length-1;L<=qk.length+1&&!sc;L++)if(L<=k.length&&sugD(qk,k.slice(0,L),m)<=m)sc=30}   // the whole title, spaces ignored: "chain male" finds Chain Mail
     if(!sc){const ws=[...sugW(c.n),k];for(const t of qt){const b=Math.max(...ws.map(w=>sugT(t,w)));if(!b){sc=0;break}sc+=b}}
+    if(sc<12&&qk.length>=5){const m=qk.length<=8?1:2;for(let L=qk.length-1;L<=qk.length+1;L++)if(L<=k.length&&sugD(qk,k.slice(0,L),m)<=m){sc=12;break}}   // the whole title with spaces ignored: "chain male" finds Chain Mail
     if(sc)out.push({...c,sc:sc+(c.it?5:0)-k.length*.05})}
   out.sort((a,b)=>b.sc-a.sc);const top=out.length?out[0].sc:0;return out.filter(x=>x.sc>=top*.5).slice(0,max)};   // weak guesses drop out when there is a good match
 // Image library: files in images/, listed by hand in images.json. Inside the app their ids get a lib: prefix, so they never collide with uploaded (Firestore) images.
