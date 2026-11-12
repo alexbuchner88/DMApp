@@ -524,3 +524,9 @@ body.pvflat::before{background:radial-gradient(ellipse at 50% -10%,#33261b 0,#1a
 .ivsec.collapsed>:not(h4),.doll.collapsed>:not(.dolltabs){display:none}
 .ivsec.collapsed h4,.doll.collapsed .dolltabs{margin-bottom:0}
 .ivwi{width:22px;height:22px;object-fit:contain}
+.ivttl{display:flex;align-items:center;gap:6px}.ivttl input{flex:1}
+.ivtico{flex:0 0 38px;height:38px;display:flex;align-items:center;justify-content:center}.ivtico:empty{display:none}.ivtico img{max-width:38px;max-height:38px;object-fit:contain}
+.ivsug{display:flex;flex-direction:column;gap:4px;max-height:40vh;overflow:auto}.ivsug:empty{display:none}
+.ivsg{display:flex;align-items:center;gap:8px;min-height:40px;padding:2px 8px;border:2px solid var(--gold2);border-radius:6px;background:#f6edcf;color:#2a170d;font:14px sans-serif;text-align:left;cursor:pointer}
+.ivsg img,.ivsg .ph{width:30px;height:30px;object-fit:contain;flex:0 0 30px;text-align:center}
+.ivsg span{flex:1}.ivsg em{font-style:normal;font-size:12px;display:flex;align-items:center;gap:2px}.ivsg em .ic{width:14px;height:14px}

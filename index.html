@@ -902,7 +902,7 @@ function player(code){
   const SHP={},subs={};
   const card=i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${itImg(i)?`<img src="${itImg(i)}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${slotsOf(i)||usesOf(i)?`<p class="wgt" title="Slots">${ICN.cube}${slotFmt(slotsOf(i))}${usesOf(i)?` &nbsp;${ICN.tally}${usesOf(i)}`:''}</p>`:''}${i.qty!=null?`<p class="qty">${i.qty>0?ICN.crate+'×'+i.qty:'Sold out'}</p>`:''}</div>`;
   // Inventory for the phone: gear and clothes in two windows, quick access bags, the backpack as a grid with sized blocks, water and rations in the top bar, a purse. It tracks, it does not play for you.
-  let CH=[],cid=localStorage.getItem('char-'+code)||'',pick=false,esel=null,info=localStorage.getItem('pvinfo')==='1',tips=localStorage.getItem('pvtips')!=='0',icv=localStorage.getItem('pvicv')==='1',dw=sessionStorage.getItem('pvdw')||'gear',panel='',addAt='',addDraft={t:'',s:'1',u:'',n:''};
+  let CH=[],cid=localStorage.getItem('char-'+code)||'',pick=false,esel=null,info=localStorage.getItem('pvinfo')==='1',tips=localStorage.getItem('pvtips')!=='0',icv=localStorage.getItem('pvicv')==='1',dw=sessionStorage.getItem('pvdw')||'gear',panel='',addAt='',addDraft={t:'',s:'1',u:'',n:''},sugL=[],focusT=false;
   let col={};try{col=JSON.parse(localStorage.getItem('pvcol')||'{}')||{}}catch(e){}   // collapsed inventory windows, per device
   const colBtn=k=>`<button class="ivcol" data-col="${k}" title="${col[k]?'Expand':'Collapse'}">${col[k]?'▾':'▴'}</button>`,colC=k=>col[k]?' collapsed':'';
   const DEF={},dsub={},rid=()=>Math.random().toString(36).slice(2,9);
@@ -958,13 +958,20 @@ function player(code){
     if(it.qty!=null)updateDoc(doc(db,'sessions',rt,'items',it.id),{qty:it.qty-1});
     open=null;render();
   };
+  const sugAll=()=>{   // items in the open shops (they carry size and uses) and every icon name; unopened shops stay hidden from players
+    const m=new Map();Object.values(SHP).forEach(S=>(S.items||[]).forEach(it=>{const k=ICK(it.name);if(k&&!m.has(k))m.set(k,{n:it.name,k,it})}));
+    ICL.forEach(x=>{if(!m.has(x.k))m.set(x.k,x)});return[...m.values()]};
+  const sugHTML=()=>{const dr=addDraft;sugL=dr.pk&&ICK(dr.pk)===ICK(dr.t)?[]:sugFind(dr.t,sugAll(),5);
+    return sugL.map((x,i)=>{const im=itImg({name:x.n}),sz=x.it?slotsOf(x.it):null;return`<button class="ivsg" data-sug="${i}">${im?`<img src="${im}" alt="">`:'<span class="ph">✦</span>'}<span>${esc(x.n)}</span>${sz!=null?`<em>${ICN.cube}${slotFmt(sz)}</em>`:''}</button>`}).join('')};
+  const tIco=()=>{const im=itImg({name:addDraft.t});return im?`<img src="${im}" alt="">`:''};
+  const closeAdd=()=>{addAt='';addDraft={t:'',s:'1',u:'',n:''};sugL=[];render()};
   const addOk=()=>{   // a simple form for loot and odds and ends
     const c=me();if(!c||!addAt)return;const t=(addDraft.t||'').trim();if(!t){note('add','Give it a title.');return}
     const sz=Math.max(0,Math.min(4,Math.round((parseFloat(addDraft.s)||0)*2)/2)),mx=Math.max(0,Math.min(99,parseInt(addDraft.u)||0)),base={name:t,desc:(addDraft.n||'').trim(),slots:sz,max:mx,uses:mx,qty:1},es=entries(c);
     if(addAt.startsWith('edit:')){const id=addAt.slice(5),e=es.find(x=>x.id===id);if(!e)return;saveInv(c,{[id]:{...e._raw,...base,uses:Math.min(mx,e.uses!=null?e.uses:mx)}})}
     else if(addAt.startsWith('cell:')){if(!packLayout(c,es).fits(+addAt.slice(5),sz<1?1:2)){note('add','Not enough room there.');return}saveInv(c,{[rid()]:{...base,pos:'pack',idx:+addAt.slice(5)}})}
     else{if(!canPlace({slots:sz},addAt,c)){note('add','Only ½ items fit there.');return}saveInv(c,{[rid()]:{...base,pos:addAt}})}
-    addAt='';render();
+    closeAdd();
   };
   const PIC={helm:'helmet',hl:'hand',armor:'armor',hr:'hand',hipl:'belt',sling:'strap',hipr:'belt',boots:'boot',hat:'hat',amulet:'amulet',cloak:'cloak',gloves:'glove',clothes:'shirt',shoes:'shoe',ringl:'ring',ringr:'ring'},WORDS=['hipl','hipr','sling'];   // only these places keep their word when the hints are off
   const step=(k,ic,lab,v)=>`<div class="ivstep"><span class="ivsl">${ic}<span>${lab}</span></span><button data-up="${k}-" title="Less">${ICN.minus}</button><b>${v}</b><button data-up="${k}+" title="More">${ICN.plus}</button></div>`;
@@ -997,27 +1004,27 @@ function player(code){
       <div class="doll${colC('doll')}"><div class="dolltabs"><button class="btn sm ibt ${dw==='gear'?'':'alt'}" data-dw="gear" title="Gear">${ICN.helmet}<span>Gear</span></button><button class="btn sm ibt ${dw==='clothes'?'':'alt'}" data-dw="clothes" title="Clothes">${ICN.shirt}<span>Clothes</span></button>${colBtn('doll')}</div>${win}<div class="ivsub tip" style="color:var(--ink);margin-top:6px">${dw==='gear'?'Gear counts in full.':'Clothes are worn and count 1 less.'} Tap an empty place to add an item.</div></div>
       <div class="ivsec${colC('quick')}"><h4>${ICN.pouch}<span>Quick access</span>${colBtn('quick')}</h4><div class="ivgrid">${qa('p',pn,'Pouch')}${qa('q',qn,'Quiver')}</div><div class="ivsub tip" style="color:var(--ink)">Belt pouch and quiver take ½ items only.</div></div>
       <div class="ivsec${colC('pack')}"><h4>${ICN.bag}<span>Backpack</span>${colBtn('pack')}</h4><div class="ivtog2"><button class="ivwb${wr.w?' on':''}" data-wr="w" title="Water, 1 slot">${wIc}<span>Water</span></button><div class="ivrat" title="Rations, ½ slot each">${rIc}<span>Rations</span><button data-wr="r-" title="One less">${ICN.minus}</button><b>${Math.min(wr.r,rm)}</b><button data-wr="r+" title="One more">${ICN.plus}</button></div></div><div class="ivsub tip" style="color:var(--ink);margin-bottom:6px">Water is 1 slot, each ration is ½ slot.</div><div class="ivpack${sel&&sel.epos!=='pack'?' valid':''}" data-pos="pack">${cells}</div><div class="ivfreeline${over?' over':''}">${ICN.cube}${over?'<span>Over the limit</span>':`<b>${slotFmt(freeN)}</b><span>free</span>`}<span class="tip">Tap a free space to add an item.</span></div></div>`;
-    if(addAt)h+=`<div class="invact ivadd"><b class="ivat">${editing?ICN.pencil:ICN.plus}<span>${editing?'Edit Item':'Add Item'}</span></b>${N.add?`<div class="ivnote">${esc(N.add)}</div>`:''}<input data-af="t" placeholder="Title" value="${esc(dr.t||'')}"><div class="ivfld"><span class="ivfl">Size</span><div class="ivchips">${szl.map(o=>`<button class="chip${String(dr.s)===o[0]?' on':''}" data-chip="${o[0]}">${o[1]}</button>`).join('')}</div></div><div class="ivfld"><span class="ivfl">Uses</span><div class="ivuse"><button data-ustep="-1">${ICN.minus}</button><b>${parseInt(dr.u)||0}</b><button data-ustep="1">${ICN.plus}</button></div><span class="tip">0 for none</span></div><input data-af="n" placeholder="Notes" value="${esc(dr.n||'')}"><div class="row"><button class="ib ok" data-ia="addok">${ICN.check}<span>${editing?'Save':'Add'}</span></button><button class="ib" data-ia="addno">${ICN.x}<span>Cancel</span></button></div></div>`;
+    if(addAt)h+=`<div class="invact ivadd"><b class="ivat">${editing?ICN.pencil:ICN.plus}<span>${editing?'Edit Item':'Add Item'}</span></b>${N.add?`<div class="ivnote">${esc(N.add)}</div>`:''}<div class="ivttl"><input data-af="t" placeholder="Title, type to search" autocomplete="off" value="${esc(dr.t||'')}"><span class="ivtico">${tIco()}</span></div><div class="ivsug">${sugHTML()}</div><div class="ivfld"><span class="ivfl">Size</span><div class="ivchips">${szl.map(o=>`<button class="chip${String(dr.s)===o[0]?' on':''}" data-chip="${o[0]}">${o[1]}</button>`).join('')}</div></div><div class="ivfld"><span class="ivfl">Uses</span><div class="ivuse"><button data-ustep="-1">${ICN.minus}</button><b>${parseInt(dr.u)||0}</b><button data-ustep="1">${ICN.plus}</button></div><span class="tip">0 for none</span></div><input data-af="n" placeholder="Notes" value="${esc(dr.n||'')}"><div class="row"><button class="ib ok" data-ia="addok">${ICN.check}<span>${editing?'Save':'Add'}</span></button><button class="ib" data-ia="addno">${ICN.x}<span>Cancel</span></button></div></div>`;
     else if(sel){const worn=WORNIDS.includes(sel.epos)&&slotsOf(sel);h+=`<div class="invact"><div class="ivrow1"><b class="ivname">${esc(sel.name)}</b>${sel.ref?'':`<button class="ib" data-ia="edit" title="Edit">${ICN.pencil}</button>`}${sel.max?`<span class="ivuse" title="Uses"><button class="ib${sel.uses?'':' bad'}" data-ia="${sel.uses?'u-':'drop'}" title="${sel.uses?'Use one':'Delete'}">${sel.uses?ICN.minus:ICN.trash}</button><b>${sel.uses}/${sel.max}</b><button class="ib" data-ia="u+" title="Add one back">${ICN.plus}</button></span>`:`<button class="ib bad" data-ia="drop" title="Delete">${ICN.trash}</button>`}<button class="ib${info?' on':''}" data-ia="info" title="Info"><i>i</i></button></div><div class="ivrow2">${info?`<div class="ivinfo2"><span class="ivmeta" title="Slots">${ICN.cube}${slotFmt(slotsOf(sel))}${worn?`<span class="ivwn" title="Worn, counts 1 less">${ICN.shirt}−1</span>`:''}</span>${sel.desc?`<p>${esc(sel.desc)}</p>`:''}${sel.rules?`<p><b>Statblock:</b> ${esc(sel.rules)}</p>`:''}</div>`:''}<button class="ib ok" data-ia="clear" title="Close">${ICN.check}</button></div></div>`}
     return h+'</div>';
   };
   const invTap=e=>{
     const c=me();if(!c)return;const es=entries(c),sel=es.find(x=>x.id===esel),ent=e.target.closest('[data-e]'),pos=e.target.closest('[data-pos]'),cellEl=e.target.closest('[data-cell]');
     if(sel&&cellEl){packTo(c,es,sel,+cellEl.dataset.cell);return}
-    if(!sel&&cellEl&&!ent){addAt='cell:'+cellEl.dataset.cell;addDraft={t:'',s:'1',u:'',n:''};N.add='';esel=null;render();return}
+    if(!sel&&cellEl&&!ent){addAt='cell:'+cellEl.dataset.cell;addDraft={t:'',s:'1',u:'',n:''};N.add='';esel=null;focusT=true;render();return}
     if(sel&&pos){const p=pos.dataset.pos;
       if(p!==sel.epos&&canPlace(sel,p,c)&&!(ent&&ent.dataset.e===sel.id)){moveTo(c,sel.id,p);esel=null;render();return}}
     if(ent){esel=esel===ent.dataset.e?null:ent.dataset.e;addAt='';render();return}
-    if(!sel&&pos&&pos.dataset.pos!=='pack'){const occ=es.find(x=>x.epos===pos.dataset.pos);if(occ){esel=occ.id;addAt='';render();return}addAt=pos.dataset.pos;addDraft={t:'',s:'1',u:'',n:''};N.add='';render();return}   // an empty place: add an item by hand; an occupied one: select what is there
+    if(!sel&&pos&&pos.dataset.pos!=='pack'){const occ=es.find(x=>x.epos===pos.dataset.pos);if(occ){esel=occ.id;addAt='';render();return}addAt=pos.dataset.pos;addDraft={t:'',s:'1',u:'',n:''};N.add='';focusT=true;render();return}   // an empty place: add an item by hand; an occupied one: select what is there
   };
   const invAct=a=>{
     const c=me();if(!c)return;
     if(a==='addok'){addOk();return}
-    if(a==='addno'){addAt='';render();return}
+    if(a==='addno'){closeAdd();return}
     const e=entries(c).find(x=>x.id===esel);if(!e)return;
     if(a==='info'){info=!info;localStorage.setItem('pvinfo',info?'1':'0');render();return}
     if(a==='clear'){esel=null;render();return}
-    if(a==='edit'){addAt='edit:'+e.id;addDraft={t:e.name,s:String(+e.slots||0),u:e.max?String(e.max):'',n:e.desc||''};esel=null;render();return}
+    if(a==='edit'){addAt='edit:'+e.id;addDraft={t:e.name,s:String(+e.slots||0),u:e.max?String(e.max):'',n:e.desc||'',pk:e.name};esel=null;render();return}
     if(a==='u-'||a==='u+'){saveInv(c,{[e.id]:{...e._raw,max:e.max,uses:Math.max(0,Math.min(e.max,e.uses+(a==='u+'?1:-1)))}});return}
     if(a==='drop'&&confirm('Drop '+e.name+'?')){saveInv(c,{[e.id]:null});esel=null}
   };
@@ -1039,7 +1046,8 @@ function player(code){
     }
     if(sheet&&CH.length){const k2=keys.includes(psel)?psel:keys[0],it2=((SHP[k2]||{}).items||[]).find(x=>x.id===open);if(it2&&it2.qty!==0)sheet=sheet.replace(/<\/div><\/div>$/,'<div class="take"><button class="btn" data-take="'+it2.id+'">Take</button></div></div></div>')}
     const key=tab+'|'+h;if(key!==last){last=key;const ae=document.activeElement,af=ae&&ae.dataset&&ae.dataset.af,a0=af&&ae.selectionStart,a1=af&&ae.selectionEnd;$('#pvb').innerHTML=h;
-      if(af){const n=$('#pvb').querySelector(`[data-af="${af}"]`);if(n){n.focus({preventScroll:true});try{n.setSelectionRange(a0,a1)}catch(x){}}}}   // a redraw (e.g. a change from the DM) keeps the cursor in the add/edit box
+      if(focusT){focusT=false;const n=$('#pvb').querySelector('[data-af="t"]');if(n)n.focus({preventScroll:true})}   // a new add box opens ready to type
+      else if(af){const n=$('#pvb').querySelector(`[data-af="${af}"]`);if(n){n.focus({preventScroll:true});try{n.setSelectionRange(a0,a1)}catch(x){}}}}   // a redraw (e.g. a change from the DM) keeps the cursor in the add/edit box
     if(sheet!==lastD){lastD=sheet;$('#pvd').innerHTML=sheet;$('#pvd').classList.toggle('on',!!sheet)}
   };
   if(!ICO.size)ICOP.then(()=>{try{render()}catch(e){}});   // item icons arrive after the first draw
@@ -1053,9 +1061,10 @@ function player(code){
   unsubs.push(onSnapshot(collection(db,'sessions',code,'chars'),s=>{CH=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(a.created||0)-(b.created||0));if(cid&&!CH.some(x=>x.id===cid))cid='';if(!cid&&CH.length===1){cid=CH[0].id;localStorage.setItem('char-'+code,cid)}syncDefs();render()}));
   unsubs.push(()=>Object.values(dsub).forEach(u=>u()));
   unsubs.push(()=>{qu&&qu();Object.values(subs).forEach(a=>a.forEach(u=>u()))});
-  app.oninput=e=>{const t=e.target;if(t.dataset&&t.dataset.af)addDraft[t.dataset.af]=t.value};
+  app.oninput=e=>{const t=e.target;if(!t.dataset||!t.dataset.af)return;addDraft[t.dataset.af]=t.value;
+    if(t.dataset.af==='t'){const b=t.closest('.ivadd'),sg=b&&b.querySelector('.ivsug'),ic=b&&b.querySelector('.ivtico');if(sg)sg.innerHTML=sugHTML();if(ic)ic.innerHTML=tIco()}};
   document.onkeydown=e=>{if(tab!=='inv'||!addAt)return;   // the add/edit box: Enter saves, Escape cancels
-    if(e.key==='Enter'&&e.target.closest('.ivadd')){e.preventDefault();addOk()}else if(e.key==='Escape'){e.preventDefault();addAt='';render()}};
+    if(e.key==='Enter'&&e.target.closest('.ivadd')){e.preventDefault();addOk()}else if(e.key==='Escape'){e.preventDefault();closeAdd()}};
   let pdP=null;app.onpointerdown=e=>{pdP={x:e.clientX,y:e.clientY}};   // where the finger really went down (the browser may move the click itself)
   app.onclick=e=>{
     const down=pdP;pdP=null;
@@ -1074,6 +1083,8 @@ function player(code){
     if(e.target.closest('[data-bag]')){panel=panel==='bag'?'':'bag';N.purse='';render();return}
     if(e.target.closest('[data-icv]')){icv=!icv;localStorage.setItem('pvicv',icv?'1':'0');render();return}
     if(e.target.closest('[data-purse]')){panel=panel==='purse'?'':'purse';N.purse='';render();return}
+    const sg=e.target.closest('[data-sug]');if(sg){const x=sugL[+sg.dataset.sug];if(!x)return;addDraft.t=x.n;addDraft.pk=x.n;
+      if(x.it){const mx=usesOf(x.it);addDraft.s=String(slotsOf(x.it));addDraft.u=mx?String(mx):'';if(!(addDraft.n||'').trim()&&x.it.desc)addDraft.n=x.it.desc}render();return}   // the exact name brings the matching icon; a shop item also brings its size and uses
     const chp=e.target.closest('[data-chip]');if(chp){addDraft.s=chp.dataset.chip;render();return}
     const ust=e.target.closest('[data-ustep]');if(ust){addDraft.u=String(Math.max(0,Math.min(99,(parseInt(addDraft.u)||0)+(+ust.dataset.ustep))));render();return}
     const ia=e.target.closest('[data-ia]');if(ia){invAct(ia.dataset.ia);return}
@@ -1090,13 +1101,28 @@ function player(code){
 let AUJ=null;
 const AUP=typeof fetch==='function'?fetch('audio.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('missing');return r.json()}).then(j=>{AUJ=j;return j}).catch(()=>null):Promise.resolve(null);
 // Item icons: files in items/ (any subfolder), listed in items.json. A shop item without its own image uses the icon whose file name matches its name.
-const ICK=n=>String(n||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,''),ICO=new Map();
+const ICK=n=>String(n||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,''),ICO=new Map(),ICL=[];
 const ICOP=typeof fetch==='function'?fetch('items.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('missing');return r.json()}).then(j=>{
   const fs=(j.files||[]).map(f=>[f.split('/').pop().replace(/\.[^.]+$/,''),encodeURI(f)]),add=(n,u)=>{const k=ICK(n);if(k&&!ICO.has(k))ICO.set(k,u)};
+  fs.forEach(([n,u])=>{const k=ICK(n);if(k&&!ICL.some(x=>x.k===k))ICL.push({n,k})});   // names for the add-item suggestions
   fs.forEach(([n,u])=>add(n,u));fs.forEach(([n,u])=>add(n.replace(/\s*\([^)]*\)\s*/g,' '),u));fs.forEach(([n,u])=>add(n.split(' - ')[0],u));return ICO}).catch(()=>ICO):Promise.resolve(ICO);   // "Acid" also finds "Acid (vial)", "Potion" finds "Potion - Black"
 // No exact match: fall back to a generic icon from one word. "Potion of Speed" uses Potion (the word before "of"), "Winter Cloak" uses Cloak (the last word), then the other end is tried.
 const itImg=i=>{if(!i)return'';if(i.img)return i.img;const n=String(i.name||''),b=n.replace(/\s*\([^)]*\)\s*/g,' ').trim(),w=b.split(/[\s,]+/).filter(Boolean),f=w[0],l=w[w.length-1];
   const ws=/\bof\b/i.test(b)?[f,l]:[l,f];return ICO.get(ICK(n))||ICO.get(ICK(b))||ws.map(x=>ICO.get(ICK(x))).find(Boolean)||''};
+// Add-item suggestions: forgiving name search, so a loose or misspelled title still finds the item (and with it its icon).
+const sugW=n=>String(n||'').toLowerCase().replace(/&/g,'and').split(/[^a-z0-9]+/).filter(Boolean);
+const sugD=(a,b,m)=>{if(Math.abs(a.length-b.length)>m)return m+1;let p2=null,p=Array.from({length:b.length+1},(_,j)=>j);   // edit distance (swaps count 1), stops early past m
+  for(let i=1;i<=a.length;i++){const c=[i];let lo=i;for(let j=1;j<=b.length;j++){let v=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));if(p2&&i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1])v=Math.min(v,p2[j-2]+1);c.push(v);lo=Math.min(lo,v)}if(lo>m)return m+1;p2=p;p=c}return p[b.length]};
+const sugT=(t,w)=>{if(w.startsWith(t))return 10;if(t.length>=3&&w.includes(t))return 6;if(t.length<3)return 0;const m=t.length<=4?1:2;   // one search word against one name word
+  for(let L=t.length-1;L<=t.length+1;L++)if(L>0&&L<=w.length&&sugD(t,w.slice(0,L),m)<=m)return 4;if(sugD(t,w,m)<=m)return 3;
+  if(t.length>=4)for(let i=1;i+t.length-1<=w.length;i++)for(let L=t.length-1;L<=t.length+1;L++)if(i+L<=w.length&&sugD(t,w.slice(i,i+L),m)<=m)return 2;return 0};   // also inside a word: "swrd" finds Longsword
+function sugFind(q,list,max){
+  const qk=ICK(q),qt=sugW(q);if(qk.length<2)return[];const out=[];
+  for(const c of list){const k=c.k||ICK(c.n);let sc=k===qk?100:k.startsWith(qk)?60:k.includes(qk)?40:0;
+    if(!sc&&qk.length>=5){const m=qk.length<=8?1:2;for(let L=qk.length-1;L<=qk.length+1&&!sc;L++)if(L<=k.length&&sugD(qk,k.slice(0,L),m)<=m)sc=30}   // the whole title, spaces ignored: "chain male" finds Chain Mail
+    if(!sc){const ws=[...sugW(c.n),k];for(const t of qt){const b=Math.max(...ws.map(w=>sugT(t,w)));if(!b){sc=0;break}sc+=b}}
+    if(sc)out.push({...c,sc:sc+(c.it?5:0)-k.length*.05})}
+  out.sort((a,b)=>b.sc-a.sc);const top=out.length?out[0].sc:0;return out.filter(x=>x.sc>=top*.5).slice(0,max)};   // weak guesses drop out when there is a good match
 // Image library: files in images/, listed by hand in images.json. Inside the app their ids get a lib: prefix, so they never collide with uploaded (Firestore) images.
 const LIB=new Map(),isLib=id=>typeof id==='string'&&id.startsWith('lib:');
 const LIBP=typeof fetch==='function'?fetch('images.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('missing');return r.json()}).then(j=>{
