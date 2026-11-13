@@ -1,5 +1,5 @@
 {
- "_notes": "Sizes in slots (0, 0.5, 1, 2, 3, 4) for items picked from the add-item suggestions. Each folder of items/ has a _default; only items that differ are listed. null = no size (the player picks it). A subfolder without its own entry uses its parent folder. Names are matched like icons: case and punctuation ignored. 'uses' sets a use counter. Sizes follow the D&D 2024 weights: under 1 lb 0 (small consumables ½), up to 10 lb 1, up to 25 lb 2, up to 40 lb 3, more 4; bulky things one step up.",
+ "_notes": "Sizes in slots (0, 0.5, 1, 2, 3, 4) for items picked from the add-item suggestions. Each folder of items/ has a _default; only items that differ are listed. null = no size (the player picks it). A subfolder without its own entry uses its parent folder. Names are matched like icons: case and punctuation ignored. 'uses' sets a use counter. Sizes follow the D&D 2024 weights: under 1 lb 0 (small consumables ½), up to 10 lb 1, up to 25 lb 2, up to 40 lb 3, more 4; bulky things one step up. Armor follows the shop: light 1, medium 2, heavy 3; shields 2 (buckler 1, large shield 3).",
  "folders": {
   "Adventuring Gear": {
    "_default": 1,
@@ -82,19 +82,19 @@
    "_default": 0.5
   },
   "Armour": {
-   "_default": 4,
+   "_default": 3,
    "Padded Armour": 1,
    "Leather Armour": 1,
-   "Studded Leather Armour": 2,
+   "Studded Leather Armour": 1,
    "Hide Armour": 2,
    "Chain Shirt": 2,
+   "Scale mail": 2,
    "Breastplate": 2,
-   "Half Plate Armour": 3,
-   "Ring Mail": 3,
+   "Half Plate Armour": 2,
    "Goggles": 0,
-   "Shield (Checked)": 1,
-   "Shield (Kite)": 1,
-   "Shield (round)": 1
+   "Shield (Checked)": 2,
+   "Shield (Kite)": 2,
+   "Shield (round)": 2
   },
   "Books and Scrolls": {
    "_default": 1,

@@ -1,5 +1,12 @@
 # Shop rework: review list
 
+**Applied 2026-11-13.** `shop_import.json` is the final list (114 items, all stock 0). Changes after this review:
+- Shields have no Str requirements or Speed penalties. Havel's Shield is the cheap, unwieldy option: +3 AC, Stealth Disadv, 4 slots, 20 gp. Shield Upgrade works on all shields.
+- The 8 standard items were added (Grappling Hook, Bedroll, Pole (10-foot), Two-Person Tent, Hunting Trap, Shovel, Hempen Rope, Thieves' Tools).
+- Renamed for correct icons: Shield Sling → Shield Strap, Silver Wash → Silver Paste.
+- Majeeks Shop stays in session `lostmine`, updated in place, without categories.
+- Heavy armor keeps its 2024 Str requirement.
+
 Source: there is no import file in the repo. The shop items live in Firestore. I read them live:
 `sessions/_shared` has 4 shops with 88 items. The Shady Magic Shop is **Majeeks Shop**, which exists only in session `lostmine` (22 items).
 The in-app importer (`impf` in `index.html`) reads only name, cost, weight, description, rules and dmNote, and only writes to `_shared`.

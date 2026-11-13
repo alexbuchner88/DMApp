@@ -530,3 +530,7 @@ body.pvflat::before{background:radial-gradient(ellipse at 50% -10%,#33261b 0,#1a
 .ivsg{display:flex;align-items:center;gap:8px;min-height:40px;padding:2px 8px;border:2px solid var(--gold2);border-radius:6px;background:#f6edcf;color:#2a170d;font:14px sans-serif;text-align:left;cursor:pointer}
 .ivsg img,.ivsg .ph{width:30px;height:30px;object-fit:contain;flex:0 0 30px;text-align:center}
 .ivsg span{flex:1}.ivsg em{font-style:normal;font-size:12px;display:flex;align-items:center;gap:2px}.ivsg em .ic{width:14px;height:14px}
+#shopk{display:flex;flex-wrap:wrap;justify-content:center;gap:1.2vmin;margin:-1vmin 0 1.6vmin}
+#shopk:empty{display:none}
+#shopk>div{display:contents}
+.shk{margin:0 0 8px}

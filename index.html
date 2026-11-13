@@ -55,7 +55,7 @@ function home(){
 
 async function display(code,pv){
   app.onclick=null;app.onpointerdown=null;document.onkeydown=null;
-  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div id="bg2"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="night"></div><div id="dusk"></div><div id="glow"></div><canvas id="mapc"></canvas><canvas id="wx"></canvas><div id="mbd"></div><div id="npcs"></div><canvas id="mfx"></canvas><canvas id="mwx"></canvas><div id="wxb"></div><div id="tcard"></div><div id="intro"></div><div id="board"><div id="papers"></div></div><div id="shopc"><div id="shopt"></div><div id="shopg"></div></div><div id="shopd"></div><div id="ver">'+VER+'</div><button id="snd" class="snd">Tap to enable sound</button><div id="vz"></div></div>';
+  app.innerHTML='<div id="stage" class="empty"><div id="bg"></div><div id="bg2"></div><div class="idle" id="idle"><div class="sigil"></div></div><div id="night"></div><div id="dusk"></div><div id="glow"></div><canvas id="mapc"></canvas><canvas id="wx"></canvas><div id="mbd"></div><div id="npcs"></div><canvas id="mfx"></canvas><canvas id="mwx"></canvas><div id="wxb"></div><div id="tcard"></div><div id="intro"></div><div id="board"><div id="papers"></div></div><div id="shopc"><div id="shopt"></div><div id="shopk"></div><div id="shopg"></div></div><div id="shopd"></div><div id="ver">'+VER+'</div><button id="snd" class="snd">Tap to enable sound</button><div id="vz"></div></div>';
   if(!pv){let vt=0;const vz=$('#vz');vz.addEventListener('pointerdown',()=>{vt=setTimeout(viewMenu,1200)});['pointerup','pointercancel','pointerleave'].forEach(n=>vz.addEventListener(n,()=>clearTimeout(vt)))}
   if(pv)$('#stage').classList.add('prev');else try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(e){}
   const cache=new Map();
@@ -68,21 +68,23 @@ async function display(code,pv){
   const mw=watchMap(code,(o,s)=>{MO=o;MS=s;kick()});unsubs.push(()=>mw.stop());
   const fit=()=>{const r=Math.min(devicePixelRatio||1,1.5);cv.width=Math.round(cv.clientWidth*r);cv.height=Math.round(cv.clientHeight*r);kick()};
   fit();addEventListener('resize',fit);unsubs.push(()=>removeEventListener('resize',fit));
-  let IT=[],SH={},sid=null,su1=null,su2=null,lo=null,dis=null,prevS=null,gk='',dk='';
+  let IT=[],SH={},sid=null,su1=null,su2=null,lo=null,dis=null,prevS=null,gk='',dk='',kk='',tcat='';
   const renderShop=()=>{
     $('#shopt').textContent=SH.name||'';
-    {const gh=IT.map(i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${itImg(i)?`<img src="${itImg(i)}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${slotsOf(i)||usesOf(i)?`<p class="wgt">Slots: ${slotTxt(i)}</p>`:''}${i.qty!=null?`<p class="qty">${i.qty>0?'×'+i.qty:'Sold out'}</p>`:''}</div>`).join('');if(gh!==gk){gk=gh;$('#shopg').innerHTML=gh}}
+    {const kb=catBar(IT,tcat,'data-k','');if(kb!==kk){kk=kb;$('#shopk').innerHTML=kb}}
+    {const gh=catPick(IT,tcat).map(i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${itImg(i)?`<img src="${itImg(i)}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${slotsOf(i)||usesOf(i)?`<p class="wgt">Slots: ${slotTxt(i)}</p>`:''}${i.qty!=null?`<p class="qty">${i.qty>0?'×'+i.qty:'Sold out'}</p>`:''}</div>`).join('');if(gh!==gk){gk=gh;$('#shopg').innerHTML=gh}}
     const oid=lo||(d.shopItemId&&d.shopItemId!==dis?d.shopItemId:null),it=IT.find(x=>x.id===oid);
     {const dh=it?`<div class="sheet"><div class="sin">${itImg(it)?`<div class="pic2"><img src="${itImg(it)}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}<div class="wt">Slots: ${slotTxt(it)}</div>${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`:'';if(dh!==dk){dk=dh;$('#shopd').innerHTML=dh}}
     $('#shopd').classList.toggle('on',!!it);
   };
   if(!ICO.size)ICOP.then(()=>{try{renderShop()}catch(e){}});   // item icons arrive after the first draw
   const watchShop=(id,rt)=>{
-    if(id===sid)return;su1&&su1();su2&&su2();su1=su2=null;sid=id;IT=[];SH={};lo=null;renderShop();if(!id)return;
+    if(id===sid)return;su1&&su1();su2&&su2();su1=su2=null;sid=id;IT=[];SH={};lo=null;tcat='';renderShop();if(!id)return;
     su1=onSnapshot(doc(db,'sessions',rt,'shops',id),s=>{SH=s.data()||{};renderShop()});
     su2=onSnapshot(query(collection(db,'sessions',rt,'items'),where('shopId','==',id)),s=>{IT=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>a.created-b.created);renderShop()});
   };
   unsubs.push(()=>{su1&&su1();su2&&su2()});
+  $('#shopk').onclick=e=>{const b=e.target.closest('[data-k]');if(b){tcat=b.dataset.k;renderShop()}};
   $('#shopg').onclick=e=>{const c=e.target.closest('[data-i]');if(c){lo=c.dataset.i;renderShop()}};
   $('#shopd').onclick=()=>{if(lo)lo=null;else dis=d.shopItemId;renderShop()};
   const WXE=makeWeather($('#wx'));unsubs.push(()=>WXE.stop());
@@ -482,7 +484,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-11 au';
+const VER='2026-11-13 shop';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -794,6 +796,11 @@ const slotsOf=i=>{if(i.slots!=null&&i.slots!=='')return Math.max(0,Math.round((+
   const w=parseFloat(m[1].replace(',','.'));return w<1?(small?.5:0):w<=10?1:w<=25?2:w<=40?3:4};
 const usesOf=i=>Math.max(0,parseInt(i.uses)||0);
 const slotTxt=i=>slotFmt(slotsOf(i))+(usesOf(i)?' · '+usesOf(i)+' uses':'');
+// Shop categories: each item has a cat. A shop shows one button per category it uses (All first), in this order; others follow alphabetically.
+const CATS=['Armor','Weapons','Combat','Healing','Travel','Tools'],USETYPES=['Action','Bonus Action','Reaction','Passive'];
+const catsOf=l=>{const s=new Set(l.map(i=>i.cat).filter(Boolean));return[...CATS.filter(c=>s.has(c)),...[...s].filter(c=>!CATS.includes(c)).sort()]};
+const catBar=(l,cur,attr,cls)=>{const cs=catsOf(l);if(cs.length<2)return'';if(!cs.includes(cur))cur='';return`<div class="${cls}">`+['',...cs].map(c=>`<button class="btn sm ${c===cur?'':'alt'}" ${attr}="${esc(c)}">${c?esc(c):'All'}</button>`).join('')+'</div>'};
+const catPick=(l,cur)=>catsOf(l).includes(cur)?l.filter(i=>i.cat===cur):l;
 const GEAR=[['helm','Helmet'],['hl','Hand'],['armor','Armor'],['hr','Hand'],['hipl','Hipgear'],['sling','Slinggear'],['hipr','Hipgear'],['boots','Boots']];
 const CLOTHES=[['hat','Hat'],['amulet','Amulet'],['cloak','Cloak'],['gloves','Gloves'],['clothes','Clothes'],['shoes','Shoes'],['ringl','Ring'],['ringr','Ring']];
 const GEARIDS=GEAR.map(g=>g[0]),WORNIDS=CLOTHES.map(g=>g[0]),PLACES=[...GEARIDS,...WORNIDS],HALFONLY=[];   // Slinggear takes anything: a shield on a strap, a bow. Only the belt pouch and the quiver are limited to ½ items.
@@ -898,7 +905,7 @@ function wxPlayerHTML(cur,w,L,sel){
 function player(code){
   app.onclick=null;app.onpointerdown=null;document.onkeydown=null;
   app.innerHTML='<div class="pv"><div class="pvh"><div class="pvt">'+[['quest','quest','Quest'],['weather','weather','Weather'],['shops','shop','Shops'],['inv','bag','Inventory'],['set','cog','Settings']].map(t=>`<button class="btn sm tabb" data-t="${t[0]}" title="${t[2]}">${ICN[t[1]]}<span class="tl">${t[2]}</span></button>`).join('')+`</div></div><div id="pvb"></div><div id="pvd"></div></div>`;
-  let d={},tab=sessionStorage.getItem('pvtab')||'quest',Q=null,qid=null,qu=null,psel=null,open=null,fxSel=null,last='',lastD='';
+  let d={},tab=sessionStorage.getItem('pvtab')||'quest',Q=null,qid=null,qu=null,psel=null,pcat='',open=null,fxSel=null,last='',lastD='';
   const SHP={},subs={};
   const card=i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${itImg(i)?`<img src="${itImg(i)}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${slotsOf(i)||usesOf(i)?`<p class="wgt" title="Slots">${ICN.cube}${slotFmt(slotsOf(i))}${usesOf(i)?` &nbsp;${ICN.tally}${usesOf(i)}`:''}</p>`:''}${i.qty!=null?`<p class="qty">${i.qty>0?ICN.crate+'×'+i.qty:'Sold out'}</p>`:''}</div>`;
   // Inventory for the phone: gear and clothes in two windows, quick access bags, the backpack as a grid with sized blocks, water and rations in the top bar, a purse. It tracks, it does not play for you.
@@ -954,7 +961,7 @@ function player(code){
     const keys=d.pshops||[],k=keys.includes(psel)?psel:keys[0],it=((SHP[k]||{}).items||[]).find(x=>x.id===id);if(!it)return;
     if(it.qty===0)return;
     const rt=k.split(':')[0],mx=usesOf(it);
-    saveInv(c,{[rid()]:{ref:rt+':'+it.id,name:it.name,desc:it.desc||'',rules:it.rules||'',slots:slotsOf(it),max:mx,uses:mx,qty:1,pos:'pack'}});
+    saveInv(c,{[rid()]:{ref:rt+':'+it.id,name:it.name,desc:it.desc||'',rules:it.rules||'',slots:slotsOf(it),max:mx,uses:mx,qty:1,pos:'pack',...(it.actionType?{actionType:it.actionType}:{}),...(it.useText?{useText:it.useText}:{}),...(it.cat?{cat:it.cat}:{})}});
     if(it.qty!=null)updateDoc(doc(db,'sessions',rt,'items',it.id),{qty:it.qty-1});
     open=null;render();
   };
@@ -1040,7 +1047,7 @@ function player(code){
     else if(!keys.length)h='<div class="pvempty">No shops are open.</div>';
     else{
       const k=keys.includes(psel)?psel:keys[0],S=SHP[k]||{name:'',items:[]};
-      h=(keys.length>1?'<div class="pvshops">'+keys.map(x=>`<button class="btn sm ${x===k?'':'alt'}" data-s="${x}">${esc((SHP[x]||{}).name||'...')}</button>`).join('')+'</div>':'')+`<div class="pvname">${esc(S.name)}</div><div class="pvg">${S.items.map(card).join('')}</div>`;
+      h=(keys.length>1?'<div class="pvshops">'+keys.map(x=>`<button class="btn sm ${x===k?'':'alt'}" data-s="${x}">${esc((SHP[x]||{}).name||'...')}</button>`).join('')+'</div>':'')+`<div class="pvname">${esc(S.name)}</div>${catBar(S.items,pcat,'data-pk','pvshops')}<div class="pvg">${catPick(S.items,pcat).map(card).join('')}</div>`;
       const it=S.items.find(x=>x.id===open);
       if(it)sheet=`<div class="sheet"><div class="sin">${itImg(it)?`<div class="pic2"><img src="${itImg(it)}" alt=""></div>`:''}<h4>${esc(it.name)}</h4>${it.cost?`<div class="cost">${esc(it.cost)}</div>`:''}<div class="wt">${ICN.cube}${slotFmt(slotsOf(it))}${usesOf(it)?` &nbsp;${ICN.tally}${usesOf(it)} uses`:''}</div>${it.desc?`<p>${esc(it.desc)}</p>`:''}${it.rules?`<div class="lbl">Statblock</div><p>${esc(it.rules)}</p>`:''}</div></div>`;
     }
@@ -1094,7 +1101,8 @@ function player(code){
     if(e.target.closest('[data-vm]')){viewMenu();return}
     const t=e.target.closest('[data-t]');if(t){tab=t.dataset.t;sessionStorage.setItem('pvtab',tab);render();return}
     if(e.target.closest('#pvd')){open=null;render();return}
-    const sb=e.target.closest('[data-s]');if(sb){psel=sb.dataset.s;render();return}
+    const sb=e.target.closest('[data-s]');if(sb){psel=sb.dataset.s;pcat='';render();return}
+    const pkc=e.target.closest('[data-pk]');if(pkc){pcat=pkc.dataset.pk;render();return}
     const c=e.target.closest('[data-i]');if(c){open=c.dataset.i;render()}};
   render();
   WXJP.then(()=>{last='';render()});
@@ -1205,7 +1213,7 @@ function dm(code){
   app.onpointerdown=null;document.onkeydown=null;
   document.body.classList.add('dmv');
   const L=doc(db,'sessions',code,'live','state'),IM=collection(db,'sessions',code,'images'),QC=collection(db,'sessions',code,'quests');
-  let live={},imgs=[],qs=[],shops=[],items=[],selShop=localStorage.getItem('selShop'),editIt=null,edit=null,MO=null,MS={},view={x:.5,y:.5,ft:60},mode=null,tmr=0,dirty=false;
+  let live={},imgs=[],qs=[],shops=[],items=[],dcat='',selShop=localStorage.getItem('selShop'),editIt=null,edit=null,MO=null,MS={},view={x:.5,y:.5,ft:60},mode=null,tmr=0,dirty=false;
   const link=location.origin+location.pathname+'#display/'+code,plink=location.origin+location.pathname+'#player/'+code;
   app.innerHTML=`<div class="wrap"><div id="muhost" class="muhost"><div id="mui"></div></div><div id="muhint" class="muhint">Spotify needs one tap. Press play here to start the intro music.</div>
   <button id="pvbtn" class="pvbtn alt" data-a="pvtoggle" title="Preview of the players' screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>
@@ -1260,12 +1268,13 @@ function dm(code){
   <div class="row edit"><input id="shn" placeholder="Shop or loot list name"><label><input id="shsh" type="checkbox" checked> Shared</label><button class="btn" data-a="shadd">Add shop</button></div>
   <div class="row" id="shl" style="margin:10px 0"></div><div class="row" id="shb"></div>
   <div class="edit" id="shform" style="margin-top:10px"><div class="row"><input id="itn" placeholder="Item name" style="flex:2 1 160px"><input id="itc" placeholder="Cost, e.g. 50 gp" style="flex:1 1 110px"><input id="itw" type="hidden"><input id="its" type="number" min="0" max="4" step="0.5" placeholder="Slots (auto)" style="flex:1 1 100px"><input id="itu" type="number" min="0" max="99" placeholder="Uses (optional)" style="flex:1 1 110px"></div>
+  <div class="row" style="margin-top:8px"><select id="itk" style="flex:1 1 120px"><option value="">Category</option>${CATS.map(c=>`<option>${c}</option>`).join('')}</select><select id="ita" style="flex:1 1 130px"><option value="none">No use</option>${USETYPES.map(c=>`<option>${c}</option>`).join('')}</select><input id="itt" placeholder="Use text, e.g. Throw 15 ft, Dex save or Restrained" style="flex:3 1 220px"></div>
   <textarea id="itd" rows="2" placeholder="Description" style="margin-top:8px"></textarea><textarea id="itr" rows="2" placeholder="Statblock" style="margin-top:8px"></textarea><textarea id="itx" rows="2" placeholder="DM notes (never shown to players)" style="margin-top:8px"></textarea>
   <div class="row" style="margin:8px 0"><input id="iti" type="file" accept="image/*"><button class="btn" id="itb" data-a="itsave">Add item</button><button class="btn alt" id="itcx" data-a="itcancel" style="display:none">Cancel</button></div><p class="note" id="itm"></p></div>
   <details class="edit" id="d-imp" style="margin-top:10px"><summary><h2 style="font-size:17px">Import items</h2></summary>
   <p class="note">Rows from your sheet: Name, Cost, Weight, Description, Statblock, DM notes. Existing names are updated.</p>
   <textarea id="imt" rows="6" placeholder="Paste rows here"></textarea>
-  <div class="row" style="margin-top:8px"><button class="btn sm" data-a="imp">Import</button><button class="btn sm alt" data-a="exp">Copy shop as table</button></div><div class="row" style="margin-top:8px"><input id="imf" type="file" accept=".json"><button class="btn sm" data-a="impf">Import file</button></div><p class="note" id="imm"></p></details>
+  <div class="row" style="margin-top:8px"><button class="btn sm" data-a="imp">Import</button><button class="btn sm alt" data-a="exp">Copy shop as table</button></div><div class="row" style="margin-top:8px"><input id="imf" type="file" accept=".json"><label><input id="imr" type="checkbox"> Replace items</label><button class="btn sm" data-a="impf">Import file</button></div><p class="note" id="imm"></p></details>
   <div id="shi"></div></details></div>`;
   if(localStorage.getItem('play')==='1'){$('.wrap').classList.add('play');$('#pm').textContent='Show editing'}
   document.querySelectorAll('details[id]').forEach(el=>{const k='open-'+el.id,v=localStorage.getItem(k);if(v!==null)el.open=v==='1';el.addEventListener('toggle',()=>localStorage.setItem(k,el.open?'1':'0'))});
@@ -1559,7 +1568,7 @@ function dm(code){
   }
   // the item form moves to sit right below the item being edited, and back to its place when done
   let shHome=null;
-  const clearForm=()=>{['#itn','#itc','#itw','#itd','#itr','#itx','#iti','#its'].forEach(k=>{const e=$(k);if(e)e.value=''});$('#itu').value='';$('#its').placeholder='Slots (auto)';$('#itb').textContent='Add item'};
+  const clearForm=()=>{['#itn','#itc','#itw','#itd','#itr','#itx','#iti','#its','#itk','#itt'].forEach(k=>{const e=$(k);if(e)e.value=''});$('#itu').value='';$('#ita').value='none';$('#its').placeholder='Slots (auto)';$('#itb').textContent='Add item'};
   function placeForm(){
     const f=$('#shform');if(!f)return;
     if(!shHome){shHome=document.createElement('div');shHome.className='note';shHome.style.margin='0';f.before(shHome)}
@@ -1576,7 +1585,7 @@ function dm(code){
     $('#csh').textContent='('+shops.length+')';
     $('#shl').innerHTML=shops.map(x=>`<button class="btn sm ${x.id===selShop?'':'alt'}" data-a="shsel" data-id="${x.id}">${esc(x.name)}${x._r==='_shared'?' <small>shared</small>':''}${(live.pshops||[]).includes((x._r||code)+':'+x.id)?EYE_SM:''} (${items.filter(i=>i.shopId===x.id).length})</button>`).join('')||'<span class="note">No shops yet.</span>';
     $('#shb').innerHTML=sel?bt('shpl',sel.id,(live.pshops||[]).includes((sel._r||code)+':'+sel.id)?'Hide from players':'Show to players',!(live.pshops||[]).includes((sel._r||code)+':'+sel.id))+bt('shren',sel.id,'Rename',1,1)+bt('shdel',sel.id,'Delete shop',1,1):'';
-    $('#shi').innerHTML=sel?items.filter(i=>i.shopId===sel.id).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''}" data-item="${i.id}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${itImg(i)?`<img src="${itImg(i)}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${' / Slots '+esc(slotTxt(i))}<p>${esc(i.desc||'')}</p>${i.qty!=null?`<p style="margin:2px 0;font-weight:700">Stock: ${i.qty}</p>`:''}${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row"><span class="edit" style="display:inline-flex;align-items:center;gap:6px">${bt('qtym',i.id,'−',1)}<b style="min-width:1.6em;text-align:center">${i.qty==null?'–':i.qty}</b>${bt('qtyp',i.id,'+',1)}</span>${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':'';
+    {const si=sel?items.filter(i=>i.shopId===sel.id):[];$('#shi').innerHTML=sel?catBar(si,dcat,'data-a="shcat" data-id','row shk')+catPick(si,dcat).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''}" data-item="${i.id}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${itImg(i)?`<img src="${itImg(i)}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${' / Slots '+esc(slotTxt(i))}<p>${esc(i.desc||'')}</p>${i.qty!=null?`<p style="margin:2px 0;font-weight:700">Stock: ${i.qty}</p>`:''}${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row"><span class="edit" style="display:inline-flex;align-items:center;gap:6px">${bt('qtym',i.id,'−',1)}<b style="min-width:1.6em;text-align:center">${i.qty==null?'–':i.qty}</b>${bt('qtyp',i.id,'+',1)}</span>${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':''}
     placeForm();
   }
   let shS={},itS={},ntS={},NT={};
@@ -1700,7 +1709,8 @@ function dm(code){
     if(a==='pdup'){const n2={...curPre(),id:'p'+Date.now(),name:curPre().name+' copy'};await saveG({presets:[...G.presets,n2],cur:n2.id});syncPre(true)}
     if(a==='pdel'&&G.presets.length>1&&confirm('Delete this preset?')){const pr=G.presets.filter(p=>p.id!==G.cur);await saveG({presets:pr,cur:pr[0].id,bag:{...pr[0].d},day:0});await set({cold:!!pr[0].cold,season:seasonP(pr[0])});wxDraw();syncPre(true)}
     if(a==='shadd'){const nm=$('#shn').value.trim();if(!nm)return;const r=doc(collection(db,'sessions',$('#shsh').checked?'_shared':code,'shops'));await setDoc(r,{name:nm,created:Date.now()});selShop=r.id;localStorage.setItem('selShop',r.id);$('#shn').value='';draw()}
-    if(a==='shsel'){selShop=id;localStorage.setItem('selShop',id);draw()}
+    if(a==='shsel'){selShop=id;dcat='';localStorage.setItem('selShop',id);draw()}
+    if(a==='shcat'){dcat=id||'';draw()}
     if(a==='shshow'&&selShop){const on=live.showShop&&live.shopId===selShop;set(on?{showShop:false,shopItemId:null}:{showShop:true,shopId:selShop,shopRoot:(shops.find(x=>x.id===selShop)||{})._r||code,shopItemId:null,showBoard:false,showMap:false})}
     if(a==='shpl'){const sh=shops.find(x=>x.id===id);if(sh){const k=(sh._r||code)+':'+sh.id;set({pshops:(live.pshops||[]).includes(k)?arrayRemove(k):arrayUnion(k)})}}
     if(a==='shren'){const sh=shops.find(x=>x.id===selShop),nn=sh&&prompt('Shop name',sh.name);if(nn&&nn.trim())updateDoc(doc(db,'sessions',sh._r||code,'shops',selShop),{name:nn.trim()})}
@@ -1712,14 +1722,14 @@ function dm(code){
       if(!selShop){msg.className='note err';msg.textContent='Select or add a shop first.';return}
       if(!name){msg.className='note err';msg.textContent='Give the item a name.';return}
       try{msg.className='note';msg.textContent='Saving...';
-        const f=$('#iti').files[0],img=f?await shrink(f,480):null,body={name,cost:$('#itc').value.trim(),desc:$('#itd').value.trim(),rules:$('#itr').value.trim(),weight:$('#itw').value.trim(),slots:$('#its').value===''?null:Math.max(0,Math.min(4,Math.round((parseFloat($('#its').value)||0)*2)/2)),uses:$('#itu').value===''?null:Math.max(0,Math.min(99,parseInt($('#itu').value)||0)),...(img?{img}:{})};
+        const f=$('#iti').files[0],img=f?await shrink(f,480):null,body={name,cost:$('#itc').value.trim(),desc:$('#itd').value.trim(),rules:$('#itr').value.trim(),weight:$('#itw').value.trim(),slots:$('#its').value===''?null:Math.max(0,Math.min(4,Math.round((parseFloat($('#its').value)||0)*2)/2)),uses:$('#itu').value===''?null:Math.max(0,Math.min(99,parseInt($('#itu').value)||0)),cat:$('#itk').value,actionType:$('#ita').value,useText:$('#itt').value.trim(),...(img?{img}:{})};
         const rt=editIt?((items.find(x=>x.id===editIt)||{})._r||code):((shops.find(x=>x.id===selShop)||{})._r||code),nid=editIt||doc(collection(db,'sessions',rt,'items')).id;
         if(editIt)await updateDoc(doc(db,'sessions',rt,'items',nid),body);
         else await setDoc(doc(db,'sessions',rt,'items',nid),{shopId:selShop,img:'',created:Date.now(),...body});
         await setDoc(doc(db,'sessions',rt,'notes',nid),{text:$('#itx').value.trim()});
         editIt=null;clearForm();placeForm();msg.textContent='Saved.';
       }catch(err){msg.className='note err';msg.textContent='Could not save: '+err.message}}
-    if(a==='itedit'){const i=items.find(x=>x.id===id);if(i){editIt=id;$('#itn').value=i.name||'';$('#itc').value=i.cost||'';$('#itd').value=i.desc||'';$('#itr').value=i.rules||'';$('#itw').value=i.weight||'';$('#its').value=i.slots!=null?i.slots:'';$('#its').placeholder='auto: '+slotFmt(slotsOf({name:i.name,weight:i.weight}));$('#itu').value=i.uses!=null?i.uses:'';$('#itx').value=NT[id]||'';$('#itb').textContent='Save item';placeForm();$('#itn').focus({preventScroll:true});$('#shform').scrollIntoView({block:'nearest'})}}
+    if(a==='itedit'){const i=items.find(x=>x.id===id);if(i){editIt=id;$('#itn').value=i.name||'';$('#itc').value=i.cost||'';$('#itd').value=i.desc||'';$('#itr').value=i.rules||'';$('#itw').value=i.weight||'';$('#its').value=i.slots!=null?i.slots:'';$('#its').placeholder='auto: '+slotFmt(slotsOf({name:i.name,weight:i.weight}));$('#itu').value=i.uses!=null?i.uses:'';$('#itk').value=i.cat||'';$('#ita').value=i.actionType||'none';$('#itt').value=i.useText||'';$('#itx').value=NT[id]||'';$('#itb').textContent='Save item';placeForm();$('#itn').focus({preventScroll:true});$('#shform').scrollIntoView({block:'nearest'})}}
     if(a==='itcancel'){editIt=null;clearForm();placeForm();$('#itm').textContent=''}
     if(a==='itdel'&&confirm('Delete this item?')){if(editIt===id){editIt=null;clearForm();placeForm()}const rt=(items.find(x=>x.id===id)||{})._r||code;deleteDoc(doc(db,'sessions',rt,'items',id));deleteDoc(doc(db,'sessions',rt,'notes',id))}
     if(a==='imp'){
@@ -1741,18 +1751,20 @@ function dm(code){
       try{
         const txt=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsText(f)});
         const arr=JSON.parse(txt);if(!Array.isArray(arr))throw new Error('Expected a list of items');
-        msg.className='note';msg.textContent='Importing...';let add=0,upd=0,ns=0;
+        const repl=$('#imr').checked;if(repl&&!confirm('Delete all items in the shops of this file and import them fresh?'))return;
+        msg.className='note';msg.textContent='Importing...';let add=0,upd=0,ns=0,del=0;
         const names=[...new Set(arr.map(x=>(x.shop||'Imported').trim()))],map={};
         for(const nm of names){let sh=shops.find(x=>x._r==='_shared'&&(x.name||'').trim().toLowerCase()===nm.toLowerCase());
           if(!sh){const r=doc(collection(db,'sessions','_shared','shops'));await setDoc(r,{name:nm,created:Date.now()+ns});sh={id:r.id};ns++}
           map[nm]=sh}
+        if(repl)for(const sh of Object.values(map))for(const i of items.filter(x=>x._r==='_shared'&&x.shopId===sh.id)){await deleteDoc(doc(db,'sessions','_shared','items',i.id));await deleteDoc(doc(db,'sessions','_shared','notes',i.id));del++}
         for(const x of arr){const sh=map[(x.shop||'Imported').trim()],name=(x.name||'').trim();if(!name)continue;
-          const body={name,cost:x.cost||'',weight:x.weight||'',desc:x.description||x.desc||'',rules:x.rules||''};
-          const ex=items.find(i=>i._r==='_shared'&&i.shopId===sh.id&&(i.name||'').trim().toLowerCase()===name.toLowerCase());let nid;
+          const num=(v,mx,f)=>v==null||v===''?null:Math.max(0,Math.min(mx,f(v))),body={name,cost:x.cost||'',weight:x.weight||'',desc:x.description||x.desc||'',rules:x.rules||'',slots:num(x.slots,4,v=>Math.round((parseFloat(v)||0)*2)/2),uses:num(x.uses,99,v=>parseInt(v)||0),cat:x.cat||'',actionType:x.actionType||'none',useText:x.useText||''};
+          const ex=!repl&&items.find(i=>i._r==='_shared'&&i.shopId===sh.id&&(i.name||'').trim().toLowerCase()===name.toLowerCase());let nid;
           if(ex){nid=ex.id;await updateDoc(doc(db,'sessions','_shared','items',nid),body);upd++}
-          else{nid=doc(collection(db,'sessions','_shared','items')).id;await setDoc(doc(db,'sessions','_shared','items',nid),{shopId:sh.id,img:'',created:Date.now()+add,...body});add++}
+          else{nid=doc(collection(db,'sessions','_shared','items')).id;await setDoc(doc(db,'sessions','_shared','items',nid),{shopId:sh.id,img:'',created:Date.now()+add,qty:x.stock!=null?Math.max(0,parseInt(x.stock)||0):null,...body});add++}
           if(x.dmNote)await setDoc(doc(db,'sessions','_shared','notes',nid),{text:String(x.dmNote)})}
-        $('#imf').value='';msg.textContent='Imported '+names.length+' shops: '+add+' new items, '+upd+' updated.';
+        $('#imf').value='';msg.textContent='Imported '+names.length+' shops: '+add+' new items, '+upd+' updated'+(del?', '+del+' removed':'')+'.';
       }catch(err){msg.className='note err';msg.textContent='Import failed: '+err.message}}
     if(a==='exp'){
       const sh=shops.find(x=>x.id===selShop),msg=$('#imm');if(!sh)return;
