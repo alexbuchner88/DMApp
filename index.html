@@ -484,7 +484,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-13 actions';
+const VER='2026-11-13 sug';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -1095,12 +1095,12 @@ function player(code){
     if(t.dataset.af==='t'){const b=t.closest('.ivadd'),sg=b&&b.querySelector('.ivsug'),ic=b&&b.querySelector('.ivtico');if(sg)sg.innerHTML=sugHTML();if(ic)ic.innerHTML=tIco()}};
   document.onkeydown=e=>{if(tab!=='inv'||!addAt)return;   // the add/edit box: Enter saves, Escape cancels
     if(e.key==='Enter'&&e.target.closest('.ivadd')){e.preventDefault();addOk()}else if(e.key==='Escape'){e.preventDefault();closeAdd()}};
-  let pdP=null;app.onpointerdown=e=>{pdP={x:e.clientX,y:e.clientY}};   // where the finger really went down (the browser may move the click itself)
+  let pdP=null;app.onpointerdown=e=>{pdP={x:e.clientX,y:e.clientY,el:e.target};if(e.target.closest('[data-sug]'))e.preventDefault()};   // a suggestion tap keeps the keyboard up until the pick is made, so nothing moves under the finger   // where the finger really went down (the browser may move the click itself)
   app.onclick=e=>{
     const down=pdP;pdP=null;
     if(tab==='inv'&&addAt){   // while the add/edit box is open, only its own buttons (or a tab) do anything, so a tap beside it never closes or resets it
       if(!e.target.closest('.ivadd')&&!e.target.closest('.pvt'))return;
-      const btn=e.target.closest('button'),r=btn&&btn.getBoundingClientRect();if(btn&&e.detail&&down&&(down.x<r.left||down.x>r.right||down.y<r.top||down.y>r.bottom))return;}   // touch adjustment can snap a tap on the box's edge onto a nearby button (Cancel): only count it if the finger really went down on that button
+      const btn=e.target.closest('button'),r=btn&&btn.getBoundingClientRect();if(btn&&e.detail&&down&&!btn.contains(down.el)&&(down.x<r.left||down.x>r.right||down.y<r.top||down.y>r.bottom))return;}   // touch adjustment can snap a tap on the box's edge onto a nearby button (Cancel): only count it if the finger really went down on that button
     const cl=e.target.closest('[data-col]');if(cl){const k=cl.dataset.col;if(col[k])delete col[k];else col[k]=1;try{localStorage.setItem('pvcol',JSON.stringify(col))}catch(x){}render();return}
     const tk=e.target.closest('[data-take]');if(tk){takeItem(tk.dataset.take);return}
     const pk=e.target.closest('[data-pick]');if(pk){cid=pk.dataset.pick;localStorage.setItem('char-'+code,cid);pick=false;esel=null;render();return}
@@ -1113,7 +1113,8 @@ function player(code){
     if(e.target.closest('[data-bag]')){panel=panel==='bag'?'':'bag';N.purse='';render();return}
     if(e.target.closest('[data-icv]')){icv=!icv;localStorage.setItem('pvicv',icv?'1':'0');render();return}
     if(e.target.closest('[data-purse]')){panel=panel==='purse'?'':'purse';N.purse='';render();return}
-    const sg=e.target.closest('[data-sug]');if(sg){const x=sugL[+sg.dataset.sug];if(!x)return;addDraft.t=x.n;addDraft.pk=x.n;
+    const sg=e.target.closest('[data-sug]');if(sg){const x=sugL[+sg.dataset.sug];if(!x)return;const ae=document.activeElement;if(ae&&ae.dataset&&ae.dataset.af)ae.blur();   // picked: the keyboard closes so size, uses and Add are in view
+      addDraft.t=x.n;addDraft.pk=x.n;
       if(x.it){const mx=usesOf(x.it);addDraft.s=String(slotsOf(x.it));addDraft.u=mx?String(mx):'';addDraft.a=useType(x.it);addDraft.e=x.it.useText||'';if(!(addDraft.n||'').trim()&&x.it.desc)addDraft.n=x.it.desc}
       else{const z=icSize(x);if(z){addDraft.s=String(z.s);addDraft.u=z.u?String(z.u):''}}render();return}   // the exact name brings the matching icon; a shop item, or item_sizes.json, also brings size and uses
     const atb=e.target.closest('[data-atype]');if(atb){addDraft.a=atb.dataset.atype;render();return}
@@ -1163,8 +1164,9 @@ function sugFind(q,list,max){
   for(const c of list){const k=c.k||ICK(c.n);let sc=k===qk?100:k.startsWith(qk)?60:k.includes(qk)?40:0;
     if(!sc){const ws=[...sugW(c.n),k];for(const t of qt){const b=Math.max(...ws.map(w=>sugT(t,w)));if(!b){sc=0;break}sc+=b}}
     if(sc<12&&qk.length>=5){const m=qk.length<=8?1:2;for(let L=qk.length-1;L<=qk.length+1;L++)if(L<=k.length&&sugD(qk,k.slice(0,L),m)<=m){sc=12;break}}   // the whole title with spaces ignored: "chain male" finds Chain Mail
-    if(sc)out.push({...c,sc:sc+(c.it?5:0)-k.length*.05})}
-  out.sort((a,b)=>b.sc-a.sc);const top=out.length?out[0].sc:0;return out.filter(x=>x.sc>=top*.5).slice(0,max)};   // weak guesses drop out when there is a good match
+    if(sc)out.push({...c,sc:sc-k.length*.05})}
+  const best=l=>{l.sort((a,b)=>b.sc-a.sc);const top=l.length?l[0].sc:0;return l.filter(x=>x.sc>=top*.5)};   // weak guesses drop out when there is a good match
+  return[...best(out.filter(x=>x.it)),...best(out.filter(x=>!x.it))].slice(0,max)};   // shop items first, then icons
 // Image library: files in images/, listed by hand in images.json. Inside the app their ids get a lib: prefix, so they never collide with uploaded (Firestore) images.
 const LIB=new Map(),isLib=id=>typeof id==='string'&&id.startsWith('lib:');
 const LIBP=typeof fetch==='function'?fetch('images.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('missing');return r.json()}).then(j=>{
