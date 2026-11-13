@@ -260,7 +260,7 @@
   "actionType": "none",
   "useText": "Sleeps 4; tent; wind doesn't raise the rest DC",
   "description": "A heavy canvas tent with guy lines and storm flaps.",
-  "rules": "Sleeps 4. Counts as a tent. Wind doesn't raise the rest DC, except a Storm.",
+  "rules": "Sleeps 4. Counts as a tent. Wind doesn't raise the rest DC.",
   "stock": 0
  },
  {
