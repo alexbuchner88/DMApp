@@ -41,7 +41,7 @@ Upgrades and addons are 0 slots (they become part of the weapon or armor).
 | ✕ | Folding Stretcher | | | | | **Cut:** rarely used, and the tarp already works as a stretcher |
 | ✕ | Red Cloak | | | | | Cut. Story item; you'll re-add it when needed |
 
-## Smith (20 → 33)
+## Smith (20 → 31)
 
 New standard armor, D&D 2024 rules and prices. Shields are in their own section below. The names are the library names, so the icons match (the library uses "Armour").
 
@@ -74,35 +74,35 @@ New standard armor, D&D 2024 rules and prices. Shields are in their own section 
 
 ## Shields (Smith; replaces Shield, Buckler, Spiked, Polished Steel, Tower, Havel's, Pavise)
 
-Rule of thumb: **agile** shields are light and use Reactions. **Static** shields are heavy and give passive bonuses. No shield gets both.
-Slots: 1 buckler, 2 normal shield, 3 heavy shield (Havel's stays the one 4).
+Six base shields: small, medium and large, each in an offensive and a defensive version.
+- **Offensive:** Bash grows with size. Small and medium add Riposte. Large has no reaction (heavy shields stay slow).
+- **Defensive:** what it protects grows with size: you (Block), your neighbour (Interpose), the group (Wall, Cover).
+- No shield goes past +2 AC. Large shields pay with slots, Strength and Stealth.
 
-| | Item | Slots | Type | AC | Str / Stealth | Properties | Cost | Note |
+| | Item | Slots | Type | AC | Str / Stealth | Properties | Cost | Category |
 |---|---|---|---|---|---|---|---|---|
-| + | Buckler (bossed) | 1 | Reaction | +1 | | Bash, Riposte | 3 gp | Agile duelist |
-| ~ | Buckler (strapped) | 1 | Reaction | +1 | | Strapped, Block | 10 gp | Replaces the old Buckler. Caster/off-hand |
-| + | Madu | 1 | Action | +1 | | Weapon 1d6 Piercing, Finesse, Light, Graze. Counts as a bossed buckler | 12 gp | Dual-wield rogue/monk |
-| + | Round Shield (strapped) | 2 | Reaction | +2 | | Strapped, Interpose | 4 gp | Protector of the party |
-| + | Heater Shield | 2 | Reaction | +2 | | Bash, Block | 15 gp | The standard shield. Replaces plain Shield |
-| + | Kite Shield | 2 | Passive | +2 | Str 11 | Wall | 10 gp | Static, front line |
-| ~ | Tower Shield | 3 | Bonus Action | +2 | Str 13, Stealth Disadv | Wall, Cover | 5 gp | 4 → 3 slots |
-| ~ | Pavise | 3 | Bonus Action | – | Str 15, Stealth Disadv | Cover (Three-Quarters) | 12 gp | Archer. Not a worn shield, no AC while carried |
-| ~ | Havel's Shield | 4 | Passive | +3 | Str 17, Stealth Disadv, Speed −5 ft | – | 150 gp | The only +3 |
-| ✕ | Center-Boss Round Shield | | | | | | | Cut: a cheap +3 with no drawback beats everything |
-| ✕ | Punch Buckler | | | | | | | Cut: same niche as the Madu |
-| ✕ | Spiked Shield | | | | | | | Cut: covered by Bash |
-| ✕ | Polished Steel Shield | | | | | | | Cut: a third mechanic shields don't need |
-| ✕ | Shield (plain) | | | | | | | Cut: Heater Shield is the standard |
+| + | Bossed Buckler | 1 | Reaction | +1 | | Bash 1d4 (Vex), Riposte | 5 gp | Armor |
+| ~ | Strapped Buckler | 1 | Reaction | +1 | | Strapped, Block | 10 gp | Armor |
+| ~ | Spiked Shield | 2 | Reaction | +2 | | Bash 1d6 (Push), Riposte | 15 gp | Armor |
+| + | Kite Shield | 2 | Reaction | +2 | | Interpose | 15 gp | Armor |
+| + | Spiked Tower Shield | 3 | Action | +2 | Str 13, Stealth Disadv | Bash 1d8 (Topple) | 30 gp | Armor |
+| ~ | Tower Shield | 3 | Bonus Action | +2 | Str 13, Stealth Disadv | Wall, Cover | 30 gp | Armor |
+| + | Shield Upgrade | 0 | Passive | | | Pick one: +1 AC, or one property from the same line | 150 gp | Armor |
+| ~ | Pavise | 3 | Bonus Action | – | Str 15, Stealth Disadv | Cover (Three-Quarters) | 12 gp | Weapons (archer gear, not worn) |
+| ~ | Havel's Shield | 4 | Passive | +3 | Str 17, Stealth Disadv, Speed −5 ft | – | 150 gp | Armor. The one oddity |
+| ✕ | Shield, Buckler, Polished Steel Shield | | | | | | | Cut: replaced by the six above |
+
+**Shield Upgrade:** one per shield. Choose either +1 AC, or one property that shield's line already uses. Offensive line: Bash, Riposte. Defensive line: Strapped, Block, Interpose, Wall, Cover. A large offensive shield can't gain a Reaction, which keeps heavy shields static. Example: a Kite Shield with Block, or a Strapped Buckler at +2.
 
 **Properties (11 → 7):**
-- **Bash:** a melee attack with the shield, 1d4 + Str Bludgeoning, Mastery Push. (Fixed die and one mastery, instead of AC-based damage and a choice of five.)
+- **Bash:** a melee attack with the shield: its listed die + Str, Bludgeoning, with its listed mastery.
 - **Block:** Reaction when you're attacked: +1 AC against that attack. (Flat +1, so no shield reaches +4.)
 - **Riposte:** Reaction when a melee attack against you misses: make an Opportunity Attack against the attacker.
 - **Interpose:** Reaction when a creature within 5 ft of you is attacked: +2 AC for it against that attack.
 - **Strapped:** the hand stays free to hold a focus, torch or potion, but not a weapon. (Free-Handed is merged into this.)
 - **Wall:** up to two allies within 5 ft of you get +1 AC. (The chain-cover clause is dropped.)
 - **Cover:** Bonus Action to plant it. You and one ally behind it have Half Cover (Pavise: Three-Quarters) from the front. Your Speed is 0 until you pick it up (Bonus Action).
-- Dropped: **Hook** (contested check, extra micromanagement), **Mounted** and **Free-Handed** (merged into Strapped), **Light** (only matters for the Madu, which is a weapon anyway).
+- Dropped: **Hook** (contested check, extra micromanagement), **Mounted**, **Free-Handed** (merged into Strapped), **Light**. Madu, Punch Buckler, Heater, Round and Center-Boss shields are not used.
 - Shield Sling stays: it lets you don or doff any shield as a Bonus Action.
 
 ## Shop categories (new)
@@ -213,7 +213,7 @@ Each item gets a `cat`. Inside a shop, category chips appear above the items (Al
 
 - **Archer:** Broadhead and Whistling Arrows, Pavise, Grappling Bolt, Silver Wash. OK.
 - **Rogue:** Thieves' Tools (fine), Lockpick Wire, Smuggler's Coat, Shadowweave Cloak, Throwing Knives, Smoke Bomb, Flash Powder, Parrying Dagger. Good.
-- **Tank:** 9 armors, 9 shields, Gorget, Reinforced Fitting, Shield Sling. Good.
+- **Tank:** 9 armors, 6 shields + upgrade, Gorget, Reinforced Fitting, Shield Sling. Good.
 - **Grappler:** 5 nets, Bolas, Spiked Shield, Spiked Armour, Hooked Polearm, Bear's Brew, Manacles. Good.
 - **Ranger/survival:** traps, Ghillie Cloak, camo tent, Tripwire Bell Kit, food, weather gear. Good.
 - **Healer:** was potions only. Adds Healer's Kit, Antitoxin and **Field Bandage** (Bonus Action).
