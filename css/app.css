@@ -556,3 +556,6 @@ body.pvflat::before{background:radial-gradient(ellipse at 50% -10%,#33261b 0,#1a
 .pv{padding-top:calc(10px + env(safe-area-inset-top,0px));padding-bottom:calc(40px + env(safe-area-inset-bottom,0px));padding-left:calc(12px + env(safe-area-inset-left,0px));padding-right:calc(12px + env(safe-area-inset-right,0px))}
 .pvt{top:env(safe-area-inset-top,0px)}
 .invact{bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+/* The add/edit box sits at the top of the screen: the keyboard and the phone's buttons are at the bottom, and a top box doesn't move when the keyboard closes */
+.invact.ivadd{position:fixed;z-index:15;top:calc(8px + env(safe-area-inset-top,0px));bottom:auto;left:50%;transform:translateX(-50%);width:min(616px,calc(100vw - 16px));box-sizing:border-box;max-height:calc(100dvh - 16px);overflow:auto;box-shadow:0 0 0 100vmax #0008,0 6px 18px #000c}
+.ivadd .ivat>span{flex:1}.ivadd .ivat .ib{flex:none}
