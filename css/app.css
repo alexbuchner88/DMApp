@@ -534,3 +534,21 @@ body.pvflat::before{background:radial-gradient(ellipse at 50% -10%,#33261b 0,#1a
 #shopk:empty{display:none}
 #shopk>div{display:contents}
 .shk{margin:0 0 8px}
+/* Actions tab: what you can do, active effects */
+.setl h4{display:flex;align-items:center;justify-content:space-between}.setl h4 .setx{color:var(--gold)}
+.ivchips.tx .chip{font-size:11px;letter-spacing:0;padding:0 2px}
+.acg+.acg{margin-top:8px}
+.acg h5{display:flex;align-items:center;gap:6px;margin:2px 0 5px;font:700 12px Cinzel,serif;color:#5a3a14;border-bottom:1px solid #8a6a2466;padding-bottom:3px}
+.acg h5 .ic{width:16px;height:16px}
+.acr{background:#f6edcf;border:1px solid var(--gold2);border-radius:7px;padding:6px 8px;margin-bottom:5px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.acr.on{box-shadow:0 0 0 2px #b5801f}
+.acr.pk{opacity:.78}
+.acl{display:flex;align-items:center;gap:7px;min-width:0}
+.acl b{flex:1 1 auto;min-width:0;overflow-wrap:anywhere;font:700 14px Cinzel,serif}
+.aci{width:28px;height:28px;object-fit:contain;object-position:top;flex:none}
+.acw{flex:none;display:inline-flex;align-items:center;gap:3px;font:italic 12px Almendra,serif;color:#6a4a1c}
+.acw .ic{width:14px;height:14px}
+.acu{flex:none;display:inline-flex;align-items:center;gap:3px;font:700 12px Cinzel,serif}.acu .ic{width:14px;height:14px}.acu.none{color:#a1281a}
+.acr .act{margin:3px 0 0;font-size:14px;line-height:1.3}
+.acx{margin-top:6px;padding-top:6px;border-top:1px dashed #8a6a2477;font-size:13px}.acx p{margin:0 0 4px}
+.acx .ivuse{margin-top:4px}.acx .ib[disabled]{opacity:.4}
