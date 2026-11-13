@@ -234,9 +234,9 @@
   "cost": "8 gp",
   "slots": 2,
   "actionType": "none",
-  "useText": "Tent; set up in 1 min",
+  "useText": "Tent: +5 to your rest roll; set up in 1 min",
   "description": "Two-person tent with folding poles.",
-  "rules": "Counts as a tent (rest DC −5). Set up in 1 minute instead of 10.",
+  "rules": "Counts as a tent: +5 to your rest roll. Set up in 1 minute instead of 10.",
   "stock": 0
  },
  {
@@ -246,9 +246,9 @@
   "cost": "20 gp",
   "slots": 2,
   "actionType": "none",
-  "useText": "Tent; DC 15 Perception to spot beyond 60 ft",
+  "useText": "Tent: +5 to your rest roll; hard to spot",
   "description": "Two-person tent dyed in earth and leaf tones.",
-  "rules": "Counts as a tent (rest DC −5). DC 15 Wis (Perception) to spot from more than 60 ft away.",
+  "rules": "Counts as a tent: +5 to your rest roll. DC 15 Wis (Perception) to spot from more than 60 ft away.",
   "stock": 0
  },
  {
@@ -258,9 +258,9 @@
   "cost": "15 gp",
   "slots": 3,
   "actionType": "none",
-  "useText": "Sleeps 4; tent; wind doesn't raise the rest DC",
+  "useText": "Sleeps 4; +5 to your rest roll, plus the wind bonus",
   "description": "A heavy canvas tent with guy lines and storm flaps.",
-  "rules": "Sleeps 4. Counts as a tent. Wind doesn't raise the rest DC.",
+  "rules": "Sleeps 4. Counts as a tent: +5 to your rest roll. It also cancels the wind: add the wind's rest DC increase to your roll as well (Breeze +2, Gust +5, Storm +10).",
   "stock": 0
  },
  {
@@ -270,9 +270,9 @@
   "cost": "1 gp",
   "slots": 1,
   "actionType": "none",
-  "useText": "Shelter for 6 (−5 rest DC); no help in Gust or Storm",
+  "useText": "Shelter for 6: +5 to rest roll; none in Gust or Storm",
   "description": "A big square of oiled canvas.",
-  "rules": "Rain shelter for up to 6 people: rest DC −5. No bonus in Gust or Storm, the wind tears it loose. Also works as a ground sheet or stretcher.",
+  "rules": "Rain shelter for up to 6 people: +5 to their rest roll. No bonus in Gust or Storm, the wind tears it loose. Also works as a ground sheet or stretcher.",
   "stock": 0
  },
  {
@@ -1205,9 +1205,9 @@
   "cost": "2 gp",
   "slots": 2,
   "actionType": "none",
-  "useText": "Tent: rest DC −5",
+  "useText": "Tent: +5 to your rest roll",
   "description": "Canvas tent for two.",
-  "rules": "Shelter for two. Counts as a tent (rest DC −5). 10 minutes to set up.",
+  "rules": "Shelter for two. Counts as a tent: +5 to your rest roll. 10 minutes to set up.",
   "stock": 0
  },
  {

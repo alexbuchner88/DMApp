@@ -74,7 +74,7 @@
     "combine": "Season override replaces fields of the base state. Travel = state.travel + wind.travelMod, min 25. Rest DC = state.restDC + wind.restDCMod. Effect list = state effects + wind effects, no duplicates.",
     "longRest": [
       "All characters roll for Survival as a group (50% must succeed) or individually.",
-      "Tent or tarp: -5 DC. Cave, building or Tiny Hut: no roll.",
+      "The DC is the same for everyone. Add bonuses from your gear to your roll: tent or tarp +5. Cave, building or Tiny Hut: no roll.",
       "Fail: Long Rest but gain 1 Exhaustion and only half Hit Dice.",
       "Fail by 5+: Short Rest and 1 Exhaustion"
     ],
