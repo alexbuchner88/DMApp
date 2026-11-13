@@ -552,3 +552,7 @@ body.pvflat::before{background:radial-gradient(ellipse at 50% -10%,#33261b 0,#1a
 .acr .act{margin:3px 0 0;font-size:14px;line-height:1.3}
 .acx{margin-top:6px;padding-top:6px;border-top:1px dashed #8a6a2477;font-size:13px}.acx p{margin:0 0 4px}
 .acx .ivuse{margin-top:4px}.acx .ib[disabled]{opacity:.4}
+/* Phone system bars (status bar, back/home/tabs) can lie over the fullscreen app: keep the player view clear of them while they show */
+.pv{padding-top:calc(10px + env(safe-area-inset-top,0px));padding-bottom:calc(40px + env(safe-area-inset-bottom,0px));padding-left:calc(12px + env(safe-area-inset-left,0px));padding-right:calc(12px + env(safe-area-inset-right,0px))}
+.pvt{top:env(safe-area-inset-top,0px)}
+.invact{bottom:calc(8px + env(safe-area-inset-bottom,0px))}
