@@ -66,9 +66,9 @@
   "cost": "5 gp",
   "slots": 1,
   "actionType": "Passive",
-  "useText": "Rain: Con saves −1 instead of −2",
+  "useText": "Rain: no penalty to Con saves",
   "description": "Waxed canvas with a deep hood. You and your pack stay dry.",
-  "rules": "In Rain or Snowfall, the penalty to your Con saves is −1 instead of −2. Your pack stays dry.",
+  "rules": "Drizzle and Rain don't lower your Con saves. Your pack stays dry.",
   "stock": 0
  },
  {
@@ -111,12 +111,12 @@
   "shop": "Thread and Needle",
   "cat": "Tools",
   "name": "Shadowweave Cloak",
-  "cost": "50 gp",
+  "cost": "30 gp + Silk",
   "slots": 1,
   "actionType": "Passive",
-  "useText": "+2 Stealth in Dim Light or Darkness",
+  "useText": "Adv on Stealth in Darkness",
   "description": "Charcoal-grey, dull and very quiet.",
-  "rules": "+2 to Dex (Stealth) checks in Dim Light or Darkness.",
+  "rules": "Advantage on Dex (Stealth) checks in Dim Light or Darkness.",
   "stock": 0
  },
  {
@@ -186,9 +186,9 @@
   "cost": "3 gp",
   "slots": 0,
   "actionType": "Passive",
-  "useText": "+1 Athletics to climb and hold ropes",
+  "useText": "Rain: no Disadv on climbing; no rope burn",
   "description": "Rough leather gloves with sanded palms.",
-  "rules": "+1 to Str (Athletics) checks to climb and to hold onto ropes. No damage from rope burn.",
+  "rules": "Rain doesn't give you Disadvantage on climbing. No damage from rope burn.",
   "stock": 0
  },
  {
@@ -258,9 +258,9 @@
   "cost": "15 gp",
   "slots": 3,
   "actionType": "none",
-  "useText": "Sleeps 4; rest DC −7 instead of −5",
+  "useText": "Sleeps 4; tent; wind doesn't raise the rest DC",
   "description": "A heavy canvas tent with guy lines and storm flaps.",
-  "rules": "Sleeps 4. Counts as a tent, but the rest DC drops by 7 instead of 5. Stays up in winds up to Storm.",
+  "rules": "Sleeps 4. Counts as a tent. Wind doesn't raise the rest DC, except a Storm.",
   "stock": 0
  },
  {
@@ -399,7 +399,7 @@
   "shop": "Smith",
   "cat": "Armor",
   "name": "Reinforced Fitting (upgrade)",
-  "cost": "100 gp",
+  "cost": "50 gp + Iron Bar",
   "slots": 0,
   "actionType": "Passive",
   "useText": "Medium armor: Str instead of Dex for AC (max 2)",
@@ -411,7 +411,7 @@
   "shop": "Smith",
   "cat": "Armor",
   "name": "Steel Gorget (addon)",
-  "cost": "200 gp",
+  "cost": "100 gp + Iron Bar",
   "slots": 0,
   "actionType": "Reaction",
   "useText": "A crit becomes a normal hit, 1/Long Rest",
@@ -519,7 +519,7 @@
   "shop": "Smith",
   "cat": "Armor",
   "name": "Shield Upgrade",
-  "cost": "150 gp",
+  "cost": "100 gp + Iron Bar",
   "slots": 0,
   "actionType": "Passive",
   "useText": "+1 AC, or one more property",
@@ -618,7 +618,7 @@
   "shop": "Smith",
   "cat": "Weapons",
   "name": "Balanced Weapon (upgrade)",
-  "cost": "150 gp",
+  "cost": "100 gp + Iron Bar",
   "slots": 0,
   "actionType": "Passive",
   "useText": "+1 to hit with this weapon",
@@ -1133,9 +1133,9 @@
   "cost": "3 gp",
   "slots": 1,
   "actionType": "none",
-  "useText": "+2 Athletics to climb it",
+  "useText": "Adv to climb it",
   "description": "Hemp rope knotted every foot. 50 ft.",
-  "rules": "+2 to Str (Athletics) checks to climb this rope.",
+  "rules": "Advantage on Str (Athletics) checks to climb this rope.",
   "stock": 0
  },
  {
@@ -1145,9 +1145,9 @@
   "cost": "12 gp",
   "slots": 0.5,
   "actionType": "none",
-  "useText": "+2 Athletics to climb it",
+  "useText": "Adv to climb it",
   "description": "Silk rope with a knot every foot. 50 ft.",
-  "rules": "+2 to Str (Athletics) checks to climb this rope.",
+  "rules": "Advantage on Str (Athletics) checks to climb this rope.",
   "stock": 0
  },
  {
@@ -1181,9 +1181,9 @@
   "cost": "10 gp",
   "slots": 0.5,
   "actionType": "Passive",
-  "useText": "Adv to stay standing on ice",
+  "useText": "Ice: no check to stay standing",
   "description": "Iron spikes strapped under the boots.",
-  "rules": "Advantage on checks and saves to stay standing on ice or slick rock. Disadvantage on Dex (Stealth) on hard floors.",
+  "rules": "You don't fall Prone when moving or Dashing on ice or slick rock. Disadvantage on Dex (Stealth) on hard floors.",
   "stock": 0
  },
  {
@@ -1363,9 +1363,9 @@
   "cost": "2 gp",
   "slots": 0,
   "actionType": "none",
-  "useText": "+2 Con saves vs cold for 8 h",
+  "useText": "Cold weather: no Con save penalty for 8 h",
   "description": "Spicy dried meat. Warms you from the inside.",
-  "rules": "After eating, +2 to Con saves against Extreme Cold for 8 hours. One portion.",
+  "rules": "After eating, cold weather doesn't lower your Con saves for 8 hours. One portion.",
   "stock": 0
  },
  {
