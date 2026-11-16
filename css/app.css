@@ -174,11 +174,6 @@ summary h2{display:flex;align-items:center;gap:.4em}
 .pvname{margin:4px 0 10px;text-align:center;font:700 22px 'Cinzel Decorative',Cinzel,serif;color:var(--gold);text-shadow:0 2px 0 #000}
 .pvg{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px}
 .pv .card{padding:8px;gap:6px}
-.qbig{position:relative;width:min(92vw,560px);aspect-ratio:589/700;margin:12px auto;background:url(../paper.webp) center/100% 100% no-repeat;filter:drop-shadow(0 6px 10px #000b)}
-.qbig .pin{top:3.5%;width:20px;height:20px;margin-left:-10px}
-.qbig .in{position:absolute;inset:17% 13% 11%;overflow:auto;color:#2b1c10;font:clamp(17px,4.6vw,24px)/1.25 Almendra,serif}
-.qbig h3{margin:0 0 .35em;font:400 1.45em MedievalSharp,Almendra,serif;color:#3a2210;line-height:1.1}
-.qbig p{margin:0;white-space:pre-wrap}
 #pvd{position:fixed;inset:0;display:none;place-items:center;background:#000b;z-index:20;overflow:auto}
 #pvd.on{display:grid}
 #pvd .sheet{height:auto;width:min(94vw,72vh);aspect-ratio:589/700}
@@ -559,3 +554,32 @@ body.pvflat::before{background:radial-gradient(ellipse at 50% -10%,#33261b 0,#1a
 /* The add/edit box sits at the top of the screen: the keyboard and the phone's buttons are at the bottom, and a top box doesn't move when the keyboard closes */
 .invact.ivadd{position:fixed;z-index:15;top:calc(8px + env(safe-area-inset-top,0px));bottom:auto;left:50%;transform:translateX(-50%);width:min(616px,calc(100vw - 16px));box-sizing:border-box;max-height:calc(100dvh - 16px);overflow:auto;box-shadow:0 0 0 100vmax #0008,0 6px 18px #000c}
 .ivadd .ivat>span{flex:1}.ivadd .ivat .ib{flex:none}
+/* World tab on the phones: quests, rumors, NPCs and monsters met */
+.wq{position:relative;margin:0 0 10px;padding:12px 14px;border-radius:4px;background:linear-gradient(#f4e8c6,#e2cf9c);color:#2b1c10;box-shadow:0 3px 8px #000a,inset 0 0 22px #8a6a2444;font:17px/1.3 Almendra,serif}
+.wq h3{margin:0 0 .25em;font:400 20px/1.15 MedievalSharp,Almendra,serif;color:#3a2210}
+.wq p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.wq em{float:right;margin:0 0 4px 8px;padding:1px 8px;border-radius:10px;font:700 12px Cinzel,serif;font-style:normal;background:#4a2c18;color:var(--gold)}
+.wq.cur{box-shadow:0 0 0 3px var(--hl),0 3px 8px #000a}
+.wq.done{opacity:.7}.wq.done h3{text-decoration:line-through}.wq.done em{background:#8c2a12;color:#f6edcf}
+.wq.ru{padding-right:44px}
+.wq small{display:block;margin-top:4px;font:italic 14px Almendra,serif;color:#6a4a2a}
+.wq .wx{position:absolute;top:6px;right:6px;width:32px;height:32px;border:0;border-radius:50%;background:#4a2c1822;color:#4a2c18;font-size:20px;line-height:1;cursor:pointer}
+.wadd{display:flex;gap:8px;align-items:stretch;margin:0 0 12px}
+.wadd textarea{flex:1;min-width:0;resize:none}
+.wadd .btn{flex:none}
+.wc{display:flex;gap:12px;align-items:flex-start;margin:0 0 10px;padding:8px;border:2px solid var(--gold2);border-radius:6px;background:#14100cd9;color:var(--parch)}
+.wc.mon{border-color:#b3472b}
+.wcp{flex:none;width:76px;height:76px;border-radius:4px;overflow:hidden;background:#2a170d}
+.wcp img{width:100%;height:100%;object-fit:cover;object-position:50% 0;display:block}
+.wct{flex:1;min-width:0}
+.wct h3{margin:2px 0 4px;font:700 17px Cinzel,serif;color:var(--gold)}
+.wct p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:16px/1.3 Almendra,serif}
+/* DM: met box under the NPC and monster grids */
+.wmet{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-top:8px}
+.wmet:empty{display:none}
+.wmet label{display:flex;align-items:center;gap:6px}
+.wmet input:not([type]){flex:1 1 220px;min-width:0}
+.tile em.met{font-style:normal;color:#7fb069;margin-left:6px}
+.wru{margin:14px 0 4px;font-size:16px}
+.qrow small{display:block;font-style:italic;opacity:.8}
+.wsub{grid-template-columns:repeat(4,1fr)}.wsub .btn{padding:0 4px;font-size:14px}

@@ -484,7 +484,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-13 addtop';
+const VER='2026-11-16 world';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -827,6 +827,7 @@ const sv=(p,c='')=>`<svg class="ic ${c}" viewBox="0 0 24 24" fill="none" stroke=
 const coinIc=(l,c)=>sv(`<circle cx="12" cy="12" r="9"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="currentColor" stroke="none" font-family="Cinzel,serif">${l}</text>`,'coin '+c);
 const HANDP='<path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>';
 const ICN={
+ world:sv('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>'),
  quest:sv('<path d="M7 3h10a2 2 0 0 1 2 2v12a4 4 0 0 1-4 4H6a3 3 0 0 1-3-3v-1h4V6a3 3 0 0 0-1-2.5"/><path d="M10 8h6M10 12h6"/>'),
  weather:sv('<path d="M7.5 18h9a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 6.6 11.2 3.5 3.5 0 0 0 7.5 18z"/>'),
  shop:sv('<path d="M4 9l1.5-5h13L20 9z"/><path d="M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0A2.7 2.7 0 0 0 20 9"/><path d="M5.5 12v8h13v-8"/><path d="M10 20v-4h4v4"/>'),
@@ -908,9 +909,26 @@ function wxPlayerHTML(cur,w,L,sel){
 }
 function player(code){
   app.onclick=null;app.onpointerdown=null;document.onkeydown=null;
-  app.innerHTML='<div class="pv"><div class="pvh"><div class="pvt">'+[['quest','quest','Quest'],['weather','weather','Weather'],['shops','shop','Shops'],['inv','bag','Inventory'],['act','sword','Actions']].map(t=>`<button class="btn sm tabb" data-t="${t[0]}" title="${t[2]}">${ICN[t[1]]}<span class="tl">${t[2]}</span></button>`).join('')+`</div></div><div id="pvb"></div><div id="pvd"></div></div>`;
-  let d={},tab=sessionStorage.getItem('pvtab')||'quest',Q=null,qid=null,qu=null,psel=null,pcat='',open=null,fxSel=null,last='',lastD='';
-  const SHP={},subs={};
+  app.innerHTML='<div class="pv"><div class="pvh"><div class="pvt">'+[['world','world','World'],['weather','weather','Weather'],['shops','shop','Shops'],['inv','bag','Inventory'],['act','sword','Actions']].map(t=>`<button class="btn sm tabb" data-t="${t[0]}" title="${t[2]}">${ICN[t[1]]}<span class="tl">${t[2]}</span></button>`).join('')+`</div></div><div id="pvb"></div><div id="pvd"></div></div>`;
+  let d={},tab=sessionStorage.getItem('pvtab')||'world',psel=null,pcat='',open=null,fxSel=null,last='',lastD='';
+  const SHP={},subs={};if(tab==='quest')tab='world';
+  document.body.classList.add('pvflat');   // no wood board behind the phone view
+  // World tab: quests the party knows, rumors they note for the group, NPCs and monsters the DM marked as met
+  let QS=[],RU=[],WD={},wsub=sessionStorage.getItem('pvws')||'quests';const WI={};
+  const wImg=id=>{if(!(id in WI)){WI[id]=null;imgDoc(code,id).then(x=>{WI[id]=x||{};render()}).catch(()=>{WI[id]={}})}return WI[id]};
+  const worldHTML=()=>{
+    const kq=QS.filter(q=>q.posted||q.known),cur=d.curQuest,met=t=>Object.entries(WD).filter(([id,w])=>w&&w.met&&w.type===t).map(([id,w])=>({id,...w})).sort((a,b)=>(b.at||0)-(a.at||0));
+    const np=met('npc'),mo=met('monster'),subs=[['quests','Quests',kq.length],['rumors','Rumors',RU.length],['npcs','NPCs',np.length],['monsters','Monsters',mo.length]];
+    const bar='<div class="pvshops wsub">'+subs.map(x=>`<button class="btn sm ${x[0]===wsub?'':'alt'}" data-ws="${x[0]}">${x[1]}${x[2]?' '+x[2]:''}</button>`).join('')+'</div>';
+    let b='';
+    if(wsub==='quests'){const l=[...kq].sort((a,b)=>((b.id===cur)-(a.id===cur))||((a.done?1:0)-(b.done?1:0))||(b.created||0)-(a.created||0));
+      b=l.map(q=>`<div class="wq${q.done?' done':''}${q.id===cur?' cur':''}">${q.id===cur?'<em>Current</em>':q.done?'<em>Done</em>':''}<h3>${esc(q.title||'')}</h3>${q.text?`<p>${esc(q.text)}</p>`:''}</div>`).join('')||'<div class="pvempty">No quests yet.</div>'}
+    else if(wsub==='rumors'){b=`<div class="wadd"><textarea data-af="r" rows="2" maxlength="300" placeholder="A rumor for the group">${esc(addDraft.r||'')}</textarea><button class="btn" data-radd>Add</button></div>`+
+      ([...RU].sort((a,b)=>(b.created||0)-(a.created||0)).map(r=>`<div class="wq ru"><button class="wx" data-rdel="${r.id}" title="Delete">×</button><p>${esc(r.text||'')}</p>${r.by?`<small>${esc(r.by)}</small>`:''}</div>`).join('')||'<div class="pvempty">No rumors yet.</div>')}
+    else{const l=wsub==='npcs'?np:mo;
+      b=l.map(w=>{const im=wImg(w.id)||{};return`<div class="wc${wsub==='monsters'?' mon':''}"><div class="wcp">${im.data?`<img src="${im.data}" alt="" loading="lazy">`:''}</div><div class="wct"><h3>${esc(im.name||w.name||'')}</h3>${w.info?`<p>${esc(w.info)}</p>`:''}</div></div>`}).join('')||`<div class="pvempty">No ${wsub==='npcs'?'NPCs':'monsters'} met yet.</div>`}
+    return bar+b};
+  const addRumor=()=>{const t=(addDraft.r||'').trim();if(!t)return;const c=me();setDoc(doc(collection(db,'sessions',code,'rumors')),{text:t,by:c?c.name||'':'',created:Date.now()});addDraft.r='';last='';render()};
   const card=i=>`<div class="card${i.qty===0?' out':''}" data-i="${i.id}"><div class="pic">${itImg(i)?`<img src="${itImg(i)}" alt="">`:'<span class="ph">✦</span>'}</div><h3>${esc(i.name)}</h3>${i.cost?`<p class="cost">${esc(i.cost)}</p>`:''}${slotsOf(i)||usesOf(i)?`<p class="wgt" title="Slots">${ICN.cube}${slotFmt(slotsOf(i))}${usesOf(i)?` &nbsp;${ICN.tally}${usesOf(i)}`:''}</p>`:''}${i.qty!=null?`<p class="qty">${i.qty>0?ICN.crate+'×'+i.qty:'Sold out'}</p>`:''}</div>`;
   // Inventory for the phone: gear and clothes in two windows, quick access bags, the backpack as a grid with sized blocks, water and rations in the top bar, a purse. It tracks, it does not play for you.
   let CH=[],cid=localStorage.getItem('char-'+code)||'',pick=false,esel=null,info=localStorage.getItem('pvinfo')==='1',tips=localStorage.getItem('pvtips')!=='0',icv=localStorage.getItem('pvicv')==='1',dw=sessionStorage.getItem('pvdw')||'gear',asel=null,panel='',addAt='',addDraft={t:'',s:'1',u:'',n:''},sugL=[],focusT=false;
@@ -1060,9 +1078,8 @@ function player(code){
   const render=()=>{
     document.querySelectorAll('.pvt [data-t]').forEach(b=>b.classList.toggle('alt',b.dataset.t!==(tab==='set'?'inv':tab)));
     const pvEl=app.querySelector('.pv');if(pvEl)pvEl.classList.toggle('notips',!tips);
-    document.body.classList.toggle('pvflat',tab!=='quest');   // the wood board only stays behind the quest
     const keys=d.pshops||[];let h='',sheet='';
-    if(tab==='quest')h=Q?`<div class="qbig"><i class="pin"></i><div class="in"><h3>${esc(Q.title||'')}</h3><p>${esc(Q.text||'')}</p></div></div>`:'<div class="pvempty">No quest selected.</div>';
+    if(tab==='world')h=worldHTML();
     else if(tab==='weather'){const ew=effWx(d);h=ew.on?wxPlayerHTML(ew.wx,Math.min(3,ew.wind|0),d,fxSel):'<div class="pvempty">No weather here.</div>'}
     else if(tab==='inv')h=invHTML();
     else if(tab==='act')h=actHTML();
@@ -1081,19 +1098,22 @@ function player(code){
     if(sheet!==lastD){lastD=sheet;$('#pvd').innerHTML=sheet;$('#pvd').classList.toggle('on',!!sheet)}
   };
   if(!ICO.size)ICOP.then(()=>{try{render()}catch(e){}});   // item icons arrive after the first draw
-  const syncQ=()=>{const id=d.curQuest||null;if(id===qid)return;qu&&qu();qu=null;qid=id;Q=null;render();if(id)qu=onSnapshot(doc(db,'sessions',code,'quests',id),s=>{Q=s.exists()?s.data():null;render()})};
   const syncS=()=>{const keys=d.pshops||[];
     Object.keys(subs).forEach(k=>{if(!keys.includes(k)){subs[k].forEach(u=>u());delete subs[k];delete SHP[k]}});
     keys.forEach(k=>{if(subs[k])return;const[rt,id]=k.split(':');SHP[k]={name:'',items:[]};
       subs[k]=[onSnapshot(doc(db,'sessions',rt,'shops',id),s=>{if(SHP[k])SHP[k].name=(s.data()||{}).name||'';render()}),
         onSnapshot(query(collection(db,'sessions',rt,'items'),where('shopId','==',id)),s=>{if(SHP[k])SHP[k].items=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>a.created-b.created);render()})]})};
-  unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};syncQ();syncS();render()}));
+  unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};syncS();render()}));
+  unsubs.push(onSnapshot(collection(db,'sessions',code,'quests'),s=>{QS=s.docs.map(x=>({id:x.id,...x.data()}));render()}));
+  unsubs.push(onSnapshot(collection(db,'sessions',code,'rumors'),s=>{RU=s.docs.map(x=>({id:x.id,...x.data()}));render()}));
+  unsubs.push(onSnapshot(collection(db,'sessions',code,'world'),s=>{WD={};s.docs.forEach(x=>{WD[x.id]=x.data()});render()}));
   unsubs.push(onSnapshot(collection(db,'sessions',code,'chars'),s=>{CH=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(a.created||0)-(b.created||0));if(cid&&!CH.some(x=>x.id===cid))cid='';if(!cid&&CH.length===1){cid=CH[0].id;localStorage.setItem('char-'+code,cid)}syncDefs();render()}));
   unsubs.push(()=>Object.values(dsub).forEach(u=>u()));
-  unsubs.push(()=>{qu&&qu();Object.values(subs).forEach(a=>a.forEach(u=>u()))});
+  unsubs.push(()=>{Object.values(subs).forEach(a=>a.forEach(u=>u()))});
   app.oninput=e=>{const t=e.target;if(!t.dataset||!t.dataset.af)return;addDraft[t.dataset.af]=t.value;
     if(t.dataset.af==='t'){const b=t.closest('.ivadd'),sg=b&&b.querySelector('.ivsug'),ic=b&&b.querySelector('.ivtico');if(sg)sg.innerHTML=sugHTML();if(ic)ic.innerHTML=tIco()}};
-  document.onkeydown=e=>{if(tab!=='inv'||!addAt)return;   // the add/edit box: Enter saves, Escape cancels
+  document.onkeydown=e=>{if(tab==='world'&&e.key==='Enter'&&!e.shiftKey&&e.target.dataset&&e.target.dataset.af==='r'){e.preventDefault();addRumor();return}
+    if(tab!=='inv'||!addAt)return;   // the add/edit box: Enter saves, Escape cancels
     if(e.key==='Enter'&&e.target.closest('.ivadd')){e.preventDefault();addOk()}else if(e.key==='Escape'){e.preventDefault();closeAdd()}};
   const pickSug=i=>{const x=sugL[i];if(!x)return;   // the exact name brings the matching icon; a shop item, or item_sizes.json, also brings size and uses
       addDraft.t=x.n;addDraft.pk=x.n;
@@ -1127,6 +1147,9 @@ function player(code){
     if(tab==='inv'&&(e.target.closest('[data-e]')||e.target.closest('[data-pos]')||e.target.closest('[data-cell]'))){invTap(e);return}
     const fb=e.target.closest('[data-fx]');if(fb){fxSel=fxSel===fb.dataset.fx?null:fb.dataset.fx;render();return}
     if(e.target.closest('[data-vm]')){viewMenu();return}
+    const wsb=e.target.closest('[data-ws]');if(wsb){wsub=wsb.dataset.ws;sessionStorage.setItem('pvws',wsub);render();return}
+    if(e.target.closest('[data-radd]')){addRumor();return}
+    const rdb=e.target.closest('[data-rdel]');if(rdb){if(confirm('Delete this rumor?'))deleteDoc(doc(db,'sessions',code,'rumors',rdb.dataset.rdel));return}
     const t=e.target.closest('[data-t]');if(t){tab=t.dataset.t;sessionStorage.setItem('pvtab',tab);render();return}
     if(e.target.closest('#pvd')){open=null;render();return}
     const sb=e.target.closest('[data-s]');if(sb){psel=sb.dataset.s;pcat='';render();return}
@@ -1286,12 +1309,12 @@ function dm(code){
   <div class="row" style="margin-top:10px"><button class="btn sm alt" data-a="pdup">Duplicate preset</button><button class="btn sm alt" data-a="pdel">Delete preset</button></div></details></details>
       <details class="panel" id="d-bg" open><summary><h2>Images <span id="cb"></span><span id="bgn"></span><span class="eye" id="e-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="bgs"></div></details>
   <details class="panel" id="d-mp" open><summary><h2>Maps <span id="cmp"></span><span id="mpn"></span><span class="eye" id="e-map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="mps"></div></details>
-  <details class="panel" id="d-np" open><summary><h2>NPCs <span id="cn"></span><span class="eye" id="e-np"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="nps"></div></details>
-  <details class="panel" id="d-mo" open><summary><h2>Monsters <span id="cm"></span><span class="eye" id="e-mo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="mos"></div><div id="monfx"></div></details>
+  <details class="panel" id="d-np" open><summary><h2>NPCs <span id="cn"></span><span class="eye" id="e-np"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="nps"></div><div class="wmet" id="npw"></div></details>
+  <details class="panel" id="d-mo" open><summary><h2>Monsters <span id="cm"></span><span class="eye" id="e-mo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary><div class="grid" id="mos"></div><div class="wmet" id="mow"></div><div id="monfx"></div></details>
   <details class="panel" id="d-q" open><summary><h2>Quests <span id="cq"></span><span class="eye" id="e-q"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
   <div class="edit"><input id="qt" placeholder="Quest title" style="width:100%;margin-bottom:8px"><textarea id="qx" rows="3" placeholder="Quest text"></textarea>
   <div class="row" style="margin:8px 0"><button class="btn" id="qb" data-a="qsave">Add quest</button></div>
-  <p class="note">New quests are pinned to the board right away. Unpin one to hide it from the players.</p></div><div id="qs"></div></details>
+  <p class="note">New quests are pinned to the board and listed in the players' World tab. Unpinning only takes a quest off the board.</p></div><div id="qs"></div><h3 class="wru">Rumors <span id="crq"></span></h3><div id="rus"></div></details>
   <details class="panel" id="d-sh" open><summary><h2>Shops <span id="csh"></span><span class="eye" id="e-sh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
   <p class="note edit" style="margin:0 0 8px">Use a shop for stores, loot or party inventory. Tap a card on the tablet to read it.</p>
   <div class="row edit"><input id="shn" placeholder="Shop or loot list name"><label><input id="shsh" type="checkbox" checked> Shared</label><button class="btn" data-a="shadd">Add shop</button></div>
@@ -1313,7 +1336,7 @@ function dm(code){
   const UF=doc(db,'sessions',code,'usage','last');let UD={};
   const useId=id=>{UD={...UD,[id]:Date.now()};setDoc(UF,{[id]:UD[id]},{merge:true})};
   const draw=()=>{
-    const tile=(i,on,a)=>`<div class="tile ${on?'on':''} ${a==='npc'?'npc':''} ${i.type==='monster'?'mon':''}" tabindex="0" data-a="${a}" data-id="${i.id}"><img src="${i.data}" alt=""${i.lib?' loading="lazy"':''}><span>${i.lib?'':'<em class="cl" title="Uploaded, this session only">☁︎</em>'}${esc(i.name)}</span>${i.lib?'':`<i class="edit" data-a="ren" data-id="${i.id}" title="Rename">✎</i>`}${i.type==='monster'?`<u class="edit" data-a="monset" data-id="${i.id}" title="Look and effects">✦</u>`:''}${i.lib?'':`<s class="edit" data-a="exp1" data-id="${i.id}" title="Export">⤓</s><b class="edit" data-a="del" data-id="${i.id}" title="Delete">×</b>`}</div>`;
+    const tile=(i,on,a)=>`<div class="tile ${on?'on':''} ${a==='npc'?'npc':''} ${i.type==='monster'?'mon':''}" tabindex="0" data-a="${a}" data-id="${i.id}"><img src="${i.data}" alt=""${i.lib?' loading="lazy"':''}><span>${i.lib?'':'<em class="cl" title="Uploaded, this session only">☁︎</em>'}${esc(i.name)}${(a==='npc'&&WD[i.id]&&WD[i.id].met)?'<em class="met" title="Met">✓</em>':''}</span>${i.lib?'':`<i class="edit" data-a="ren" data-id="${i.id}" title="Rename">✎</i>`}${i.type==='monster'?`<u class="edit" data-a="monset" data-id="${i.id}" title="Look and effects">✦</u>`:''}${i.lib?'':`<s class="edit" data-a="exp1" data-id="${i.id}" title="Export">⤓</s><b class="edit" data-a="del" data-id="${i.id}" title="Delete">×</b>`}</div>`;
     const bg=imgs.filter(i=>i.type==='background'),np=imgs.filter(i=>i.type==='npc'),mo=imgs.filter(i=>i.type==='monster'),mp=imgs.filter(i=>i.type==='map');
     const ud=i=>UD[i.id]||0,onN=i=>(live.visibleNpcIds||[]).includes(i.id);
     bg.sort((a,b)=>((live.backgroundId===b.id)-(live.backgroundId===a.id))||ud(b)-ud(a));np.sort((a,b)=>(onN(b)-onN(a))||ud(b)-ud(a));mo.sort((a,b)=>(onN(b)-onN(a))||ud(b)-ud(a));mp.sort((a,b)=>((live.mapId===b.id)-(live.mapId===a.id))||ud(b)-ud(a));
@@ -1328,7 +1351,25 @@ function dm(code){
     shopDraw();wxDraw();ctlDraw();muDraw();pvDraw();inDraw();monDraw();chDraw();
     const qb=(a,id,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#qs').innerHTML=qs.map(q=>`<div class="qrow ${q.posted?'on':''}"><div class="qt"><b>${esc(q.title||'Untitled')}${q.done?' (done)':''}</b><p>${esc(q.text||'')}</p></div><div class="row">${qb('qcur',q.id,live.curQuest===q.id?'Current':'Set current',live.curQuest===q.id?0:1)}${qb('qpin',q.id,q.posted?'Unpin':'Pin')}${qb('qdone',q.id,q.done?'Reopen':'Done',1)}${qb('qedit',q.id,'Edit',1,1)}${qb('qdel',q.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No quests yet.</p>';
+    $('#crq').textContent=RU.length?'('+RU.length+')':'';
+    $('#rus').innerHTML=[...RU].sort((a,b)=>(b.created||0)-(a.created||0)).map(r=>`<div class="qrow"><div class="qt"><p>${esc(r.text||'')}</p>${r.by?`<small>${esc(r.by)}</small>`:''}</div>${qb('rdel',r.id,'Delete',1,1)}</div>`).join('')||'<p class="note">Players add rumors on their phones.</p>';
+    wDraw();
   };
+  // World tab on the phones: the DM marks NPCs and monsters as met and adds a short line for the players. The strip shows the last tapped tile.
+  const WC=collection(db,'sessions',code,'world');let WD={},RU=[];const WS={npc:null,monster:null};
+  const wDraw=()=>[['npc','#npw'],['monster','#mow']].forEach(([t,sel])=>{
+    const box=$(sel);if(!box)return;const vis=(live.visibleNpcIds||[]).filter(id=>imgs.some(x=>x.id===id&&x.type===t));
+    const id=WS[t]&&imgs.some(x=>x.id===WS[t])?WS[t]:vis[0],im=imgs.find(x=>x.id===id),w=(id&&WD[id])||{};
+    const k=im?id+'|'+im.name+'|'+!!w.met+'|'+(w.info||''):'';if(box.dataset.k===k)return;
+    if(im&&box.dataset.id===id&&box.contains(document.activeElement)){const cb=box.querySelector('input[type=checkbox]');if(cb)cb.checked=!!w.met;return}   // typing: keep the info box as it is
+    box.dataset.k=k;box.dataset.id=im?id:'';
+    box.innerHTML=im?`<b>${esc(im.name)}</b><label><input type="checkbox" data-w="met"${w.met?' checked':''}> Met</label><input data-w="info" maxlength="200" placeholder="Short info for the players" value="${esc(w.info||'')}">`:'';
+  });
+  const wSave=(t,v)=>{const id=$(t).dataset.id,im=imgs.find(x=>x.id===id);if(!im)return;const cur=WD[id]||{},upd={...cur,...v,name:im.name,type:im.type};if(v.met&&!cur.met)upd.at=Date.now();WD={...WD,[id]:upd};setDoc(doc(WC,id),upd,{merge:true});draw()};
+  ['#npw','#mow'].forEach(sel=>{const b=$(sel);b.onchange=e=>{const k=e.target.dataset&&e.target.dataset.w;if(k==='met')wSave(sel,{met:e.target.checked});if(k==='info')wSave(sel,{info:e.target.value.trim()})};
+    b.onkeydown=e=>{if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.w==='info')e.target.blur()}});
+  unsubs.push(onSnapshot(WC,s=>{WD={};s.docs.forEach(x=>{WD[x.id]=x.data()});draw()}));
+  unsubs.push(onSnapshot(collection(db,'sessions',code,'rumors'),s=>{RU=s.docs.map(x=>({id:x.id,...x.data()}));draw()}));
   if(!ICO.size)ICOP.then(()=>{try{draw()}catch(e){}});   // item icons arrive after the first draw
   let MI=false;const MU={cur:null,file:'',loop:localStorage.getItem('muloop')!=='0',ctx:null,out:null,seq:0,get el(){return this.cur?this.cur.el:null}};
   const SP={ctrl:null,uri:'',type:'',link:'',playing:false,pos:0,dur:0,was:false,loading:false,auto:false,api:null,script:null,h:152};
@@ -1693,7 +1734,7 @@ function dm(code){
     if(a==='bg'){if(live.backgroundId!==id&&curView()==='scene'){autoMusic(id);autoCard(id)}set({backgroundId:live.backgroundId===id?null:id,bgWx:wxOf(id),bgOff:false})}
     if(a==='npc'&&MO&&live.showMap&&!(live.visibleNpcIds||[]).includes(id)){MS.tk={...(MS.tk||{}),[id]:{x:view.x,y:view.y}};dirty=true;flush()}
     if(a==='monset'){monSel=id;monDraw()}
-    if(a==='npc'){const im=imgs.find(x=>x.id===id);if(im&&im.type==='monster')monSel=id}
+    if(a==='npc'){const im=imgs.find(x=>x.id===id);if(im&&im.type==='monster')monSel=id;if(im)WS[im.type]=id}
     if(a==='npc')useId(id);
     if(a==='npc')set({visibleNpcIds:(live.visibleNpcIds||[]).includes(id)?arrayRemove(id):arrayUnion(id)});
     if(a==='black')set({backgroundId:null});
@@ -1824,11 +1865,12 @@ function dm(code){
     if(a==='qsave'){
       const title=$('#qt').value.trim(),text=$('#qx').value.trim();if(!title&&!text)return;
       if(edit){await updateDoc(doc(QC,edit),{title,text});edit=null}
-      else await setDoc(doc(QC),{title,text,posted:true,done:false,created:Date.now()});
+      else await setDoc(doc(QC),{title,text,posted:true,known:true,done:false,created:Date.now()});
       $('#qt').value='';$('#qx').value='';$('#qb').textContent='Add quest';}
-    if(a==='qpin'||a==='qdone'){const q=qs.find(x=>x.id===id);if(q)updateDoc(doc(QC,id),a==='qpin'?{posted:!q.posted}:{done:!q.done})}
+    if(a==='qpin'||a==='qdone'){const q=qs.find(x=>x.id===id);if(q)updateDoc(doc(QC,id),a==='qpin'?(q.posted?{posted:false,known:true}:{posted:true,known:true}):{done:!q.done})}
     if(a==='qedit'){const q=qs.find(x=>x.id===id);if(q){edit=id;$('#qt').value=q.title||'';$('#qx').value=q.text||'';$('#qb').textContent='Save quest';$('#qt').focus()}}
     if(a==='qdel'&&confirm('Delete this quest?')){deleteDoc(doc(QC,id));if(live.curQuest===id)set({curQuest:null})}
+    if(a==='rdel'&&confirm('Delete this rumor?'))deleteDoc(doc(db,'sessions',code,'rumors',id));
     if(a==='qcur')set({curQuest:live.curQuest===id?null:id});
     if(a==='up'){
       const files=[...$('#file').files],type=$('#type').value,msg=$('#msg');
