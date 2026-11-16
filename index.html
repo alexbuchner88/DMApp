@@ -484,7 +484,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-16 world';
+const VER='2026-11-16 group';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -834,6 +834,7 @@ const ICN={
  bag:sv('<path d="M8 7V6a4 4 0 0 1 8 0v1M6.5 7h11A1.5 1.5 0 0 1 19 8.5V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8.5A1.5 1.5 0 0 1 6.5 7zM9 15h6M9 11.5h6"/>'),
  bagplus:sv('<path d="M8 7V6a4 4 0 0 1 7-2.6"/><path d="M6.5 7h11A1.5 1.5 0 0 1 19 8.5V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8.5A1.5 1.5 0 0 1 6.5 7z"/><path d="M12 11v6M9 14h6"/>'),
  eye:sv('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
+ chest:sv('<path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v9H4z"/><path d="M4 12h16"/><path d="M11 11h2v3h-2z"/>'),
  swap:sv('<path d="M4 8h15M15 4l4 4-4 4M20 16H5M9 12l-4 4 4 4"/>'),
  tired:sv('<circle cx="12" cy="12" r="9"/><path d="M7.5 10.5h3M13.5 10.5h3M9 16c1.6-1.3 4.4-1.3 6 0"/>'),
  boot:sv('<path d="M7 3h7v7.5l4.3 2.4a2 2 0 0 1 1 1.7V18a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M6 16h14"/>'),
@@ -912,6 +913,9 @@ function player(code){
   app.innerHTML='<div class="pv"><div class="pvh"><div class="pvt">'+[['world','world','World'],['weather','weather','Weather'],['shops','shop','Shops'],['inv','bag','Inventory'],['act','sword','Actions']].map(t=>`<button class="btn sm tabb" data-t="${t[0]}" title="${t[2]}">${ICN[t[1]]}<span class="tl">${t[2]}</span></button>`).join('')+`</div></div><div id="pvb"></div><div id="pvd"></div></div>`;
   let d={},tab=sessionStorage.getItem('pvtab')||'world',psel=null,pcat='',open=null,fxSel=null,last='',lastD='';
   const SHP={},subs={};if(tab==='quest')tab='world';
+  // Group inventory: Loot (a session shop the DM fills from the shop view, also shown on the tablet like a shop) and the base chest (honor system, no limit)
+  let LOOT=[],CHEST={},gsel=null,give=false,gw=sessionStorage.getItem('pvgw')||'loot';const CHR=doc(db,'sessions',code,'group','chest');
+  const pkeys=()=>(d.pshops||[]).filter(k=>!k.endsWith(':loot'));   // loot lives in the inventory, not in the shops tab
   document.body.classList.add('pvflat');   // no wood board behind the phone view
   // World tab: quests the party knows, rumors they note for the group, NPCs and monsters the DM marked as met
   let QS=[],RU=[],WD={},wsub=sessionStorage.getItem('pvws')||'quests';const WI={};
@@ -980,13 +984,29 @@ function player(code){
   };
   const takeItem=id=>{
     const c=me();if(!c){tab='inv';sessionStorage.setItem('pvtab',tab);pick=true;open=null;render();return}
-    const keys=d.pshops||[],k=keys.includes(psel)?psel:keys[0],it=((SHP[k]||{}).items||[]).find(x=>x.id===id);if(!it)return;
+    const keys=pkeys(),k=keys.includes(psel)?psel:keys[0],it=((SHP[k]||{}).items||[]).find(x=>x.id===id);if(!it)return;
     if(it.qty===0)return;
     const rt=k.split(':')[0],mx=usesOf(it);
     saveInv(c,{[rid()]:{ref:rt+':'+it.id,name:it.name,desc:it.desc||'',rules:it.rules||'',slots:slotsOf(it),max:mx,uses:mx,qty:1,pos:'pack',...(it.actionType?{actionType:it.actionType}:{}),...(it.useText?{useText:it.useText}:{}),...(it.cat?{cat:it.cat}:{})}});
     if(it.qty!=null)updateDoc(doc(db,'sessions',rt,'items',it.id),{qty:it.qty-1});
     open=null;render();
   };
+  const chestL=()=>Object.entries(CHEST).filter(([k,v])=>v).map(([k,v])=>({...resolveEntry(v,null),id:k,_raw:v})).sort((a,b)=>a.name.localeCompare(b.name));
+  const gTake=()=>{const c=me();if(!c||!gsel)return;const t=gsel[0],id=gsel.slice(2);
+    if(t==='l'){const it=LOOT.find(x=>x.id===id);if(!it)return;const mx=usesOf(it),q=it.qty==null?1:+it.qty;
+      saveInv(c,{[rid()]:{ref:it.src||(code+':'+it.id),name:it.name,desc:it.desc||'',rules:it.rules||'',slots:slotsOf(it),max:mx,uses:mx,qty:1,pos:'pack',...(it.actionType?{actionType:it.actionType}:{}),...(it.useText?{useText:it.useText}:{}),...(it.cat?{cat:it.cat}:{})}});
+      if(q<=1){deleteDoc(doc(db,'sessions',code,'items',it.id));gsel=null}else updateDoc(doc(db,'sessions',code,'items',it.id),{qty:q-1})}
+    else{const v=CHEST[id];if(!v)return;saveInv(c,{[rid()]:{...v,pos:'pack',idx:null}});CHEST={...CHEST,[id]:null};setDoc(CHR,{inv:{[id]:null}},{merge:true});gsel=null}
+    render()};
+  const giveTo=to=>{const c=me(),e=c&&entries(c).find(x=>x.id===esel);if(!e)return;const v={...e._raw,pos:'pack',idx:null},nid=rid();   // the whole item moves, uses and notes included
+    setDoc(to==='chest'?CHR:doc(db,'sessions',code,'chars',to),{inv:{[nid]:v}},{merge:true});saveInv(c,{[e.id]:null});esel=null;give=false;render()};
+  const groupHTML=()=>{const cl=chestL(),ln=LOOT.reduce((a,x)=>a+(x.qty==null?1:+x.qty),0),loot=gw==='loot';
+    const ti=(key,x,n)=>{const im=icv&&itImg(x);return im?`<div class="ivi ivic${gsel===key?' on':''}" data-g="${key}" title="${esc(x.name)}"><img src="${im}" alt="${esc(x.name)}">${n>1?`<em class="ivu">×${n}</em>`:''}</div>`:`<div class="ivi${gsel===key?' on':''}" data-g="${key}"><b>${esc(x.name)}</b>${n>1?`<em class="ivm">×${n}</em>`:''}</div>`};
+    const list=loot?LOOT.map(x=>ti('l:'+x.id,x,x.qty==null?1:+x.qty)):cl.map(x=>ti('c:'+x.id,x,1));
+    return`<div class="ivsec${colC('grp')}"><h4${colH('grp')}>${ICN.chest}<span>Group</span>${colI('grp')}</h4><div class="dolltabs"><button class="btn sm ibt ${loot?'':'alt'}" data-gw="loot">${ICN.sparkle}<span>Loot${ln?' '+ln:''}</span></button><button class="btn sm ibt ${loot?'alt':''}" data-gw="chest">${ICN.chest}<span>Chest${cl.length?' '+cl.length:''}</span></button></div><div class="ivgrid">${list.join('')||`<div class="ivsub" style="color:var(--ink);grid-column:1/-1">${loot?'No loot right now.':'The chest is empty.'}</div>`}</div><div class="ivsub tip" style="color:var(--ink);margin-top:6px">${loot?'Loot the DM hands out. Tap an item to take it.':'The chest at your base. Give items from your inventory to put them here.'}</div></div>${gsel||esel?'<div class="ivpad"></div>':''}`};
+  const gselHTML=()=>{const t=gsel[0],id=gsel.slice(2),x=t==='l'?LOOT.find(y=>y.id===id):chestL().find(y=>y.id===id);if(!x){gsel=null;return''}
+    const mx=t==='l'?usesOf(x):x.max,us=t==='l'?mx:x.uses;
+    return`<div class="invact"><div class="ivrow1"><b class="ivname">${esc(x.name)}</b><button class="ib ok" data-gtake="1">${ICN.bag}<span>Take</span></button><button class="ib" data-gx="1" title="Close">${ICN.x}</button></div><div class="ivinfo2"><span class="ivmeta" title="Slots">${ICN.cube}${slotFmt(slotsOf(x))}${mx?` &nbsp;${ICN.tally}${us}/${mx}`:''}</span>${useType(x)&&x.useText?`<p><b>${esc(useType(x))}:</b> ${esc(x.useText)}</p>`:''}${x.desc?`<p>${esc(x.desc)}</p>`:''}${x.rules?`<p><b>Statblock:</b> ${esc(x.rules)}</p>`:''}</div></div>`};
   const sugAll=()=>{   // items in the open shops (they carry size and uses) and every icon name; unopened shops stay hidden from players
     const m=new Map();Object.values(SHP).forEach(S=>(S.items||[]).forEach(it=>{const k=ICK(it.name);if(k&&!m.has(k))m.set(k,{n:it.name,k,it})}));
     ICL.forEach(x=>{if(!m.has(x.k))m.set(x.k,x)});return[...m.values()]};
@@ -1036,9 +1056,10 @@ function player(code){
       ${panel==='purse'?`<div class="ivsec ivupg"><h4>${ICN.purse}<span>Purse</span></h4>${crow('pp',ICN.cp,'Plat')}${crow('gp',ICN.cg,'Gold')}${crow('sp',ICN.cs,'Silver')}<div class="ivsub" style="color:var(--ink)">≈ ${(co.pp*10+co.gp+co.sp/10).toFixed(1)} gp<span class="tip">. 10 silver = 1 gold, 10 gold = 1 plat. Taking coins breaks bigger ones.</span></div>${N.purse?`<div class="ivnote">${esc(N.purse)}</div>`:''}<div class="row"><button class="ib" data-coin="tidy:0" title="Tidy up">${ICN.sparkle}<span>Tidy up</span></button><button class="ib" data-purse="1" title="Close">${ICN.x}<span>Close</span></button></div></div>`:''}
       <div class="doll${colC('doll')}"><div class="dolltabs"><button class="btn sm ibt ${dw==='gear'&&!col.doll?'':'alt'}" data-dw="gear" title="Gear">${ICN.helmet}<span>Gear</span></button><button class="btn sm ibt ${dw==='clothes'&&!col.doll?'':'alt'}" data-dw="clothes" title="Clothes">${ICN.shirt}<span>Clothes</span></button></div>${win}<div class="ivsub tip" style="color:var(--ink);margin-top:6px">${dw==='gear'?'Gear counts in full.':'Clothes are worn and count 1 less.'} Tap an empty place to add an item.</div></div>
       <div class="ivsec${colC('quick')}"><h4${colH('quick')}>${ICN.pouch}<span>Quick access</span>${colI('quick')}</h4><div class="ivgrid">${qa('p',pn,'Pouch')}${qa('q',qn,'Quiver')}</div><div class="ivsub tip" style="color:var(--ink)">Belt pouch and quiver take ½ items only.</div></div>
-      <div class="ivsec${colC('pack')}"><h4${colH('pack')}>${ICN.bag}<span>Backpack</span>${colI('pack')}</h4><div class="ivtog2"><button class="ivwb${wr.w?' on':''}" data-wr="w" title="Water, 1 slot">${wIc}<span>Water</span></button><div class="ivrat" title="Rations, ½ slot each">${rIc||'<span>Rations</span>'}<button data-wr="r-" title="One less">${ICN.minus}</button><b>${Math.min(wr.r,rm)}</b><button data-wr="r+" title="One more">${ICN.plus}</button></div></div><div class="ivsub tip" style="color:var(--ink);margin-bottom:6px">Water is 1 slot, each ration is ½ slot.</div><div class="ivpack${sel&&sel.epos!=='pack'?' valid':''}" data-pos="pack">${cells}</div><div class="ivfreeline${over?' over':''}">${ICN.cube}${over?'<span>Over the limit</span>':`<b>${slotFmt(freeN)}</b><span>free</span>`}<span class="tip">Tap a free space to add an item.</span></div></div>`;
+      <div class="ivsec${colC('pack')}"><h4${colH('pack')}>${ICN.bag}<span>Backpack</span>${colI('pack')}</h4><div class="ivtog2"><button class="ivwb${wr.w?' on':''}" data-wr="w" title="Water, 1 slot">${wIc}<span>Water</span></button><div class="ivrat" title="Rations, ½ slot each">${rIc||'<span>Rations</span>'}<button data-wr="r-" title="One less">${ICN.minus}</button><b>${Math.min(wr.r,rm)}</b><button data-wr="r+" title="One more">${ICN.plus}</button></div></div><div class="ivsub tip" style="color:var(--ink);margin-bottom:6px">Water is 1 slot, each ration is ½ slot.</div><div class="ivpack${sel&&sel.epos!=='pack'?' valid':''}" data-pos="pack">${cells}</div><div class="ivfreeline${over?' over':''}">${ICN.cube}${over?'<span>Over the limit</span>':`<b>${slotFmt(freeN)}</b><span>free</span>`}<span class="tip">Tap a free space to add an item.</span></div></div>`+groupHTML();
     if(addAt)h+=`<div class="invact ivadd"><div class="ivat">${editing?ICN.pencil:ICN.plus}<span>${editing?'Edit Item':'Add Item'}</span><button class="ib ok" data-ia="addok">${ICN.check}<span>${editing?'Save':'Add'}</span></button><button class="ib" data-ia="addno" title="Cancel">${ICN.x}</button></div>${N.add?`<div class="ivnote">${esc(N.add)}</div>`:''}<div class="ivttl"><input data-af="t" placeholder="Title, type to search" autocomplete="off" value="${esc(dr.t||'')}"><span class="ivtico">${tIco()}</span></div><div class="ivsug">${sugHTML()}</div><div class="ivfld"><span class="ivfl">Size</span><div class="ivchips">${szl.map(o=>`<button class="chip${String(dr.s)===o[0]?' on':''}" data-chip="${o[0]}">${o[1]}</button>`).join('')}</div></div><div class="ivfld"><span class="ivfl">Uses</span><div class="ivuse"><button data-ustep="-1">${ICN.minus}</button><b>${parseInt(dr.u)||0}</b><button data-ustep="1">${ICN.plus}</button></div><span class="tip">0 for none</span></div><div class="ivfld"><span class="ivfl">Type</span><div class="ivchips tx">${UTCH.map(o=>`<button class="chip${(dr.a||'')===o[0]?' on':''}" data-atype="${o[0]}">${o[1]}</button>`).join('')}</div></div>${dr.a?`<input data-af="e" placeholder="Effect, e.g. +1 AC" value="${esc(dr.e||'')}">`:''}<input data-af="n" placeholder="Notes" value="${esc(dr.n||'')}"></div>`;
-    else if(sel){const worn=WORNIDS.includes(sel.epos)&&slotsOf(sel);h+=`<div class="invact"><div class="ivrow1"><b class="ivname">${esc(sel.name)}</b>${sel.ref?'':`<button class="ib" data-ia="edit" title="Edit">${ICN.pencil}</button>`}${sel.max?`<span class="ivuse" title="Uses"><button class="ib${sel.uses?'':' bad'}" data-ia="${sel.uses?'u-':'drop'}" title="${sel.uses?'Use one':'Delete'}">${sel.uses?ICN.minus:ICN.trash}</button><b>${sel.uses}/${sel.max}</b><button class="ib" data-ia="u+" title="Add one back">${ICN.plus}</button></span>`:`<button class="ib bad" data-ia="drop" title="Delete">${ICN.trash}</button>`}<button class="ib${info?' on':''}" data-ia="info" title="Info"><i>i</i></button></div><div class="ivrow2">${info?`<div class="ivinfo2"><span class="ivmeta" title="Slots">${ICN.cube}${slotFmt(slotsOf(sel))}${worn?`<span class="ivwn" title="Worn, counts 1 less">${ICN.shirt}−1</span>`:''}</span>${useType(sel)&&sel.useText?`<p><b>${esc(useType(sel))}:</b> ${esc(sel.useText)}</p>`:''}${sel.desc?`<p>${esc(sel.desc)}</p>`:''}${sel.rules?`<p><b>Statblock:</b> ${esc(sel.rules)}</p>`:''}</div>`:''}<button class="ib ok" data-ia="clear" title="Close">${ICN.check}</button></div></div>`}
+    else if(sel){const worn=WORNIDS.includes(sel.epos)&&slotsOf(sel);h+=`<div class="invact"><div class="ivrow1"><b class="ivname">${esc(sel.name)}</b>${sel.ref?'':`<button class="ib" data-ia="edit" title="Edit">${ICN.pencil}</button>`}${sel.max?`<span class="ivuse" title="Uses"><button class="ib${sel.uses?'':' bad'}" data-ia="${sel.uses?'u-':'drop'}" title="${sel.uses?'Use one':'Delete'}">${sel.uses?ICN.minus:ICN.trash}</button><b>${sel.uses}/${sel.max}</b><button class="ib" data-ia="u+" title="Add one back">${ICN.plus}</button></span>`:`<button class="ib bad" data-ia="drop" title="Delete">${ICN.trash}</button>`}<button class="ib${give?' on':''}" data-ia="give" title="Give">${ICN.swap}</button><button class="ib${info?' on':''}" data-ia="info" title="Info"><i>i</i></button></div>${give?`<div class="ivgive">${CH.filter(x=>x.id!==c.id).map(x=>`<button class="ib" data-gto="${x.id}">${esc(x.name)}</button>`).join('')}<button class="ib" data-gto="chest">${ICN.chest}<span>Chest</span></button></div>`:''}<div class="ivrow2">${info?`<div class="ivinfo2"><span class="ivmeta" title="Slots">${ICN.cube}${slotFmt(slotsOf(sel))}${worn?`<span class="ivwn" title="Worn, counts 1 less">${ICN.shirt}−1</span>`:''}</span>${useType(sel)&&sel.useText?`<p><b>${esc(useType(sel))}:</b> ${esc(sel.useText)}</p>`:''}${sel.desc?`<p>${esc(sel.desc)}</p>`:''}${sel.rules?`<p><b>Statblock:</b> ${esc(sel.rules)}</p>`:''}</div>`:''}<button class="ib ok" data-ia="clear" title="Close">${ICN.check}</button></div></div>`}
+    else if(gsel)h+=gselHTML();
     return h+'</div>';
   };
   // Actions: what the items you carry let you do, by action type, and the effects of passive items you wear in a gear or clothes place
@@ -1061,7 +1082,7 @@ function player(code){
     if(!sel&&cellEl&&!ent){addAt='cell:'+cellEl.dataset.cell;addDraft={t:'',s:'1',u:'',n:''};N.add='';esel=null;focusT=true;render();return}
     if(sel&&pos){const p=pos.dataset.pos;
       if(p!==sel.epos&&canPlace(sel,p,c)&&!(ent&&ent.dataset.e===sel.id)){moveTo(c,sel.id,p);esel=null;render();return}}
-    if(ent){esel=esel===ent.dataset.e?null:ent.dataset.e;addAt='';render();return}
+    if(ent){esel=esel===ent.dataset.e?null:ent.dataset.e;addAt='';gsel=null;give=false;render();return}
     if(!sel&&pos&&pos.dataset.pos!=='pack'){const occ=es.find(x=>x.epos===pos.dataset.pos);if(occ){esel=occ.id;addAt='';render();return}addAt=pos.dataset.pos;addDraft={t:'',s:'1',u:'',n:''};N.add='';focusT=true;render();return}   // an empty place: add an item by hand; an occupied one: select what is there
   };
   const invAct=a=>{
@@ -1070,7 +1091,8 @@ function player(code){
     if(a==='addno'){closeAdd();return}
     const e=entries(c).find(x=>x.id===esel);if(!e)return;
     if(a==='info'){info=!info;localStorage.setItem('pvinfo',info?'1':'0');render();return}
-    if(a==='clear'){esel=null;render();return}
+    if(a==='clear'){esel=null;give=false;render();return}
+    if(a==='give'){give=!give;render();return}
     if(a==='edit'){addAt='edit:'+e.id;addDraft={t:e.name,s:String(+e.slots||0),u:e.max?String(e.max):'',n:e.desc||'',a:useType(e),e:e.useText||'',pk:e.name};esel=null;render();return}
     if(a==='u-'||a==='u+'){saveInv(c,{[e.id]:{...e._raw,max:e.max,uses:Math.max(0,Math.min(e.max,e.uses+(a==='u+'?1:-1)))}});return}
     if(a==='drop'&&confirm('Drop '+e.name+'?')){saveInv(c,{[e.id]:null});esel=null}
@@ -1078,7 +1100,7 @@ function player(code){
   const render=()=>{
     document.querySelectorAll('.pvt [data-t]').forEach(b=>b.classList.toggle('alt',b.dataset.t!==(tab==='set'?'inv':tab)));
     const pvEl=app.querySelector('.pv');if(pvEl)pvEl.classList.toggle('notips',!tips);
-    const keys=d.pshops||[];let h='',sheet='';
+    const keys=pkeys();let h='',sheet='';
     if(tab==='world')h=worldHTML();
     else if(tab==='weather'){const ew=effWx(d);h=ew.on?wxPlayerHTML(ew.wx,Math.min(3,ew.wind|0),d,fxSel):'<div class="pvempty">No weather here.</div>'}
     else if(tab==='inv')h=invHTML();
@@ -1098,7 +1120,7 @@ function player(code){
     if(sheet!==lastD){lastD=sheet;$('#pvd').innerHTML=sheet;$('#pvd').classList.toggle('on',!!sheet)}
   };
   if(!ICO.size)ICOP.then(()=>{try{render()}catch(e){}});   // item icons arrive after the first draw
-  const syncS=()=>{const keys=d.pshops||[];
+  const syncS=()=>{const keys=pkeys();
     Object.keys(subs).forEach(k=>{if(!keys.includes(k)){subs[k].forEach(u=>u());delete subs[k];delete SHP[k]}});
     keys.forEach(k=>{if(subs[k])return;const[rt,id]=k.split(':');SHP[k]={name:'',items:[]};
       subs[k]=[onSnapshot(doc(db,'sessions',rt,'shops',id),s=>{if(SHP[k])SHP[k].name=(s.data()||{}).name||'';render()}),
@@ -1106,6 +1128,8 @@ function player(code){
   unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};syncS();render()}));
   unsubs.push(onSnapshot(collection(db,'sessions',code,'quests'),s=>{QS=s.docs.map(x=>({id:x.id,...x.data()}));render()}));
   unsubs.push(onSnapshot(collection(db,'sessions',code,'rumors'),s=>{RU=s.docs.map(x=>({id:x.id,...x.data()}));render()}));
+  unsubs.push(onSnapshot(query(collection(db,'sessions',code,'items'),where('shopId','==','loot')),s=>{LOOT=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(a.created||0)-(b.created||0));render()}));
+  unsubs.push(onSnapshot(CHR,s=>{CHEST=(s.data()||{}).inv||{};render()}));
   unsubs.push(onSnapshot(collection(db,'sessions',code,'world'),s=>{WD={};s.docs.forEach(x=>{WD[x.id]=x.data()});render()}));
   unsubs.push(onSnapshot(collection(db,'sessions',code,'chars'),s=>{CH=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(a.created||0)-(b.created||0));if(cid&&!CH.some(x=>x.id===cid))cid='';if(!cid&&CH.length===1){cid=CH[0].id;localStorage.setItem('char-'+code,cid)}syncDefs();render()}));
   unsubs.push(()=>Object.values(dsub).forEach(u=>u()));
@@ -1141,6 +1165,11 @@ function player(code){
     const atb=e.target.closest('[data-atype]');if(atb){addDraft.a=atb.dataset.atype;render();return}
     const chp=e.target.closest('[data-chip]');if(chp){addDraft.s=chp.dataset.chip;render();return}
     const ust=e.target.closest('[data-ustep]');if(ust){addDraft.u=String(Math.max(0,Math.min(99,(parseInt(addDraft.u)||0)+(+ust.dataset.ustep))));render();return}
+    const gwb=e.target.closest('[data-gw]');if(gwb){if(gwb.dataset.gw===gw&&!col.grp)col.grp=1;else delete col.grp;try{localStorage.setItem('pvcol',JSON.stringify(col))}catch(x){}gw=gwb.dataset.gw;sessionStorage.setItem('pvgw',gw);gsel=null;render();return}
+    const gb=e.target.closest('[data-g]');if(gb){gsel=gsel===gb.dataset.g?null:gb.dataset.g;esel=null;give=false;render();return}
+    if(e.target.closest('[data-gtake]')){gTake();return}
+    if(e.target.closest('[data-gx]')){gsel=null;render();return}
+    const gto=e.target.closest('[data-gto]');if(gto){giveTo(gto.dataset.gto);return}
     const ia=e.target.closest('[data-ia]');if(ia){invAct(ia.dataset.ia);return}
     const au=e.target.closest('[data-au]');if(au){const c=me(),x=c&&entries(c).find(y=>y.id===asel);if(x&&x.max)saveInv(c,{[x.id]:{...x._raw,max:x.max,uses:Math.max(0,Math.min(x.max,x.uses+(+au.dataset.au)))}});return}
     const acb=e.target.closest('[data-ac]');if(acb){asel=asel===acb.dataset.ac?null:acb.dataset.ac;render();return}
@@ -1316,8 +1345,8 @@ function dm(code){
   <div class="row" style="margin:8px 0"><button class="btn" id="qb" data-a="qsave">Add quest</button></div>
   <p class="note">New quests are pinned to the board and listed in the players' World tab. Unpinning only takes a quest off the board.</p></div><div id="qs"></div><h3 class="wru">Rumors <span id="crq"></span></h3><div id="rus"></div></details>
   <details class="panel" id="d-sh" open><summary><h2>Shops <span id="csh"></span><span class="eye" id="e-sh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></span></h2></summary>
-  <p class="note edit" style="margin:0 0 8px">Use a shop for stores, loot or party inventory. Tap a card on the tablet to read it.</p>
-  <div class="row edit"><input id="shn" placeholder="Shop or loot list name"><label><input id="shsh" type="checkbox" checked> Shared</label><button class="btn" data-a="shadd">Add shop</button></div>
+  <p class="note edit" style="margin:0 0 8px">Tap a card on the tablet to read it. Loot copies an item into the Loot list, which players take from in their inventory.</p>
+  <div class="row edit"><input id="shn" placeholder="Shop name"><label><input id="shsh" type="checkbox" checked> Shared</label><button class="btn" data-a="shadd">Add shop</button></div>
   <div class="row" id="shl" style="margin:10px 0"></div><div class="row" id="shb"></div>
   <div class="edit" id="shform" style="margin-top:10px"><div class="row"><input id="itn" placeholder="Item name" style="flex:2 1 160px"><input id="itc" placeholder="Cost, e.g. 50 gp" style="flex:1 1 110px"><input id="itw" type="hidden"><input id="its" type="number" min="0" max="4" step="0.5" placeholder="Slots (auto)" style="flex:1 1 100px"><input id="itu" type="number" min="0" max="99" placeholder="Uses (optional)" style="flex:1 1 110px"></div>
   <div class="row" style="margin-top:8px"><select id="itk" style="flex:1 1 120px"><option value="">Category</option>${CATS.map(c=>`<option>${c}</option>`).join('')}</select><select id="ita" style="flex:1 1 130px"><option value="none">No use</option>${USETYPES.map(c=>`<option>${c}</option>`).join('')}</select><input id="itt" placeholder="Use text, e.g. Throw 15 ft, Dex save or Restrained" style="flex:3 1 220px"></div>
@@ -1654,8 +1683,8 @@ function dm(code){
     const bt=(a,id,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#csh').textContent='('+shops.length+')';
     $('#shl').innerHTML=shops.map(x=>`<button class="btn sm ${x.id===selShop?'':'alt'}" data-a="shsel" data-id="${x.id}">${esc(x.name)}${x._r==='_shared'?' <small>shared</small>':''}${(live.pshops||[]).includes((x._r||code)+':'+x.id)?EYE_SM:''} (${items.filter(i=>i.shopId===x.id).length})</button>`).join('')||'<span class="note">No shops yet.</span>';
-    $('#shb').innerHTML=sel?bt('shpl',sel.id,(live.pshops||[]).includes((sel._r||code)+':'+sel.id)?'Hide from players':'Show to players',!(live.pshops||[]).includes((sel._r||code)+':'+sel.id))+bt('shren',sel.id,'Rename',1,1)+bt('shdel',sel.id,'Delete shop',1,1):'';
-    {const si=sel?items.filter(i=>i.shopId===sel.id):[];$('#shi').innerHTML=sel?catBar(si,dcat,'data-a="shcat" data-id','row shk')+catPick(si,dcat).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''}" data-item="${i.id}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${itImg(i)?`<img src="${itImg(i)}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${' / Slots '+esc(slotTxt(i))}<p>${esc(i.desc||'')}</p>${i.qty!=null?`<p style="margin:2px 0;font-weight:700">Stock: ${i.qty}</p>`:''}${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row"><span class="edit" style="display:inline-flex;align-items:center;gap:6px">${bt('qtym',i.id,'−',1)}<b style="min-width:1.6em;text-align:center">${i.qty==null?'–':i.qty}</b>${bt('qtyp',i.id,'+',1)}</span>${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':''}
+    $('#shb').innerHTML=sel&&sel.id==='loot'&&sel._r===code?'<span class="note">Players take loot in their inventory. Show it on the tablet with the Shop button.</span>'+bt('shdel',sel.id,'Clear loot',1,1):sel?bt('shpl',sel.id,(live.pshops||[]).includes((sel._r||code)+':'+sel.id)?'Hide from players':'Show to players',!(live.pshops||[]).includes((sel._r||code)+':'+sel.id))+bt('shren',sel.id,'Rename',1,1)+bt('shdel',sel.id,'Delete shop',1,1):'';
+    {const si=sel?items.filter(i=>i.shopId===sel.id):[];$('#shi').innerHTML=sel?catBar(si,dcat,'data-a="shcat" data-id','row shk')+catPick(si,dcat).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''}" data-item="${i.id}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${itImg(i)?`<img src="${itImg(i)}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${' / Slots '+esc(slotTxt(i))}<p>${esc(i.desc||'')}</p>${i.qty!=null?`<p style="margin:2px 0;font-weight:700">Stock: ${i.qty}</p>`:''}${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row"><span class="edit" style="display:inline-flex;align-items:center;gap:6px">${bt('qtym',i.id,'−',1)}<b style="min-width:1.6em;text-align:center">${i.qty==null?'–':i.qty}</b>${bt('qtyp',i.id,'+',1)}</span>${sel.id!=='loot'?bt('itloot',i.id,'Loot',1):''}${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':''}
     placeForm();
   }
   let shS={},itS={},ntS={},NT={};
@@ -1784,7 +1813,7 @@ function dm(code){
     if(a==='shshow'&&selShop){const on=live.showShop&&live.shopId===selShop;set(on?{showShop:false,shopItemId:null}:{showShop:true,shopId:selShop,shopRoot:(shops.find(x=>x.id===selShop)||{})._r||code,shopItemId:null,showBoard:false,showMap:false})}
     if(a==='shpl'){const sh=shops.find(x=>x.id===id);if(sh){const k=(sh._r||code)+':'+sh.id;set({pshops:(live.pshops||[]).includes(k)?arrayRemove(k):arrayUnion(k)})}}
     if(a==='shren'){const sh=shops.find(x=>x.id===selShop),nn=sh&&prompt('Shop name',sh.name);if(nn&&nn.trim())updateDoc(doc(db,'sessions',sh._r||code,'shops',selShop),{name:nn.trim()})}
-    if(a==='shdel'&&selShop&&confirm((shops.find(x=>x.id===selShop)||{})._r==='_shared'?'Delete this shared shop and all its items for every session?':'Delete this shop and all its items?')){const sd=selShop,rt=(shops.find(x=>x.id===sd)||{})._r||code;
+    if(a==='shdel'&&selShop&&confirm(selShop==='loot'?'Remove all loot?':(shops.find(x=>x.id===selShop)||{})._r==='_shared'?'Delete this shared shop and all its items for every session?':'Delete this shop and all its items?')){const sd=selShop,rt=(shops.find(x=>x.id===sd)||{})._r||code;
       for(const i of items.filter(x=>x.shopId===sd)){await deleteDoc(doc(db,'sessions',rt,'items',i.id));await deleteDoc(doc(db,'sessions',rt,'notes',i.id))}
       await deleteDoc(doc(db,'sessions',rt,'shops',sd));set({pshops:arrayRemove(rt+':'+sd)});if(live.shopId===sd)set({showShop:false,shopItemId:null});selShop=null;localStorage.removeItem('selShop');draw()}
     if(a==='itsave'){
@@ -1843,6 +1872,12 @@ function dm(code){
       try{await navigator.clipboard.writeText(t);msg.className='note';msg.textContent='Copied '+(t.split('\n').length-1)+' items. Paste them into your sheet.'}
       catch(e){$('#imt').value=t;msg.className='note';msg.textContent='Clipboard blocked. The table is in the box above.'}}
     if(a==='qtyp'||a==='qtym'){const i=items.find(x=>x.id===id);if(i){const n=Math.max(0,(i.qty==null?0:+i.qty)+(a==='qtyp'?1:-1));i.qty=n;updateDoc(doc(db,'sessions',i._r||code,'items',id),{qty:n});draw()}}
+    if(a==='itloot'){const i=items.find(x=>x.id===id);if(i){   // a copy of the item goes into this session's loot list, free; the same item again raises the count
+      const src=(i._r||code)+':'+i.id,ex=items.find(x=>x.shopId==='loot'&&x._r===code&&x.src===src),b=document.querySelector(`[data-a="itloot"][data-id="${id}"]`);
+      await setDoc(doc(db,'sessions',code,'shops','loot'),{name:'Loot',created:0},{merge:true});
+      if(ex)await updateDoc(doc(db,'sessions',code,'items',ex.id),{qty:(ex.qty==null?1:+ex.qty)+1});
+      else{const{id:_i,_r,qty:_q,cost:_c,created:_t,shopId:_s,...rest}=i;await setDoc(doc(collection(db,'sessions',code,'items')),{...rest,shopId:'loot',src,cost:'',qty:1,created:Date.now()})}
+      if(b){b.textContent='Added';setTimeout(()=>{if(b.isConnected)b.textContent='Loot'},1200)}}}
     if(a==='itshow'){const i=items.find(x=>x.id===id);if(i){const on=live.showShop&&live.shopId===i.shopId;set(on?{shopItemId:live.shopItemId===id?null:id}:{showShop:true,shopId:i.shopId,shopRoot:i._r,shopItemId:id,showBoard:false,showMap:false})}}
     if(a==='map'){if(curView()==='map'){autoMusic(id);autoCard(id)}set({mapId:id,mapWx:wxOf(id),mapView:{x:.5,y:.5,ft:60}})}
     if(a==='mshow'&&live.mapId)set({showMap:!live.showMap,...(!live.showMap?{showBoard:false,showShop:false}:{})});

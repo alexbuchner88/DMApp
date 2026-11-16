@@ -583,3 +583,7 @@ body.pvflat::before{background:radial-gradient(ellipse at 50% -10%,#33261b 0,#1a
 .wru{margin:14px 0 4px;font-size:16px}
 .qrow small{display:block;font-style:italic;opacity:.8}
 .wsub{grid-template-columns:repeat(4,1fr)}.wsub .btn{padding:0 4px;font-size:14px}
+/* Give: the other characters and the chest */
+.ivgive{display:flex;flex-wrap:wrap;gap:6px}
+.ivgive .ib{flex:1 1 auto}
+.ivpad{height:170px}

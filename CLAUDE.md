@@ -18,6 +18,8 @@ A DM tool for D&D (and other tabletops). The DM controls everything from a DM vi
 - Data layout:
   - `sessions/{code}/...` per-session data (images, chars, intro config, etc.)
   - `sessions/_shared/items`, `sessions/_shared/notes` for data shared across all sessions (shops and items stay available every session).
+  - Group inventory: loot is the session shop `sessions/{code}/shops/loot` (items with `shopId:'loot'` and `src` pointing to the shop item they were copied from); the base chest is `sessions/{code}/group/chest` (`inv` map, same entries as a character).
+  - World tab: `sessions/{code}/rumors`, `sessions/{code}/world/{imageId}` (`met`, `info`).
 - Hosted on GitHub Pages from `main`. Installed as a PWA (`manifest.json`, `sw.js`).
 - Routing via hash: `#dm/{code}`, `#display/{code}` (tablet), `#player/{code}` (phones), `#last`.
 - Service worker cache name is in `sw.js` (`infini-dnd-vN`). Bump the version when a change must reach installed PWAs.
