@@ -1392,5 +1392,66 @@
   "description": "A pouch of bitter leaves.",
   "rules": "A creature on watch who drinks a cup has Advantage on Wis (Perception) checks to notice threats for 2 hours. It can't fall asleep for 4 hours afterwards.",
   "stock": 0
+ },
+ {
+  "shop": "General Store",
+  "cat": "Healing",
+  "name": "Gnomish Potion Sprayer",
+  "cost": "30 gp",
+  "slots": 1,
+  "actionType": "Bonus Action",
+  "useText": "Give a potion to a creature within 15 ft",
+  "description": "A brass bellows with a nozzle and a clip for one potion.",
+  "rules": "When you give a potion to a creature as a Bonus Action, it can be within 15 ft instead of 5 ft.",
+  "stock": 0
+ },
+ {
+  "shop": "Thread and Needle",
+  "cat": "Tools",
+  "name": "Busker's Hat",
+  "cost": "5 gp",
+  "slots": 0.5,
+  "actionType": "none",
+  "useText": "Perform 1 h in town: earn tips",
+  "description": "A battered hat with a jaunty feather.",
+  "rules": "After performing for an hour in a town, collect tips: 1d6 gp, or 2d6 gp on a DC 15 Cha (Performance) check.",
+  "stock": 0
+ },
+ {
+  "shop": "Thread and Needle",
+  "cat": "Travel",
+  "name": "Springheel Boots",
+  "cost": "50 gp + Iron Bar",
+  "slots": 1,
+  "actionType": "Passive",
+  "useText": "Your jumps go twice as far",
+  "description": "Leather boots with steel springs in the heels.",
+  "rules": "Your Long Jump and High Jump distances double. This includes Rabbit Hop.",
+  "stock": 0
+ },
+ {
+  "shop": "Smith",
+  "cat": "Weapons",
+  "name": "Rime Arrows",
+  "cost": "25 gp",
+  "slots": 0.5,
+  "uses": 10,
+  "actionType": "none",
+  "useText": "Cold damage; hit: Speed −10 ft",
+  "description": "Arrowheads of blue-black iron, cold to the touch.",
+  "rules": "Deal Cold damage instead of Piercing. On a hit, the target's Speed drops by 10 ft until the start of its next turn. Also available as bolts. Uses = arrows left.",
+  "stock": 0
+ },
+ {
+  "shop": "General Store",
+  "cat": "Travel",
+  "name": "Snowshoes",
+  "cost": "6 gp",
+  "slots": 1,
+  "actionType": "Passive",
+  "useText": "Deep snow isn't Difficult Terrain for you",
+  "description": "Woven frames of ash and rawhide.",
+  "rules": "Snow-covered ground isn't Difficult Terrain for you.",
+  "stock": 0
  }
 ]
