@@ -905,7 +905,7 @@ function wxPlayerHTML(cur,w,L,sel){
   const head=`<div class="pwh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${WI[ic]}</svg><div class="pwn"><b>${esc(wname(cur,season,cd))}</b><small>Wind: ${WINDS[w]}</small></div>${travel}</div>`;
   if(!inf)return`<div class="pwx">${head}</div>`;
   const cats=WXJ.categories||DEFCATS,known=cats.map(c=>c.key);
-  const tile=e=>{const f=WXJ.effects[e],on=e===sel;return`<button class="pwt ${f.tone||'neutral'}${on?' on':''}" data-fx="${e}"><span class="pws">${ico(f.icon)}<span>${esc(f.situation||f.short||'')}</span></span><b>${esc(f.effect||f.short||f.text)}</b>${on?`<p>${esc(f.text)}</p>`:''}</button>`};
+  const tile=e=>{const f=WXJ.effects[e],on=e===sel;return`<button class="pwt ${f.tone||'neutral'}${on?' on':''}" data-fx="${e}">${ico(f.icon)}<span class="pws">${esc(f.situation||f.short||'')}</span><b>${esc(f.effect||f.short||f.text)}</b>${on?`<p>${esc(f.text)}</p>`:''}</button>`};   // one row per effect: icon, situation, effect; tap for the full rule
   const body=cats.map(c=>{const l=inf.eff.filter(e=>{const k=WXJ.effects[e].cat;return(known.includes(k)?k:known[known.length-1])===c.key});return l.length?`<h4 class="pwc">${ico(c.icon)}${esc(c.name)}</h4><div class="pwg">${l.map(tile).join('')}</div>`:''}).join('');
   return`<div class="pwx">${head}${body||'<div class="pvempty">No effects.</div>'}</div>`;
 }
