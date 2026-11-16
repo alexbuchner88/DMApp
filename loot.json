@@ -1,0 +1,188 @@
+{
+ "_notes": "Curated loot list. Every session's Loot list starts with these items, all at 0 (hidden from players). The DM raises the count to hand one out. Items are added to a session once by name: editing or deleting one in the app sticks, new names added here show up next time the DM view opens. Fields as in shop_import.json; cost is optional (a sale value). Categories: Healing, Combat, Travel, Tools, Valuables, Materials.",
+ "items": [
+  {
+   "cat": "Healing",
+   "name": "Potion of Healing",
+   "slots": 0.5,
+   "actionType": "Bonus Action",
+   "useText": "Drink or give: 2d4 + 2 HP",
+   "description": "A red liquid that glimmers when shaken."
+  },
+  {
+   "cat": "Healing",
+   "name": "Healer's Kit",
+   "slots": 1,
+   "uses": 10,
+   "actionType": "Action",
+   "useText": "Stabilize a creature at 0 HP, no check",
+   "description": "Bandages, salves and splints."
+  },
+  {
+   "cat": "Healing",
+   "name": "Antitoxin (vial)",
+   "slots": 0.5,
+   "actionType": "Bonus Action",
+   "useText": "Adv on saves vs Poisoned for 1 h",
+   "description": "A bitter draught against venom."
+  },
+  {
+   "cat": "Combat",
+   "name": "Arrows",
+   "slots": 0.5,
+   "uses": 20,
+   "description": "A bundle of arrows."
+  },
+  {
+   "cat": "Combat",
+   "name": "Crossbow Bolts",
+   "slots": 0.5,
+   "uses": 20,
+   "description": "A bundle of bolts."
+  },
+  {
+   "cat": "Combat",
+   "name": "Sling Bullets",
+   "slots": 0.5,
+   "uses": 20,
+   "description": "A pouch of lead bullets."
+  },
+  {
+   "cat": "Combat",
+   "name": "Alchemist's Fire (flask)",
+   "slots": 0.5,
+   "actionType": "Action",
+   "useText": "Throw 20 ft, Dex save or 1d4 Fire and Burning",
+   "description": "Sticky fluid that ignites in air."
+  },
+  {
+   "cat": "Combat",
+   "name": "Acid (vial)",
+   "slots": 0.5,
+   "actionType": "Action",
+   "useText": "Throw 20 ft, Dex save or 2d6 Acid",
+   "description": "A sealed vial of corrosive acid."
+  },
+  {
+   "cat": "Travel",
+   "name": "Torch",
+   "slots": 0.5,
+   "useText": "Burns 1 h: 20 ft bright, 20 ft dim",
+   "description": "A wooden rod wrapped in oiled rags."
+  },
+  {
+   "cat": "Travel",
+   "name": "Oil (flask)",
+   "slots": 0.5,
+   "actionType": "Action",
+   "useText": "Throw 20 ft or pour; burns for 2 rounds",
+   "description": "Lamp oil in a clay flask."
+  },
+  {
+   "cat": "Travel",
+   "name": "Hempen Rope",
+   "slots": 1,
+   "useText": "50 ft of rope",
+   "description": "Rough but strong."
+  },
+  {
+   "cat": "Travel",
+   "name": "Candle",
+   "slots": 0,
+   "description": "A stub of tallow candle."
+  },
+  {
+   "cat": "Tools",
+   "name": "Thieves' Tools",
+   "slots": 0.5,
+   "useText": "Pick locks and disarm traps",
+   "description": "Picks and files in a leather roll."
+  },
+  {
+   "cat": "Tools",
+   "name": "Crowbar",
+   "slots": 1,
+   "useText": "Adv on Str checks where leverage helps",
+   "description": "A bar of iron with a flattened end."
+  },
+  {
+   "cat": "Tools",
+   "name": "Key",
+   "slots": 0,
+   "description": "An old iron key. It opens something."
+  },
+  {
+   "cat": "Valuables",
+   "name": "Azurite",
+   "cost": "Worth 10 gp",
+   "slots": 0,
+   "description": "A mottled deep blue stone."
+  },
+  {
+   "cat": "Valuables",
+   "name": "Carnelian",
+   "cost": "Worth 50 gp",
+   "slots": 0,
+   "description": "A polished orange-red stone. Counts as any gem."
+  },
+  {
+   "cat": "Valuables",
+   "name": "Amethyst",
+   "cost": "Worth 100 gp",
+   "slots": 0,
+   "description": "A clear violet gem. Counts as any gem."
+  },
+  {
+   "cat": "Valuables",
+   "name": "Garnet",
+   "cost": "Worth 100 gp",
+   "slots": 0,
+   "description": "A deep red gem. Counts as any gem."
+  },
+  {
+   "cat": "Valuables",
+   "name": "Copper Chalice",
+   "cost": "Worth 25 gp",
+   "slots": 0.5,
+   "description": "A dented cup with silver filigree."
+  },
+  {
+   "cat": "Valuables",
+   "name": "Carved Bone Statuette",
+   "cost": "Worth 25 gp",
+   "slots": 0,
+   "description": "A small figure carved with care."
+  },
+  {
+   "cat": "Valuables",
+   "name": "Electrum Ring",
+   "cost": "Worth 25 gp",
+   "slots": 0,
+   "description": "A plain ring of pale gold."
+  },
+  {
+   "cat": "Materials",
+   "name": "Thick Pelt",
+   "slots": 2,
+   "description": "A heavy winter pelt, cleaned and rolled. Wanted for warm gear."
+  },
+  {
+   "cat": "Materials",
+   "name": "Silver Ore",
+   "slots": 1,
+   "description": "A lump of raw silver ore."
+  },
+  {
+   "cat": "Materials",
+   "name": "Adamantine Ore",
+   "slots": 1,
+   "description": "Black ore, heavier than it looks. Smiths pay well for it."
+  },
+  {
+   "cat": "Materials",
+   "name": "Mithral Ore",
+   "slots": 1,
+   "description": "Bright, light ore that never tarnishes."
+  }
+ ]
+}

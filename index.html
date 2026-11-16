@@ -15,7 +15,7 @@
 <body><div id="app"></div>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getFirestore,doc,collection,setDoc,getDoc,deleteDoc,updateDoc,query,where,onSnapshot,arrayUnion,arrayRemove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,collection,setDoc,getDoc,getDocs,deleteDoc,updateDoc,query,where,onSnapshot,arrayUnion,arrayRemove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Paste your Firebase web app config here (Project settings > Your apps).
 const CFG={apiKey:"AIzaSyCZJdQ3Lq9VuMkOj2OzhJ1FhRPY9LGNaKE",authDomain:"dm-app-b2ffe.firebaseapp.com",projectId:"dm-app-b2ffe",appId:"1:651806206382:web:a099ff940512021be6003f"};
@@ -81,7 +81,7 @@ async function display(code,pv){
   const watchShop=(id,rt)=>{
     if(id===sid)return;su1&&su1();su2&&su2();su1=su2=null;sid=id;IT=[];SH={};lo=null;tcat='';renderShop();if(!id)return;
     su1=onSnapshot(doc(db,'sessions',rt,'shops',id),s=>{SH=s.data()||{};renderShop()});
-    su2=onSnapshot(query(collection(db,'sessions',rt,'items'),where('shopId','==',id)),s=>{IT=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>a.created-b.created);renderShop()});
+    su2=onSnapshot(query(collection(db,'sessions',rt,'items'),where('shopId','==',id)),s=>{IT=s.docs.map(x=>({id:x.id,...x.data()})).filter(x=>id!=='loot'||x.qty==null||x.qty>0).sort((a,b)=>a.created-b.created);renderShop()});
   };
   unsubs.push(()=>{su1&&su1();su2&&su2()});
   $('#shopk').onclick=e=>{const b=e.target.closest('[data-k]');if(b){tcat=b.dataset.k;renderShop()}};
@@ -484,7 +484,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-16 group';
+const VER='2026-11-16 loot';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -797,7 +797,7 @@ const slotsOf=i=>{if(i.slots!=null&&i.slots!=='')return Math.max(0,Math.round((+
 const usesOf=i=>Math.max(0,parseInt(i.uses)||0);
 const slotTxt=i=>slotFmt(slotsOf(i))+(usesOf(i)?' · '+usesOf(i)+' uses':'');
 // Shop categories: each item has a cat. A shop shows one button per category it uses (All first), in this order; others follow alphabetically.
-const CATS=['Armor','Weapons','Combat','Healing','Travel','Tools'],USETYPES=['Action','Bonus Action','Reaction','Passive'];
+const CATS=['Armor','Weapons','Combat','Healing','Travel','Tools','Valuables','Materials'],USETYPES=['Action','Bonus Action','Reaction','Passive'];
 const useType=e=>USETYPES.includes(e&&e.actionType)?e.actionType:'';   // 'none' or anything else means no type
 const catsOf=l=>{const s=new Set(l.map(i=>i.cat).filter(Boolean));return[...CATS.filter(c=>s.has(c)),...[...s].filter(c=>!CATS.includes(c)).sort()]};
 const catBar=(l,cur,attr,cls)=>{const cs=catsOf(l);if(cs.length<2)return'';if(!cs.includes(cur))cur='';return`<div class="${cls}">`+['',...cs].map(c=>`<button class="btn sm ${c===cur?'':'alt'}" ${attr}="${esc(c)}">${c?esc(c):'All'}</button>`).join('')+'</div>'};
@@ -995,7 +995,7 @@ function player(code){
   const gTake=()=>{const c=me();if(!c||!gsel)return;const t=gsel[0],id=gsel.slice(2);
     if(t==='l'){const it=LOOT.find(x=>x.id===id);if(!it)return;const mx=usesOf(it),q=it.qty==null?1:+it.qty;
       saveInv(c,{[rid()]:{ref:it.src||(code+':'+it.id),name:it.name,desc:it.desc||'',rules:it.rules||'',slots:slotsOf(it),max:mx,uses:mx,qty:1,pos:'pack',...(it.actionType?{actionType:it.actionType}:{}),...(it.useText?{useText:it.useText}:{}),...(it.cat?{cat:it.cat}:{})}});
-      if(q<=1){deleteDoc(doc(db,'sessions',code,'items',it.id));gsel=null}else updateDoc(doc(db,'sessions',code,'items',it.id),{qty:q-1})}
+      updateDoc(doc(db,'sessions',code,'items',it.id),{qty:Math.max(0,q-1)});if(q<=1)gsel=null}   // the item stays in the DM's loot list at 0
     else{const v=CHEST[id];if(!v)return;saveInv(c,{[rid()]:{...v,pos:'pack',idx:null}});CHEST={...CHEST,[id]:null};setDoc(CHR,{inv:{[id]:null}},{merge:true});gsel=null}
     render()};
   const giveTo=to=>{const c=me(),e=c&&entries(c).find(x=>x.id===esel);if(!e)return;const v={...e._raw,pos:'pack',idx:null},nid=rid();   // the whole item moves, uses and notes included
@@ -1128,7 +1128,7 @@ function player(code){
   unsubs.push(onSnapshot(doc(db,'sessions',code,'live','state'),s=>{d=s.data()||{};syncS();render()}));
   unsubs.push(onSnapshot(collection(db,'sessions',code,'quests'),s=>{QS=s.docs.map(x=>({id:x.id,...x.data()}));render()}));
   unsubs.push(onSnapshot(collection(db,'sessions',code,'rumors'),s=>{RU=s.docs.map(x=>({id:x.id,...x.data()}));render()}));
-  unsubs.push(onSnapshot(query(collection(db,'sessions',code,'items'),where('shopId','==','loot')),s=>{LOOT=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(a.created||0)-(b.created||0));render()}));
+  unsubs.push(onSnapshot(query(collection(db,'sessions',code,'items'),where('shopId','==','loot')),s=>{LOOT=s.docs.map(x=>({id:x.id,...x.data()})).filter(x=>x.qty==null||x.qty>0).sort((a,b)=>(a.created||0)-(b.created||0));render()}));
   unsubs.push(onSnapshot(CHR,s=>{CHEST=(s.data()||{}).inv||{};render()}));
   unsubs.push(onSnapshot(collection(db,'sessions',code,'world'),s=>{WD={};s.docs.forEach(x=>{WD[x.id]=x.data()});render()}));
   unsubs.push(onSnapshot(collection(db,'sessions',code,'chars'),s=>{CH=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(a.created||0)-(b.created||0));if(cid&&!CH.some(x=>x.id===cid))cid='';if(!cid&&CH.length===1){cid=CH[0].id;localStorage.setItem('char-'+code,cid)}syncDefs();render()}));
@@ -1224,6 +1224,18 @@ function sugFind(q,list,max){
 const LIB=new Map(),isLib=id=>typeof id==='string'&&id.startsWith('lib:');
 const LIBP=typeof fetch==='function'?fetch('images.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('missing');return r.json()}).then(j=>{
   (j.images||[]).forEach(e=>{if(e&&e.id&&e.type&&e.file)LIB.set('lib:'+e.id,{id:'lib:'+e.id,type:e.type,name:e.name||e.id,data:encodeURI(e.file),tags:e.tags||[],lib:true,created:0})});return LIB}).catch(()=>LIB):Promise.resolve(LIB);
+// The Loot list of a session always exists and starts with the curated items of loot.json, all at 0 (hidden from players). Each name is added once, so edits and deletions in the app stick.
+const LOOTP=typeof fetch==='function'?fetch('loot.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).catch(()=>null):Promise.resolve(null);
+async function lootSeed(code){
+  const j=await LOOTP,ref=doc(db,'sessions',code,'shops','loot'),s=await getDoc(ref),done=(s.exists()&&s.data().seeded)||[],dl=new Set(done.map(n=>n.toLowerCase()));
+  const todo=((j&&j.items)||[]).filter(x=>x&&(x.name||'').trim()&&!dl.has(x.name.trim().toLowerCase()));
+  if(s.exists()&&!todo.length)return;
+  if(todo.length){const have=new Set((await getDocs(query(collection(db,'sessions',code,'items'),where('shopId','==','loot')))).docs.map(d=>(d.data().name||'').trim().toLowerCase()));
+    const num=(v,mx,f)=>v==null||v===''?null:Math.max(0,Math.min(mx,f(v)));let n=0;
+    for(const x of todo){const name=x.name.trim();if(have.has(name.toLowerCase()))continue;
+      await setDoc(doc(collection(db,'sessions',code,'items')),{shopId:'loot',name,cost:x.cost||'',weight:'',desc:x.description||x.desc||'',rules:x.rules||'',slots:num(x.slots,4,v=>Math.round((parseFloat(v)||0)*2)/2),uses:num(x.uses,99,v=>parseInt(v)||0),cat:x.cat||'',actionType:x.actionType||'none',useText:x.useText||'',img:'',qty:0,created:1+n++})}}
+  await setDoc(ref,{name:'Loot',created:0,seeded:[...done,...todo.map(x=>x.name.trim())]},{merge:true});
+}
 async function imgDoc(code,id){   // one image's record, from the library file list or from Firestore
   if(isLib(id)){await LIBP;const e=LIB.get(id);return e?{...e}:null}
   const s=await getDoc(doc(db,'sessions',code,'images',id));return s.exists()?s.data():null;
@@ -1385,6 +1397,7 @@ function dm(code){
     wDraw();
   };
   // World tab on the phones: the DM marks NPCs and monsters as met and adds a short line for the players. The strip shows the last tapped tile.
+  lootSeed(code).catch(e=>console.warn('Loot list',e));
   const WC=collection(db,'sessions',code,'world');let WD={},RU=[];const WS={npc:null,monster:null};
   const wDraw=()=>[['npc','#npw'],['monster','#mow']].forEach(([t,sel])=>{
     const box=$(sel);if(!box)return;const vis=(live.visibleNpcIds||[]).filter(id=>imgs.some(x=>x.id===id&&x.type===t));
@@ -1683,8 +1696,8 @@ function dm(code){
     const bt=(a,id,t,alt,ed)=>`<button class="btn sm ${alt?'alt':''} ${ed?'edit':''}" data-a="${a}" data-id="${id}">${t}</button>`;
     $('#csh').textContent='('+shops.length+')';
     $('#shl').innerHTML=shops.map(x=>`<button class="btn sm ${x.id===selShop?'':'alt'}" data-a="shsel" data-id="${x.id}">${esc(x.name)}${x._r==='_shared'?' <small>shared</small>':''}${(live.pshops||[]).includes((x._r||code)+':'+x.id)?EYE_SM:''} (${items.filter(i=>i.shopId===x.id).length})</button>`).join('')||'<span class="note">No shops yet.</span>';
-    $('#shb').innerHTML=sel&&sel.id==='loot'&&sel._r===code?'<span class="note">Players take loot in their inventory. Show it on the tablet with the Shop button.</span>'+bt('shdel',sel.id,'Clear loot',1,1):sel?bt('shpl',sel.id,(live.pshops||[]).includes((sel._r||code)+':'+sel.id)?'Hide from players':'Show to players',!(live.pshops||[]).includes((sel._r||code)+':'+sel.id))+bt('shren',sel.id,'Rename',1,1)+bt('shdel',sel.id,'Delete shop',1,1):'';
-    {const si=sel?items.filter(i=>i.shopId===sel.id):[];$('#shi').innerHTML=sel?catBar(si,dcat,'data-a="shcat" data-id','row shk')+catPick(si,dcat).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''}" data-item="${i.id}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${itImg(i)?`<img src="${itImg(i)}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${' / Slots '+esc(slotTxt(i))}<p>${esc(i.desc||'')}</p>${i.qty!=null?`<p style="margin:2px 0;font-weight:700">Stock: ${i.qty}</p>`:''}${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row"><span class="edit" style="display:inline-flex;align-items:center;gap:6px">${bt('qtym',i.id,'−',1)}<b style="min-width:1.6em;text-align:center">${i.qty==null?'–':i.qty}</b>${bt('qtyp',i.id,'+',1)}</span>${sel.id!=='loot'?bt('itloot',i.id,'Loot',1):''}${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':''}
+    $('#shb').innerHTML=sel&&sel.id==='loot'&&sel._r===code?'<span class="note">Raise the count to hand an item out. Items at 0 are hidden.</span>'+bt('lootclr',sel.id,'Hide all',1):sel?bt('shpl',sel.id,(live.pshops||[]).includes((sel._r||code)+':'+sel.id)?'Hide from players':'Show to players',!(live.pshops||[]).includes((sel._r||code)+':'+sel.id))+bt('shren',sel.id,'Rename',1,1)+bt('shdel',sel.id,'Delete shop',1,1):'';
+    {const isL=!!sel&&sel.id==='loot'&&sel._r===code,si=sel?items.filter(i=>i.shopId===sel.id):[];if(isL)si.sort((a,b)=>((b.qty>0)-(a.qty>0))||(a.created||0)-(b.created||0));$('#shi').innerHTML=sel?catBar(si,dcat,'data-a="shcat" data-id','row shk')+catPick(si,dcat).map(i=>`<div class="qrow ${on&&live.shopItemId===i.id?'on':''}" data-item="${i.id}"><div class="row" style="flex:1 1 220px;flex-wrap:nowrap">${itImg(i)?`<img src="${itImg(i)}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:2px solid var(--gold2)">`:''}<div class="qt"><b>${esc(i.name)}</b> ${esc(i.cost||'')}${' / Slots '+esc(slotTxt(i))}<p>${esc(i.desc||'')}</p>${i.qty!=null?`<p style="margin:2px 0;font-weight:700">Stock: ${i.qty}</p>`:''}${on&&live.shopItemId===i.id&&i.rules?`<p><b>Statblock:</b> ${esc(i.rules)}</p>`:''}${NT[i.id]?`<p style="color:#8c2a12"><b>DM:</b> ${esc(NT[i.id])}</p>`:''}</div></div><div class="row"><span class="${isL?'':'edit'}" style="display:inline-flex;align-items:center;gap:6px">${bt('qtym',i.id,'−',1)}<b style="min-width:1.6em;text-align:center">${i.qty==null?'–':i.qty}</b>${bt('qtyp',i.id,'+',1)}</span>${isL?'':bt('itloot',i.id,'Loot',1)}${bt('itshow',i.id,on&&live.shopItemId===i.id?'Hide':'Details')}${bt('itedit',i.id,'Edit',1,1)}${bt('itdel',i.id,'Delete',1,1)}</div></div>`).join('')||'<p class="note">No items yet.</p>':''}
     placeForm();
   }
   let shS={},itS={},ntS={},NT={};
@@ -1872,10 +1885,11 @@ function dm(code){
       try{await navigator.clipboard.writeText(t);msg.className='note';msg.textContent='Copied '+(t.split('\n').length-1)+' items. Paste them into your sheet.'}
       catch(e){$('#imt').value=t;msg.className='note';msg.textContent='Clipboard blocked. The table is in the box above.'}}
     if(a==='qtyp'||a==='qtym'){const i=items.find(x=>x.id===id);if(i){const n=Math.max(0,(i.qty==null?0:+i.qty)+(a==='qtyp'?1:-1));i.qty=n;updateDoc(doc(db,'sessions',i._r||code,'items',id),{qty:n});draw()}}
+    if(a==='lootclr'&&confirm('Hide all loot from the players?'))for(const i of items.filter(x=>x.shopId==='loot'&&x._r===code&&x.qty>0))updateDoc(doc(db,'sessions',code,'items',i.id),{qty:0});
     if(a==='itloot'){const i=items.find(x=>x.id===id);if(i){   // a copy of the item goes into this session's loot list, free; the same item again raises the count
-      const src=(i._r||code)+':'+i.id,ex=items.find(x=>x.shopId==='loot'&&x._r===code&&x.src===src),b=document.querySelector(`[data-a="itloot"][data-id="${id}"]`);
+      const src=(i._r||code)+':'+i.id,ex=items.find(x=>x.shopId==='loot'&&x._r===code&&(x.src===src||(x.name||'').trim().toLowerCase()===(i.name||'').trim().toLowerCase())),b=document.querySelector(`[data-a="itloot"][data-id="${id}"]`);
       await setDoc(doc(db,'sessions',code,'shops','loot'),{name:'Loot',created:0},{merge:true});
-      if(ex)await updateDoc(doc(db,'sessions',code,'items',ex.id),{qty:(ex.qty==null?1:+ex.qty)+1});
+      if(ex)await updateDoc(doc(db,'sessions',code,'items',ex.id),{qty:(+ex.qty||0)+1});
       else{const{id:_i,_r,qty:_q,cost:_c,created:_t,shopId:_s,...rest}=i;await setDoc(doc(collection(db,'sessions',code,'items')),{...rest,shopId:'loot',src,cost:'',qty:1,created:Date.now()})}
       if(b){b.textContent='Added';setTimeout(()=>{if(b.isConnected)b.textContent='Loot'},1200)}}}
     if(a==='itshow'){const i=items.find(x=>x.id===id);if(i){const on=live.showShop&&live.shopId===i.shopId;set(on?{shopItemId:live.shopItemId===id?null:id}:{showShop:true,shopId:i.shopId,shopRoot:i._r,shopItemId:id,showBoard:false,showMap:false})}}
