@@ -270,9 +270,9 @@
   "cost": "1 gp",
   "slots": 1,
   "actionType": "none",
-  "useText": "Shelter for 6: +5 to rest roll; none in Gust or Storm",
+  "useText": "Shelter for 6: +5 to the rest roll",
   "description": "A big square of oiled canvas.",
-  "rules": "Rain shelter for up to 6 people: +5 to their rest roll. No bonus in Gust or Storm, the wind tears it loose. Also works as a ground sheet or stretcher.",
+  "rules": "Shelter from rain and wind for up to 6 people: +5 to their rest roll. Also works as a ground sheet or stretcher.",
   "stock": 0
  },
  {
