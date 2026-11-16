@@ -48,6 +48,8 @@ If a new feature needs tunable numbers, put them in a JSON data file, not in cod
 - Inventory uses a slot system, not weight. Weight is hidden in the player UI.
 - Weather design: common items may fully cancel minor effects (rain, ice, climbing in the wet). Exposure, rest DCs and the worst weather are only softened by normal gear; only rare gear removes them. Worst weather is rare and should feel dangerous.
 - Item rules: utility items stay light on numbers (Advantage, or a penalty removed, rather than +1/+2). The cost is mostly the slots it takes away from other useful items. Rare or particularly good items and upgrades can add a material cost the players must find first (e.g. `100 gp + Iron Bar`; use names from the items/ library such as Iron Bar, Silver Bar, Adamantine Bar, Silk or a gem).
+- Prices: the party is in a remote town, so prices are inflated and avoid copper and silver. Small consumables cost 5 sp or 1 gp and up; almost no mundane item costs less than 3 gp.
+- Rest rolls: the DM calls one Survival DC from the weather, the same for everyone. Players add their gear bonuses to the roll (one tent and one tarp stack). Items never lower the DC.
 - Initiative and stat blocks are handled in D&D Beyond. Don't build a combat tracker.
 
 ## Design
