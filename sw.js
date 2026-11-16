@@ -1,4 +1,4 @@
-const C='infini-dnd-v19';
+const C='infini-dnd-v20';
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(['./','./index.html','./css/app.css','./images.json','./items.json','./item_sizes.json','./loot.json','./icon-192.png'])))});
 self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch',e=>{

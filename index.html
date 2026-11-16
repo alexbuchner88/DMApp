@@ -484,7 +484,7 @@ const WXS=[
  {id:'r2',n:['Rain','Snow'],i:['rain','snow'],cl:.7,p:2},
  {id:'r3',n:['Heavy rain','Heavy snow'],i:['rain','snow'],cl:.85,p:3}
 ];
-const VER='2026-11-16 loot';
+const VER='2026-11-16 wxfix';
 const WINDS=['Still','Breeze','Gust','Storm'];
 const WXFX={};
 const WI={sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -519,6 +519,7 @@ function makeWeather(cv){
     return{cl:s.cl||0,fog:s.fog||0,cr:t[0],cg:t[1],cb:t[2],ca:t[3],fr:s.fr||0,ws:[0,.12,.55,1.1][tw],wf:[1,1.1,1.7,2.4][tw],rain:tsn?0:L/1600,snow:tsn?L/1600:0,vr:tsn?0:[0,.05,.14,.34][s.p||0],tp:tsn?0:[0,.06,.2,.42][s.p||0],vs:tsn?[0,.06,.2,.5][s.p||0]:0,str:tw>=3?1:tw>=2?.55:0,cs:(s.cl||0)<.5?.13:.4,nd:tn?1:0,gl:gl0,dr:am0==='drip'?1:0,tc:am0==='torch'?1:0,mg:am0==='magic'?1:0,...Object.fromEntries(Object.entries(AMK).map(([n,k])=>[k,am0===n?1:0]))}};
   const frame=ts=>{
     raf=requestAnimationFrame(frame);size();const W=cv.width,H=cv.height,dt=Math.min(100,ts-(last||ts));last=ts;
+    if(!W||!H)return;   // hidden (quest board, shop): pause, or every drop would reset to one corner and pour out of it when the view comes back
     const T=target(),k=1-Math.exp(-dt/900);for(const q in T)cu[q]+=(T[q]-cu[q])*k;
     if(Math.max(T.cl,T.fog,T.ca,T.fr,T.rain,T.snow,T.str,T.gl,T.vr,T.vs,T.tp,T.dr,T.tc,T.mg)===0&&AK.every(k=>T[k]===0)&&AK.every(k=>cu[k]<.004)&&Math.max(cu.cl,cu.fog,cu.ca,cu.fr,cu.rain,cu.snow,cu.str,cu.gl,cu.vr,cu.vs,cu.tp,cu.dr,cu.tc,cu.mg)<.004){c.clearRect(0,0,W,H);cancelAnimationFrame(raf);raf=0;return}
     c.clearRect(0,0,W,H);
