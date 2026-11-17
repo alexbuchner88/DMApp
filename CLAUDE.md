@@ -6,7 +6,7 @@ A DM tool for D&D (and other tabletops). The DM controls everything from a DM vi
 
 - Feature concepts are written in a separate chat and handed over as spec files in `docs/specs/`. When asked to implement a spec, follow it closely. If something in the spec is unclear or conflicts with existing behavior, ask before guessing.
 - Small fixes and tweaks come directly in the prompt, without a spec.
-- Commit with short, plain messages. Push only when asked.
+- Commit with short, plain messages. When a change is done and checked, push and merge it into `main` without asking. Ask first only if something went wrong or an important question is still open.
 - The repo is cloned on two machines (laptop and PC). Always `git pull` before starting work.
 
 ## Tech setup
